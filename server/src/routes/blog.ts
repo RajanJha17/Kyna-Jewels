@@ -6,13 +6,7 @@ import {
   uploadImages, 
   handleUploadError 
 } from '../middleware/blogUpload';
-import { 
-  validateCreateBlog, 
-  validateUpdateBlog, 
-  validateBlogId, 
-  validateBlogSearch,
-  validatePagination 
-} from '../middleware/blogValidation';
+// Validation middleware removed
 
 const router = express.Router();
 
@@ -26,7 +20,6 @@ const router = express.Router();
  */
 router.post(
   '/',
-  validateCreateBlog,
   uploadBlogImages,
   handleUploadError,
   BlogController.createBlog
@@ -40,7 +33,6 @@ router.post(
  */
 router.get(
   '/',
-  validatePagination,
   BlogController.getAllBlogs
 );
 
@@ -52,8 +44,6 @@ router.get(
  */
 router.get(
   '/search',
-  validateBlogSearch,
-  validatePagination,
   BlogController.searchBlogs
 );
 
@@ -65,7 +55,6 @@ router.get(
  */
 router.get(
   '/:id',
-  validateBlogId,
   BlogController.getBlogById
 );
 
@@ -78,7 +67,6 @@ router.get(
  */
 router.put(
   '/:id',
-  validateUpdateBlog,
   uploadBlogImages,
   handleUploadError,
   BlogController.updateBlog
@@ -92,7 +80,6 @@ router.put(
  */
 router.delete(
   '/:id',
-  validateBlogId,
   BlogController.deleteBlog
 );
 
@@ -107,7 +94,6 @@ router.delete(
  */
 router.post(
   '/:id/display-image',
-  validateBlogId,
   uploadDisplayImage,
   handleUploadError,
   BlogController.updateBlog
@@ -122,7 +108,6 @@ router.post(
  */
 router.post(
   '/:id/images',
-  validateBlogId,
   uploadImages,
   handleUploadError,
   BlogController.updateBlog

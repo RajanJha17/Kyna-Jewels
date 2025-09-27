@@ -1,13 +1,5 @@
-import { v2 as cloudinary } from 'cloudinary';
+import cloudinary from '../config/cloudinary';
 import Blog, { IBlog } from '../models/blogModel';
-import { CloudinaryConfig } from '../config/cloudinary';
-
-// Initialize Cloudinary
-cloudinary.config({
-  cloud_name: CloudinaryConfig.cloudName,
-  api_key: CloudinaryConfig.apiKey,
-  api_secret: CloudinaryConfig.apiSecret
-});
 
 export interface BlogCreateData {
   title: string;

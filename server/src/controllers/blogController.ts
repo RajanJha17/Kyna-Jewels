@@ -1,14 +1,6 @@
 import { Request, Response } from 'express';
 import Blog, { IBlog } from '../models/blogModel';
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryConfig } from '../config/cloudinary';
-
-// Initialize Cloudinary
-cloudinary.config({
-  cloud_name: CloudinaryConfig.cloudName,
-  api_key: CloudinaryConfig.apiKey,
-  api_secret: CloudinaryConfig.apiSecret
-});
+import cloudinary from '../config/cloudinary';
 
 export class BlogController {
   /**

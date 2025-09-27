@@ -39,4 +39,7 @@ const config: CloudinaryConfig = {
   apiSecret: process.env.CLOUDINARY_API_SECRET || 'mock-secret',
 };
 
+console.log('Cloudinary Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
+
+
 export default config;
