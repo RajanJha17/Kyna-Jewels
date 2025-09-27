@@ -25,6 +25,7 @@ import trackingRoutes, { setTrackingController } from "./routes/tracking";
 import adminRoutes from "./routes/admin";
 import buildYourJewelryRoutes from "./routes/buildYourJewelry";
 import subProductRoutes from "./routes/subProduct";
+import blogRoutes from "./routes/blog";
 
 // Import tracking services
 import { TrackingController } from "./controllers/trackingController";
@@ -294,6 +295,7 @@ app.get("/api", (req: Request, res: Response) => {
       rings: "/api/rings",
       buildYourJewelry: "/api/build-your-jewelry",
       subProducts: "/api/sub-products",
+      blogs: "/api/blogs",
     },
   });
 });
@@ -345,6 +347,7 @@ app.use("/api/rings", deprecationWarning, ringsRoutes);
 app.use("/api/admin", deprecationWarning, adminRoutes);
 app.use("/api/build-your-jewelry", deprecationWarning, buildYourJewelryRoutes);
 app.use("/api/sub-products", deprecationWarning, subProductRoutes);
+app.use("/api/blogs", deprecationWarning, blogRoutes);
 
 // Home route
 app.get("/", (req: Request, res: Response) => {
