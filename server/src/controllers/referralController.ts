@@ -140,9 +140,7 @@ export const redeemPromoCode = async (req: AuthRequest, res: Response) => {
     }
 
     // Find referral
-    const referral = await Referral.findOne({ referFrdId }).populate(
-      "fromUserId"
-    );
+    const referral = await Referral.findOne({ referFrdId }).populate("fromUserId");
     if (!referral) {
       return res.status(404).json({
         success: false,
@@ -201,59 +199,46 @@ export const redeemPromoCode = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Start transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // --- Update documents sequentially (no transaction) ---
 
-    try {
-      // Update referral status
-      referral.status = "accepted";
-      referral.redeemedBy = userId;
-      referral.redeemedAt = new Date();
-      await referral.save({ session });
+    referral.status = "accepted";
+    referral.redeemedBy = userId;
+    referral.redeemedAt = new Date();
+    await referral.save();
 
-      // Add rewards to both users
-      const referrer = await User.findById(referral.fromUserId);
-      if (referrer) {
-        referrer.availableOffers += settings.referralRewardReferrer;
-        await referrer.save({ session });
-      }
-
-      user.availableOffers += settings.referralRewardFriend;
-      await user.save({ session });
-
-      await session.commitTransaction();
-
-      // Send success notification to referrer
-      if (referrer) {
-        try {
-          await sendReferralSuccessNotification(
-            referrer,
-            user.email,
-            settings.referralRewardReferrer
-          );
-        } catch (error) {
-          console.error("Failed to send success notification:", error);
-          // Don't fail the transaction for email errors
-        }
-      }
-
-      res.json({
-        success: true,
-        message: "Promo code redeemed successfully",
-        data: {
-          friendReward: settings.referralRewardFriend,
-          referrerReward: settings.referralRewardReferrer,
-          yourNewBalance: user.availableOffers,
-          referrerNewBalance: referrer?.availableOffers || 0,
-        },
-      });
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
+    const referrer = await User.findById(referral.fromUserId);
+    if (referrer) {
+      referrer.availableOffers += settings.referralRewardReferrer;
+      await referrer.save();
     }
+
+    user.availableOffers += settings.referralRewardFriend;
+    await user.save();
+
+    // Send success notification to referrer
+    if (referrer) {
+      try {
+        await sendReferralSuccessNotification(
+          referrer,
+          user.email,
+          settings.referralRewardReferrer
+        );
+      } catch (error) {
+        console.error("Failed to send success notification:", error);
+        // Don't fail request for email issues
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: "Promo code redeemed successfully",
+      data: {
+        friendReward: settings.referralRewardFriend,
+        referrerReward: settings.referralRewardReferrer,
+        yourNewBalance: user.availableOffers,
+        referrerNewBalance: referrer?.availableOffers || 0,
+      },
+    });
   } catch (error) {
     console.error("Error redeeming promo code:", error);
     res.status(500).json({
@@ -262,6 +247,7 @@ export const redeemPromoCode = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
 
 // Get user's referrals
 export const getUserReferrals = async (req: AuthRequest, res: Response) => {
