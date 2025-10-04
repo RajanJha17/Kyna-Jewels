@@ -1,7 +1,7 @@
 // Test script for automatic tracking updates
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://api.kynajewels.com/api';
 
 async function testTrackingCron() {
   console.log('🧪 Testing Automatic Tracking Updates...\n');

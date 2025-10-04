@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api/build-your-jewelry';
+const BASE_URL = 'https://api.kynajewels.com/api/build-your-jewelry';
 
 /**
  * Test Build Your Jewelry API endpoints

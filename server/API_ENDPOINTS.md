@@ -4,7 +4,7 @@
 
 This document contains all available API endpoints for the Kyna Jewels e-commerce platform. The API is built with Node.js, Express, TypeScript, and MongoDB.
 
-**Base URL**: `http://localhost:5000/api`
+**Base URL**: `https://api.kynajewels.com/api`
 
 ---
 

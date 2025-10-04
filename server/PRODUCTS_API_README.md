@@ -9,7 +9,7 @@ This document provides comprehensive documentation for the Products API endpoint
 ## 🚀 **Base URL**
 
 ```
-Development: http://localhost:5000/api/products
+Development: https://api.kynajewels.com/api/products
 Production: https://yourdomain.com/api/products
 ```
 

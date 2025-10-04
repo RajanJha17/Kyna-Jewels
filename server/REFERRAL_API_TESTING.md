@@ -58,7 +58,7 @@ FRONTEND_URL=http://localhost:5173
 
 **Create initial settings:**
 ```bash
-curl -X POST http://localhost:5000/api/settings \
+curl -X POST https://api.kynajewels.com/api/settings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
   -d '{
@@ -89,7 +89,7 @@ curl -X POST http://localhost:5000/api/settings \
 
 **Create referral with friend emails:**
 ```bash
-curl -X POST http://localhost:5000/api/referrals \
+curl -X POST https://api.kynajewels.com/api/referrals \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_REFERRER_JWT_TOKEN" \
   -d '{
@@ -120,7 +120,7 @@ curl -X POST http://localhost:5000/api/referrals \
 
 **Check referral details before redemption:**
 ```bash
-curl -X GET http://localhost:5000/api/referrals/details/507f1f77bcf86cd799439011
+curl -X GET https://api.kynajewels.com/api/referrals/details/507f1f77bcf86cd799439011
 ```
 
 **Expected Response:**
@@ -145,7 +145,7 @@ curl -X GET http://localhost:5000/api/referrals/details/507f1f77bcf86cd799439011
 
 **Redeem the referral code as a friend:**
 ```bash
-curl -X POST http://localhost:5000/api/referrals/promos/redeem \
+curl -X POST https://api.kynajewels.com/api/referrals/promos/redeem \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_FRIEND_JWT_TOKEN" \
   -d '{
@@ -171,7 +171,7 @@ curl -X POST http://localhost:5000/api/referrals/promos/redeem \
 
 **Get referrer's referral history:**
 ```bash
-curl -X GET http://localhost:5000/api/referrals/my-referrals \
+curl -X GET https://api.kynajewels.com/api/referrals/my-referrals \
   -H "Authorization: Bearer YOUR_REFERRER_JWT_TOKEN"
 ```
 
@@ -206,7 +206,7 @@ curl -X GET http://localhost:5000/api/referrals/my-referrals \
 
 **Get current system settings:**
 ```bash
-curl -X GET http://localhost:5000/api/settings
+curl -X GET https://api.kynajewels.com/api/settings
 ```
 
 **Expected Response:**
@@ -229,7 +229,7 @@ curl -X GET http://localhost:5000/api/settings
 
 ### 1. Invalid Referral Code
 ```bash
-curl -X POST http://localhost:5000/api/referrals/promos/redeem \
+curl -X POST https://api.kynajewels.com/api/referrals/promos/redeem \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_FRIEND_JWT_TOKEN" \
   -d '{
@@ -248,7 +248,7 @@ curl -X POST http://localhost:5000/api/referrals/promos/redeem \
 ### 2. Already Redeemed Code
 ```bash
 # Try to redeem the same code again
-curl -X POST http://localhost:5000/api/referrals/promos/redeem \
+curl -X POST https://api.kynajewels.com/api/referrals/promos/redeem \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_FRIEND_JWT_TOKEN" \
   -d '{
@@ -267,7 +267,7 @@ curl -X POST http://localhost:5000/api/referrals/promos/redeem \
 ### 3. Self-Referral Attempt
 ```bash
 # Try to redeem your own referral code
-curl -X POST http://localhost:5000/api/referrals/promos/redeem \
+curl -X POST https://api.kynajewels.com/api/referrals/promos/redeem \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_REFERRER_JWT_TOKEN" \
   -d '{
@@ -285,7 +285,7 @@ curl -X POST http://localhost:5000/api/referrals/promos/redeem \
 
 ### 4. Invalid Email Format
 ```bash
-curl -X POST http://localhost:5000/api/referrals \
+curl -X POST https://api.kynajewels.com/api/referrals \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_REFERRER_JWT_TOKEN" \
   -d '{
@@ -350,7 +350,7 @@ Add sections to show:
 ```bash
 # Create multiple referrals simultaneously
 for i in {1..10}; do
-  curl -X POST http://localhost:5000/api/referrals \
+  curl -X POST https://api.kynajewels.com/api/referrals \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer YOUR_REFERRER_JWT_TOKEN" \
     -d "{
@@ -366,7 +366,7 @@ wait
 ### 1. Unauthorized Access
 ```bash
 # Try to access protected endpoints without token
-curl -X POST http://localhost:5000/api/referrals \
+curl -X POST https://api.kynajewels.com/api/referrals \
   -H "Content-Type: application/json" \
   -d '{"toEmails": ["test@example.com"]}'
 ```
@@ -374,7 +374,7 @@ curl -X POST http://localhost:5000/api/referrals \
 ### 2. Admin-Only Endpoints
 ```bash
 # Try to update settings without admin role
-curl -X PUT http://localhost:5000/api/settings \
+curl -X PUT https://api.kynajewels.com/api/settings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_REGULAR_USER_JWT_TOKEN" \
   -d '{"referralRewardFriend": 100}'

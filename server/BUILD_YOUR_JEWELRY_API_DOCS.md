@@ -5,7 +5,7 @@ The Build Your Jewelry API provides comprehensive functionality for customers to
 
 ## Base URL
 ```
-http://localhost:5000/api/build-your-jewelry
+https://api.kynajewels.com/api/build-your-jewelry
 ```
 
 ## Authentication

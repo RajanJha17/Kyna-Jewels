@@ -81,7 +81,7 @@ This is a comprehensive backend implementation for the "Build Your Jewelry" func
 
 ### Base URL
 ```
-http://localhost:5000/api/build-your-jewelry
+https://api.kynajewels.com/api/build-your-jewelry
 ```
 
 ### Available Endpoints

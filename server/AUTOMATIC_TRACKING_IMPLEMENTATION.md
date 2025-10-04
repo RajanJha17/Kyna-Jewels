@@ -59,7 +59,7 @@ npm run dev
 ### **2. Test Manual Update**
 ```bash
 # Test the manual update endpoint
-curl -X POST http://localhost:5000/api/tracking/manual-update
+curl -X POST https://api.kynajewels.com/api/tracking/manual-update
 ```
 
 ### **3. Check Server Logs**

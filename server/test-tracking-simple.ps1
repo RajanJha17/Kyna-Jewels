@@ -5,7 +5,7 @@ Write-Host ""
 try {
     # Test 1: Check if server is running
     Write-Host "1️⃣ Testing server health..." -ForegroundColor Yellow
-    $healthResponse = Invoke-WebRequest -Uri "http://localhost:5000/api/tracking/health" -Method GET
+    $healthResponse = Invoke-WebRequest -Uri "https://api.kynajewels.com/api/tracking/health" -Method GET
     Write-Host "✅ Server is running" -ForegroundColor Green
     Write-Host "Response: $($healthResponse.Content)" -ForegroundColor Cyan
     
@@ -13,7 +13,7 @@ try {
     Write-Host ""
     Write-Host "2️⃣ Testing manual tracking update..." -ForegroundColor Yellow
     try {
-        $manualResponse = Invoke-WebRequest -Uri "http://localhost:5000/api/tracking/manual-update" -Method POST
+        $manualResponse = Invoke-WebRequest -Uri "https://api.kynajewels.com/api/tracking/manual-update" -Method POST
         Write-Host "✅ Manual tracking update successful" -ForegroundColor Green
         Write-Host "Response: $($manualResponse.Content)" -ForegroundColor Cyan
     } catch {
@@ -29,7 +29,7 @@ try {
     Write-Host ""
     Write-Host "3️⃣ Checking tracking statistics..." -ForegroundColor Yellow
     try {
-        $statsResponse = Invoke-WebRequest -Uri "http://localhost:5000/api/tracking/stats" -Method GET
+        $statsResponse = Invoke-WebRequest -Uri "https://api.kynajewels.com/api/tracking/stats" -Method GET
         Write-Host "✅ Tracking stats retrieved" -ForegroundColor Green
         Write-Host "Response: $($statsResponse.Content)" -ForegroundColor Cyan
     } catch {

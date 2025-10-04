@@ -55,12 +55,12 @@ The frontend will start on `http://localhost:5173`
 
 ### Authentication APIs
 
-- **Signup**: `POST http://localhost:5000/api/auth/signup`
-- **Login**: `POST http://localhost:5000/api/auth/login`
-- **Logout**: `POST http://localhost:5000/api/auth/logout`
-- **Email Verification**: `POST http://localhost:5000/api/auth/verify-email`
-- **Forgot Password**: `POST http://localhost:5000/api/auth/forgot-password`
-- **Reset Password**: `POST http://localhost:5000/api/auth/reset-password/:token`
+- **Signup**: `POST https://api.kynajewels.com/api/auth/signup`
+- **Login**: `POST https://api.kynajewels.com/api/auth/login`
+- **Logout**: `POST https://api.kynajewels.com/api/auth/logout`
+- **Email Verification**: `POST https://api.kynajewels.com/api/auth/verify-email`
+- **Forgot Password**: `POST https://api.kynajewels.com/api/auth/forgot-password`
+- **Reset Password**: `POST https://api.kynajewels.com/api/auth/reset-password/:token`
 
 ## 🎨 Features Implemented
 
@@ -153,7 +153,7 @@ BCRYPT_SALT_ROUNDS=12
 
 #### 1. CORS Error (Most Common)
 
-**Error**: `Access to fetch at 'http://localhost:5000/api/auth/login' has been blocked by CORS policy`
+**Error**: `Access to fetch at 'https://api.kynajewels.com/api/auth/login' has been blocked by CORS policy`
 
 **Solution**:
 

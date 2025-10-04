@@ -48,7 +48,7 @@ Creates a new blog post with optional image uploads.
 
 #### Example Request
 ```bash
-curl -X POST http://localhost:5000/api/blogs \
+curl -X POST https://api.kynajewels.com/api/blogs \
   -F "title=My First Blog Post" \
   -F "notes=This is the content of my blog post..." \
   -F "displayImage=@/path/to/cover.jpg" \
@@ -87,7 +87,7 @@ Retrieves all blog posts with pagination support.
 
 #### Example Request
 ```bash
-curl "http://localhost:5000/api/blogs?page=1&limit=5"
+curl "https://api.kynajewels.com/api/blogs?page=1&limit=5"
 ```
 
 #### Response
@@ -127,7 +127,7 @@ Retrieves a single blog post by its ID.
 
 #### Example Request
 ```bash
-curl "http://localhost:5000/api/blogs/64f8b1234567890abcdef123"
+curl "https://api.kynajewels.com/api/blogs/64f8b1234567890abcdef123"
 ```
 
 #### Response
@@ -165,7 +165,7 @@ Updates an existing blog post with optional image updates.
 
 #### Example Request
 ```bash
-curl -X PUT http://localhost:5000/api/blogs/64f8b1234567890abcdef123 \
+curl -X PUT https://api.kynajewels.com/api/blogs/64f8b1234567890abcdef123 \
   -F "title=Updated Blog Post Title" \
   -F "notes=Updated content..." \
   -F "displayImage=@/path/to/new-cover.jpg"
@@ -198,7 +198,7 @@ Deletes a blog post and all associated images from Cloudinary.
 
 #### Example Request
 ```bash
-curl -X DELETE http://localhost:5000/api/blogs/64f8b1234567890abcdef123
+curl -X DELETE https://api.kynajewels.com/api/blogs/64f8b1234567890abcdef123
 ```
 
 #### Response
@@ -221,7 +221,7 @@ Searches blog posts by title or content.
 
 #### Example Request
 ```bash
-curl "http://localhost:5000/api/blogs/search?q=jewelry&page=1&limit=5"
+curl "https://api.kynajewels.com/api/blogs/search?q=jewelry&page=1&limit=5"
 ```
 
 #### Response
@@ -349,28 +349,28 @@ Adds additional images to an existing blog post.
 ### Using cURL
 ```bash
 # Create a blog post
-curl -X POST http://localhost:5000/api/blogs \
+curl -X POST https://api.kynajewels.com/api/blogs \
   -F "title=Test Blog" \
   -F "notes=This is a test blog post content" \
   -F "displayImage=@test-image.jpg"
 
 # Get all blogs
-curl http://localhost:5000/api/blogs
+curl https://api.kynajewels.com/api/blogs
 
 # Search blogs
-curl "http://localhost:5000/api/blogs/search?q=test"
+curl "https://api.kynajewels.com/api/blogs/search?q=test"
 
 # Update a blog
-curl -X PUT http://localhost:5000/api/blogs/BLOG_ID \
+curl -X PUT https://api.kynajewels.com/api/blogs/BLOG_ID \
   -F "title=Updated Test Blog"
 
 # Delete a blog
-curl -X DELETE http://localhost:5000/api/blogs/BLOG_ID
+curl -X DELETE https://api.kynajewels.com/api/blogs/BLOG_ID
 ```
 
 ### Using Postman
 1. Set method to POST/PUT
-2. Set URL to `http://localhost:5000/api/blogs`
+2. Set URL to `https://api.kynajewels.com/api/blogs`
 3. Go to Body tab
 4. Select "form-data"
 5. Add fields: title, notes, displayImage, images

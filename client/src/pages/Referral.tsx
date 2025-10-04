@@ -43,7 +43,7 @@ const Referral = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/referrals/promos/redeem",
+        "https://api.kynajewels.com/api/referrals/promos/redeem",
         { referFrdId: referralCode },
         {
           headers: {

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://api.kynajewels.com/api';
 
 // Test data
 const testProductId = '64f8a1b2c3d4e5f6a7b8c9d0'; // Sample product ID

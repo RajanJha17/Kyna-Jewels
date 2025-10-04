@@ -170,7 +170,7 @@ server {
 
     # Health check endpoint
     location /health {
-        proxy_pass http://localhost:5000/api/health;
+        proxy_pass https://api.kynajewels.com/api/health;
         access_log off;
     }
 }

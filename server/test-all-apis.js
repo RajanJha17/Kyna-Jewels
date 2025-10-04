@@ -1,7 +1,7 @@
 // Comprehensive API testing script
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'https://api.kynajewels.com/api';
 const SAMPLE_PRODUCT_ID = '68ce55145c0f1761afa25604'; // From the created sample
 
 // Test configurations

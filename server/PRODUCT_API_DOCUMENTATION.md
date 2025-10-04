@@ -5,7 +5,7 @@ This document describes the enhanced Product API endpoints for the Kyna Jewels e
 
 ## Base URL
 ```
-http://localhost:5000/api/products
+https://api.kynajewels.com/api/products
 ```
 
 ## Authentication
@@ -441,19 +441,19 @@ interface IProduct {
 
 ```bash
 # Get products with filters
-curl "http://localhost:5000/api/products?category=Gents Ring&diamondShape=RD&metal=RG&minPrice=10000&maxPrice=50000"
+curl "https://api.kynajewels.com/api/products?category=Gents Ring&diamondShape=RD&metal=RG&minPrice=10000&maxPrice=50000"
 
 # Get product price with overrides
-curl "http://localhost:5000/api/products/64f8a1b2c3d4e5f6a7b8c9d0/price?diamondSize=1.00&metal=WG&karat=22"
+curl "https://api.kynajewels.com/api/products/64f8a1b2c3d4e5f6a7b8c9d0/price?diamondSize=1.00&metal=WG&karat=22"
 
 # Get product images
-curl "http://localhost:5000/api/products/64f8a1b2c3d4e5f6a7b8c9d0/images?diamondShape=PR&metal=WG"
+curl "https://api.kynajewels.com/api/products/64f8a1b2c3d4e5f6a7b8c9d0/images?diamondShape=PR&metal=WG"
 
 # Search products
-curl "http://localhost:5000/api/products/search?q=diamond ring&category=Gents Ring"
+curl "https://api.kynajewels.com/api/products/search?q=diamond ring&category=Gents Ring"
 
 # Get available filters
-curl "http://localhost:5000/api/products/filters"
+curl "https://api.kynajewels.com/api/products/filters"
 ```
 
 ---

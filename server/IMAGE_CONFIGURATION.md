@@ -116,10 +116,10 @@ const response = await fetch('/api/products/GR1');
 2. **Test API Endpoints:**
    ```bash
    # Test earring images
-   curl "http://localhost:5000/api/products/ER66/images?diamondShape=EM&diamondSize=05&metalColour=WG&view=AV"
+   curl "https://api.kynajewels.com/api/products/ER66/images?diamondShape=EM&diamondSize=05&metalColour=WG&view=AV"
    
    # Test gents ring images
-   curl "http://localhost:5000/api/products/GR1/images?diamondShape=RD&diamondSize=70&tone=2T&finish=BR&metal=RG&view=45"
+   curl "https://api.kynajewels.com/api/products/GR1/images?diamondShape=RD&diamondSize=70&tone=2T&finish=BR&metal=RG&view=45"
    ```
 
 3. **Verify URLs in Browser:**

@@ -12,7 +12,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'http://localhost:5000/api/blogs';
+const BASE_URL = 'https://api.kynajewels.com/api/blogs';
 
 // Test data
 const testBlog = {
@@ -245,7 +245,7 @@ async function runTests() {
   
   // Check if server is running
   try {
-    await axios.get('http://localhost:5000/api/test');
+    await axios.get('https://api.kynajewels.com/api/test');
     console.log('✅ Server is running');
   } catch (error) {
     console.log('❌ Server is not running. Please start the server first.');

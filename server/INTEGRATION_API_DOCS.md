@@ -264,10 +264,10 @@ fetch(`/api/reviews/${reviewId}/like`, {
 2. **Test Review API**:
    ```bash
    # Get reviews for a product
-   curl http://localhost:5000/api/reviews/product/PRODUCT_ID
+   curl https://api.kynajewels.com/api/reviews/product/PRODUCT_ID
    
    # Add a review (requires authentication)
-   curl -X POST http://localhost:5000/api/reviews \
+   curl -X POST https://api.kynajewels.com/api/reviews \
      -H "Authorization: Bearer YOUR_TOKEN" \
      -F "productId=PRODUCT_ID" \
      -F "rating=5" \
@@ -278,10 +278,10 @@ fetch(`/api/reviews/${reviewId}/like`, {
 3. **Test Gifting API**:
    ```bash
    # Get all gifting products
-   curl http://localhost:5000/api/gifting
+   curl https://api.kynajewels.com/api/gifting
    
    # Get products in price range
-   curl "http://localhost:5000/api/gifting?minPrice=1000&maxPrice=10000"
+   curl "https://api.kynajewels.com/api/gifting?minPrice=1000&maxPrice=10000"
    ```
 
 ## 🔄 Migration Notes

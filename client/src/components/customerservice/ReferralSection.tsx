@@ -55,7 +55,7 @@ export default function ReferralSection({ isOpen }: ReferralSectionProps) {
         .filter((email) => email.length > 0);
 
       const response = await axios.post(
-        "http://localhost:5000/api/referrals",
+        "https://api.kynajewels.com/api/referrals",
         {
           toEmails,
           note: referralForm.note,

@@ -10,7 +10,7 @@ This guide provides everything the frontend team needs to integrate with the Kyn
 
 ### **Base URL**
 ```
-Development: http://localhost:5000/api/products
+Development: https://api.kynajewels.com/api/products
 Production: https://yourdomain.com/api/products
 ```
 
