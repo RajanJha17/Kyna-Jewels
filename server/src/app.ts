@@ -114,14 +114,22 @@ app.use(
 
 // CORS configuration - Production ready
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL?.split(',') || ['https://kynajewels.com']
-    : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'],
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://kynajewels.com',
+      'https://www.kynajewels.com',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173'
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    }
+  },
   credentials: true,
-  optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 };
+
 
 app.use(cors(corsOptions));
 
