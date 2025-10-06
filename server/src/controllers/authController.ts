@@ -9,7 +9,21 @@ import {
   sendVerificationEmail,
   sendWelcomeEmail,
 } from '../services/emailService';
+import validator from "validator";
+import { deleteImageFromCloudinary, extractPublicIdFromUrl } from "../services/cloudinary";
 
+
+interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  displayName?: string;
+  secondaryEmail?: string;
+  phoneNumber?: string;
+  phone?: string;
+  country?: string;
+  state?: string;
+  zipCode?: string;
+}
 // Signup with email verification
 export const signup = async (req: Request, res: Response) => {
   const { email, password, name } = req.body;
@@ -346,44 +360,149 @@ export const getProfile = async (
 };
 
 // Update user profile
-export const updateProfile = async (req: Request, res: Response) => {
-  try {
-    const { firstName, lastName, phone } = req.body;
-    const userId = (req as any).userId;
+export const updateProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  console.log("👉 [updateProfile] Request received");
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+  try {
+    const userId = (req as any).user?.id;
+    console.log("🔹 userId from token:", userId);
+
+    if (!userId) {
+      console.warn("⚠ Authentication required — userId missing");
+      res.status(401).json({ message: "Authentication required." });
+      return;
     }
 
-    // Update fields
-    if (firstName) user.firstName = firstName;
-    if (lastName !== undefined) user.lastName = lastName;
-    if (phone !== undefined) user.phone = phone;
+    const {
+      firstName,
+      lastName,
+      displayName,
+      secondaryEmail,
+      phoneNumber,
+      phone,
+      country,
+      state,
+      zipCode,
+    } = req.body as UpdateProfileRequest;
 
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        isVerified: user.isVerified,
-        role: user.role,
-        lastLogin: user.lastLogin,
-        addresses: user.addresses,
-        isActive: user.isActive,
-        availableOffers: user.availableOffers,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
+    console.log("📦 Request body:", {
+      firstName,
+      lastName,
+      displayName,
+      secondaryEmail,
+      phoneNumber,
+      phone,
+      country,
+      state,
+      zipCode,
     });
-  } catch (error) {
-    console.log("Error in updateProfile ", error);
-    res.status(500).json({ success: false, message: "Server error" });
+
+    // Get the uploaded file (if any) from multer
+    const profileImageFile = (req as any).file;
+    console.log("🖼 Uploaded file info:", profileImageFile ? {
+      originalname: profileImageFile.originalname,
+      mimetype: profileImageFile.mimetype,
+      size: profileImageFile.size,
+      path: profileImageFile.path // Cloudinary URL
+    } : "No file uploaded");
+
+    // Validate secondary email if provided
+    if (secondaryEmail && !validator.isEmail(secondaryEmail)) {
+      console.warn("⚠ Invalid secondary email:", secondaryEmail);
+      res.status(400).json({ message: "Invalid secondary email address." });
+      return;
+    }
+
+    // Get current user to handle profile image updates
+    const currentUser = await User.findById(userId);
+    console.log("👤 Current user fetched:", currentUser ? "found" : "not found");
+
+    if (!currentUser) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    // Build update object with only provided fields
+    const updateData: Partial<UpdateProfileRequest & { profileImage?: string }> = {};
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (secondaryEmail !== undefined) {
+      updateData.secondaryEmail = validator.normalizeEmail(secondaryEmail) || secondaryEmail;
+    }
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+    if (phone !== undefined) updateData.phone = phone;
+    if (country !== undefined) updateData.country = country;
+    if (state !== undefined) updateData.state = state;
+    if (zipCode !== undefined) updateData.zipCode = zipCode;
+
+    console.log("📝 Data to update:", updateData);
+
+    // Handle profile image upload
+    let newProfileImageUrl = currentUser.profileImage;
+
+    try {
+      if (profileImageFile && profileImageFile.path) {
+        console.log("📤 Processing new profile image from Cloudinary");
+
+        // Delete old image if it exists
+        if (currentUser.profileImage) {
+          const oldPublicId = extractPublicIdFromUrl(currentUser.profileImage);
+          if (oldPublicId) {
+            console.log("🗑 Deleting old image from Cloudinary:", oldPublicId);
+            await deleteImageFromCloudinary(oldPublicId);
+          }
+        }
+
+        // Use the Cloudinary URL provided by multer
+        newProfileImageUrl = profileImageFile.path;
+        updateData.profileImage = newProfileImageUrl;
+        console.log("✅ New profile image URL:", newProfileImageUrl);
+      } else {
+        console.log("ℹ No new image uploaded — keeping current image");
+      }
+    } catch (imageError) {
+      console.error("❌ Image upload/delete error:", imageError);
+      res.status(500).json({ message: "Error processing profile image. Please try again." });
+      return;
+    }
+
+    // Update user in database
+    console.log("💾 Saving user update to database...");
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-passwordHash -otp -otpExpires -resetPasswordToken -resetPasswordExpires");
+
+    console.log("📡 Updated user:", updatedUser ? "success" : "not found");
+
+    if (!updatedUser) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    console.log("🎉 Profile updated successfully for user:", updatedUser._id);
+
+    res.json({
+      message: "Profile updated successfully.",
+      user: updatedUser,
+      profileImage: newProfileImageUrl,
+    });
+  } catch (err) {
+    console.error("💥 Profile update error:", err);
+    if (err instanceof Error && (err as any).name === "ValidationError") {
+      res.status(400).json({
+        message: "Validation error",
+        details: (err as any).message,
+      });
+      return;
+    }
+    res.status(500).json({ message: "Server error during profile update." });
+    next(err);
   }
 };
