@@ -93,15 +93,36 @@ class ApiService {
       body: JSON.stringify({ password }),
     });
   }
-async updateProfile(profileData: Record<string, any>) {
-  return this.makeRequest("/auth/profile", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json", // explicitly JSON
-    },
-    body: JSON.stringify(profileData),
-  });
-}
+  async updateProfile(profileData: Record<string, any>, profileImage?: File) {
+    // If there's an image, use FormData
+    if (profileImage) {
+      const formData = new FormData();
+      
+      // Add all profile data fields
+      Object.keys(profileData).forEach(key => {
+        if (profileData[key] !== undefined && profileData[key] !== null) {
+          formData.append(key, profileData[key]);
+        }
+      });
+      
+      // Add the image file
+      formData.append('profileImage', profileImage);
+      
+      return this.makeRequest("/auth/profile", {
+        method: "PUT",
+        body: formData, // Don't set Content-Type header, let browser set it with boundary
+      });
+    } else {
+      // No image, use JSON
+      return this.makeRequest("/auth/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profileData),
+      });
+    }
+  }
 
 
   async checkAuth() {
