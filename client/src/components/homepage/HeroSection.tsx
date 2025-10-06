@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import vid1 from "/heropage/Bracelet.mov";
-import vid2 from "/heropage/Ring and Braclelet.mov";
+import vid2 from "/heropage/Ring-and-Braclelet.mov";
 
 const HeroSection: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
