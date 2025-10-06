@@ -10,9 +10,12 @@ import {
   MessageCircle,
   Share2,
 } from "lucide-react";
+// Use Three.js with enhanced rendering for jewelry
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { useParams, Link } from "react-router-dom";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -99,7 +102,7 @@ const sampleProduct = {
   ],
 };
 
-const GLBViewer = ({
+const EnhancedGLBViewer = ({
   modelUrl,
   className,
   isMain = false,
@@ -113,127 +116,179 @@ const GLBViewer = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const modelRef = useRef<THREE.Group | null>(null);
   const animationIdRef = useRef<number | null>(null);
+  const controlsRef = useRef<OrbitControls | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    if (!mountRef.current || !isMain) {
+      setIsLoading(false);
+      return;
+    }
 
-    const initThreeJS = () => {
+    const initEnhancedThreeJS = () => {
       if (!mountRef.current) return;
+
+      setIsLoading(true);
 
       // Scene setup
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xf5f5f5);
+      scene.background = new THREE.Color(0xf8f9fa);
       sceneRef.current = scene;
 
-      // Camera setup
+      // Camera setup with better FOV for jewelry
       const camera = new THREE.PerspectiveCamera(
-        75,
+        35,
         mountRef.current.clientWidth / mountRef.current.clientHeight,
         0.1,
         1000
       );
-      camera.position.set(0, 0, 5);
+      camera.position.set(0, 0, 8);
 
-      // Renderer setup
+      // Enhanced renderer setup
       const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
+        powerPreference: "high-performance",
       });
       renderer.setSize(
         mountRef.current.clientWidth,
         mountRef.current.clientHeight
       );
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
       mountRef.current.appendChild(renderer.domElement);
       rendererRef.current = renderer;
 
-      // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      // Enhanced lighting setup for jewelry
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
       scene.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(10, 10, 5);
-      directionalLight.castShadow = true;
-      scene.add(directionalLight);
+      // Key light for jewelry
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      keyLight.position.set(5, 10, 5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.setScalar(2048);
+      keyLight.shadow.camera.near = 1;
+      keyLight.shadow.camera.far = 50;
+      keyLight.shadow.camera.left = -10;
+      keyLight.shadow.camera.right = 10;
+      keyLight.shadow.camera.top = 10;
+      keyLight.shadow.camera.bottom = -10;
+      scene.add(keyLight);
 
-      const pointLight = new THREE.PointLight(0xffffff, 0.3);
-      pointLight.position.set(-10, -10, -5);
-      scene.add(pointLight);
+      // Fill light
+      const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+      fillLight.position.set(-5, 5, 3);
+      scene.add(fillLight);
 
-      let diamond: THREE.Mesh | null = null;
+      // Rim light for sparkle effect
+      const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      rimLight.position.set(0, -10, -5);
+      scene.add(rimLight);
 
-      function createPlaceholderModel() {
-        const group = new THREE.Group();
+      // Point lights for additional sparkle
+      const sparkleLight1 = new THREE.PointLight(0xffffff, 0.5, 10);
+      sparkleLight1.position.set(3, 3, 3);
+      scene.add(sparkleLight1);
 
-        // Ring band
-        const ringGeometry = new THREE.TorusGeometry(1.2, 0.15, 8, 32);
-        const ringMaterial = new THREE.MeshStandardMaterial({
-          color: 0xffd700,
-          metalness: 0.9,
-          roughness: 0.1,
-        });
-        const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-        ring.castShadow = true;
-        group.add(ring);
+      const sparkleLight2 = new THREE.PointLight(0xffffff, 0.5, 10);
+      sparkleLight2.position.set(-3, -3, 3);
+      scene.add(sparkleLight2);
 
-        // Center diamond (simplified)
-        const diamondGeometry = new THREE.OctahedronGeometry(0.3);
-        const diamondMaterial = new THREE.MeshPhysicalMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.9,
-          roughness: 0,
-          metalness: 0,
-          reflectivity: 1,
-          clearcoat: 1,
-          clearcoatRoughness: 0,
-        });
-        diamond = new THREE.Mesh(diamondGeometry, diamondMaterial);
-        diamond.position.y = 0.2;
-        diamond.castShadow = true;
-        group.add(diamond);
-
-        // Small accent diamonds
-        for (let i = 0; i < 8; i++) {
-          const angle = (i / 8) * Math.PI * 2;
-          const smallDiamondGeometry = new THREE.OctahedronGeometry(0.08);
-          const smallDiamond = new THREE.Mesh(
-            smallDiamondGeometry,
-            diamondMaterial
-          );
-          smallDiamond.position.set(
-            Math.cos(angle) * 1.3,
-            0.1,
-            Math.sin(angle) * 1.3
-          );
-          smallDiamond.scale.set(0.7, 0.7, 0.7);
-          group.add(smallDiamond);
+      // Environment mapping for realistic reflections
+      const rgbeLoader = new RGBELoader();
+      rgbeLoader.load(
+        "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr",
+        (texture) => {
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+          scene.environment = texture;
+          scene.background = new THREE.Color(0xf8f9fa); // Keep solid background
+        },
+        undefined,
+        (error) => {
+          console.warn("Could not load HDR environment map:", error);
         }
+      );
 
-        scene.add(group);
-        modelRef.current = group;
-      }
+      // Enhanced controls
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.enableZoom = true;
+      controls.enableRotate = true;
+      controls.enablePan = false;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.5;
+      controls.minDistance = 3;
+      controls.maxDistance = 15;
+      controls.maxPolarAngle = Math.PI / 1.5;
+      controls.minPolarAngle = Math.PI / 6;
+      controlsRef.current = controls;
 
-      // Load GLB Model
+      // // Enhanced material creation for jewelry
+      // const createEnhancedMaterial = (originalMaterial: THREE.Material, materialName: string) => {
+      //   const name = materialName.toLowerCase();
+
+      //   if (name.includes('diamond') || name.includes('gem') || name.includes('stone')) {
+      //     // Enhanced diamond material
+      //     const diamondMaterial = new THREE.MeshPhysicalMaterial({
+      //       color: 0xffffff,
+      //       transparent: true,
+      //       opacity: 0.95,
+      //       roughness: 0,
+      //       metalness: 0,
+      //       transmission: 0.95,
+      //       thickness: 0.5,
+      //       ior: 2.42, // Diamond IOR
+      //       reflectivity: 1,
+      //       clearcoat: 1,
+      //       clearcoatRoughness: 0,
+      //       envMapIntensity: 2,
+      //     });
+      //     return diamondMaterial;
+      //   } else if (name.includes('gold') || name.includes('metal')) {
+      //     // Enhanced gold material
+      //     const goldMaterial = new THREE.MeshStandardMaterial({
+      //       color: name.includes('white') ? 0xe8e8e8 :
+      //              name.includes('rose') ? 0xf4c2a1 : 0xffd700,
+      //       metalness: 1,
+      //       roughness: 0.1,
+      //       envMapIntensity: 1.5,
+      //     });
+      //     return goldMaterial;
+      //   } else if (name.includes('silver') || name.includes('platinum')) {
+      //     // Enhanced silver/platinum material
+      //     const metalMaterial = new THREE.MeshStandardMaterial({
+      //       color: name.includes('platinum') ? 0xe5e4e2 : 0xc0c0c0,
+      //       metalness: 1,
+      //       roughness: 0.08,
+      //       envMapIntensity: 1.8,
+      //     });
+      //     return metalMaterial;
+      //   }
+
+      //   return originalMaterial;
+      // };
+
+      // Load GLB Model with enhanced materials
       if (modelUrl && modelUrl.endsWith(".glb")) {
-        console.log("Attempting to load GLB model:", modelUrl);
-
         const loader = new GLTFLoader();
 
-        // Setup DRACO loader for compressed models
         const dracoLoader = new DRACOLoader();
-        // Use CDN for DRACO decoder files
         dracoLoader.setDecoderPath(
           "https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
         );
-        dracoLoader.preload();
         loader.setDRACOLoader(dracoLoader);
 
         loader.load(
           modelUrl,
           (gltf) => {
-            console.log("Successfully loaded GLB model:", modelUrl, gltf);
+            console.log("Successfully loaded enhanced GLB model:", modelUrl);
             const model = gltf.scene;
 
             // Clear any existing models
@@ -241,113 +296,64 @@ const GLBViewer = ({
               scene.remove(modelRef.current);
             }
 
-            // Auto-scale the model to fit the scene
+            // Auto-scale and center the model
             const box = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3()).length();
             const center = box.getCenter(new THREE.Vector3());
 
-            // Scale the model to fit in the view
-            const scale = isMain ? 2 / size : 1.6 / size;
+            const scale = 3 / size;
             model.scale.setScalar(scale);
-
-            // Center the model
             model.position.copy(center).multiplyScalar(-scale);
+
+            // Enhance materials for jewelry rendering
+            model.traverse((child: any) => {
+              if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+                if (child.material) {
+                  // const materialName = child.material.name || child.name || '';
+                  // const enhancedMaterial = createEnhancedMaterial(child.material, materialName);
+                  const enhancedMaterial = child.material.clone();
+                  child.material = enhancedMaterial;
+                  child.material.needsUpdate = true;
+                }
+              }
+            });
 
             scene.add(model);
             modelRef.current = model;
-            console.log("GLB model added to scene successfully");
+            setIsLoading(false);
 
-            // Dispose of the DRACO loader after use
+            console.log("Enhanced GLB model added to scene successfully");
             dracoLoader.dispose();
           },
           (progress) => {
-            const progressPercent = (progress.loaded / progress.total) * 100;
-            console.log(
-              "Loading progress for",
-              modelUrl,
-              ":",
-              progressPercent + "%"
+            const progressPercent = Math.round(
+              (progress.loaded / progress.total) * 100
             );
+            setLoadingProgress(progressPercent);
           },
           (error) => {
-            console.error("Error loading GLB model:", modelUrl, error);
-            console.log("Falling back to placeholder model");
+            console.error("Error loading GLB model:", error);
+            setIsLoading(false);
             dracoLoader.dispose();
-            createPlaceholderModel();
           }
         );
-      } else {
-        console.log("No valid GLB URL provided, using placeholder model");
-        createPlaceholderModel();
-      }
-
-      // Controls for main viewer (mouse interaction)
-      let isDragging = false;
-      let previousMousePosition = { x: 0, y: 0 };
-
-      const handleMouseDown = (event: MouseEvent) => {
-        if (!isMain) return;
-        isDragging = true;
-        previousMousePosition = { x: event.clientX, y: event.clientY };
-        renderer.domElement.style.cursor = "grabbing";
-      };
-
-      const handleMouseMove = (event: MouseEvent) => {
-        if (!isDragging || !isMain || !modelRef.current) return;
-
-        const deltaMove = {
-          x: event.clientX - previousMousePosition.x,
-          y: event.clientY - previousMousePosition.y,
-        };
-
-        const deltaRotationQuaternion = new THREE.Quaternion().setFromEuler(
-          new THREE.Euler(deltaMove.y * 0.01, deltaMove.x * 0.01, 0, "XYZ")
-        );
-
-        modelRef.current.quaternion.multiplyQuaternions(
-          deltaRotationQuaternion,
-          modelRef.current.quaternion
-        );
-        previousMousePosition = { x: event.clientX, y: event.clientY };
-      };
-
-      const handleMouseUp = () => {
-        isDragging = false;
-        if (rendererRef.current) {
-          rendererRef.current.domElement.style.cursor = isMain
-            ? "grab"
-            : "pointer";
-        }
-      };
-
-      const handleWheel = (event: WheelEvent) => {
-        if (!isMain) return;
-        event.preventDefault();
-        camera.position.z += event.deltaY * 0.01;
-        camera.position.z = Math.max(2, Math.min(10, camera.position.z));
-      };
-
-      if (isMain) {
-        renderer.domElement.style.cursor = "grab";
-        renderer.domElement.addEventListener("mousedown", handleMouseDown);
-        window.addEventListener("mousemove", handleMouseMove);
-        window.addEventListener("mouseup", handleMouseUp);
-        renderer.domElement.addEventListener("wheel", handleWheel);
       }
 
       // Animation loop
       const animate = () => {
         animationIdRef.current = requestAnimationFrame(animate);
 
-        // Auto-rotate for thumbnail
-        if (!isMain && modelRef.current) {
-          modelRef.current.rotation.y += 0.01;
+        if (controlsRef.current) {
+          controlsRef.current.update();
         }
 
-        // Sparkle effect for diamond
-        if (diamond) {
-          diamond.rotation.y += 0.02;
-        }
+        // Add subtle animation to sparkle lights
+        const time = Date.now() * 0.001;
+        sparkleLight1.intensity = 0.3 + 0.2 * Math.sin(time * 2);
+        sparkleLight2.intensity = 0.3 + 0.2 * Math.cos(time * 2.5);
 
         renderer.render(scene, camera);
       };
@@ -367,16 +373,13 @@ const GLBViewer = ({
 
       window.addEventListener("resize", handleResize);
 
-      // Store cleanup functions
+      // Cleanup function
       const cleanup = () => {
         if (animationIdRef.current) {
           cancelAnimationFrame(animationIdRef.current);
         }
-        if (isMain) {
-          renderer.domElement.removeEventListener("mousedown", handleMouseDown);
-          window.removeEventListener("mousemove", handleMouseMove);
-          window.removeEventListener("mouseup", handleMouseUp);
-          renderer.domElement.removeEventListener("wheel", handleWheel);
+        if (controlsRef.current) {
+          controlsRef.current.dispose();
         }
         window.removeEventListener("resize", handleResize);
         if (
@@ -392,9 +395,8 @@ const GLBViewer = ({
       return cleanup;
     };
 
-    const cleanup = initThreeJS();
+    const cleanup = initEnhancedThreeJS();
 
-    // Cleanup on unmount
     return () => {
       if (cleanup) {
         cleanup();
@@ -402,7 +404,55 @@ const GLBViewer = ({
     };
   }, [modelUrl, isMain]);
 
-  return <div ref={mountRef} className={className} />;
+  if (!isMain) {
+    // For thumbnails, show a simple placeholder
+    return (
+      <div className={`relative ${className}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <div className="text-2xl">💍</div>
+          <div className="absolute top-1 right-1 bg-[#328F94] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+            3D
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <div ref={mountRef} className="w-full h-full" />
+
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 border-4 border-[#328F94] border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div className="text-[#328F94] font-medium">
+            Loading Enhanced 3D Model...
+          </div>
+          <div className="text-sm text-gray-600 mt-2">{loadingProgress}%</div>
+        </div>
+      )}
+
+      {/* 3D Model indicator */}
+      {!isLoading && (
+        <>
+          <div className="absolute bottom-16 left-4 bg-gradient-to-r from-[#328F94] to-[#2a7a7e] text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+            ✨ Enhanced Realistic 3D Model
+          </div>
+          <div className="absolute bottom-4 left-4 right-4 text-sm text-gray-600 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Controls:</span>
+              <div className="flex gap-4 text-xs">
+                <span>🖱️ Drag to rotate</span>
+                <span>🎯 Scroll to zoom</span>
+                <span>⚡ Auto-rotate enabled</span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
 
 const ProductDetail = () => {
@@ -487,6 +537,29 @@ const ProductDetail = () => {
     return isGLB || imagePath.endsWith(".glb");
   };
 
+  // Function to render thumbnail content
+  const renderThumbnailContent = (image: string, index: number) => {
+    if (is3DModel(image, index)) {
+      // Show enhanced viewer for thumbnails
+      return (
+        <EnhancedGLBViewer
+          modelUrl={image}
+          className="w-full h-full"
+          isMain={false}
+        />
+      );
+    } else {
+      // Show regular image for non-3D thumbnails
+      return (
+        <img
+          src={image}
+          alt={`Product ${index + 1}`}
+          className="w-full h-full object-cover"
+        />
+      );
+    }
+  };
+
   return (
     <div style={{ fontFamily: "Poppins" }} className="flex justify-center ">
       <SEO
@@ -543,24 +616,7 @@ const ProductDetail = () => {
                             : "border-neutral-200 hover:border-neutral-300"
                         }`}
                       >
-                        {is3DModel(image, index) ? (
-                          <div className="relative w-full h-full bg-gradient-to-br from-gray-100 to-gray-200">
-                            <GLBViewer
-                              modelUrl={image}
-                              className="w-full h-full"
-                              isMain={false}
-                            />
-                            <div className="absolute top-1 right-1 bg-[#328F94] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                              3D
-                            </div>
-                          </div>
-                        ) : (
-                          <img
-                            src={image}
-                            alt={`Product ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                        {renderThumbnailContent(image, index)}
                       </button>
                     ))}
                   </div>
@@ -579,25 +635,11 @@ const ProductDetail = () => {
                     sampleProduct.images[selectedImage],
                     selectedImage
                   ) ? (
-                    <div className="relative w-full h-full">
-                      <GLBViewer
-                        modelUrl={sampleProduct.images[selectedImage]}
-                        className="w-full h-full"
-                        isMain={true}
-                      />
-                      <div className="absolute bottom-16 left-4 bg-gradient-to-r from-[#328F94] to-[#2a7a7e] text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                        🔄 Interactive 3D Model
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4 text-sm text-gray-600 bg-white/95 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">Controls:</span>
-                          <div className="flex gap-4 text-xs">
-                            <span>🖱️ Drag to rotate</span>
-                            <span>🎯 Scroll to zoom</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <EnhancedGLBViewer
+                      modelUrl={sampleProduct.images[selectedImage]}
+                      className="w-full h-full"
+                      isMain={true}
+                    />
                   ) : (
                     <img
                       src={sampleProduct.images[selectedImage]}
@@ -641,24 +683,7 @@ const ProductDetail = () => {
                             : "border-neutral-200 hover:border-neutral-300"
                         }`}
                       >
-                        {is3DModel(image, index) ? (
-                          <div className="relative w-full h-full bg-gradient-to-br from-gray-100 to-gray-200">
-                            <GLBViewer
-                              modelUrl={image}
-                              className="w-full h-full"
-                              isMain={false}
-                            />
-                            <div className="absolute top-1 right-1 bg-[#328F94] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                              3D
-                            </div>
-                          </div>
-                        ) : (
-                          <img
-                            src={image}
-                            alt={`Product ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                        {renderThumbnailContent(image, index)}
                       </button>
                     ))}
                   </div>

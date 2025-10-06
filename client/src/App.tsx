@@ -40,6 +40,13 @@ import Blogs from "./pages/Blogs";
 import BlogPost from "./pages/BlogPost";
 import ProductDetail from "./pages/ProductDetail";
 import Product3d from "./pages/Product3d";
+import JewelleryPage from "./pages/JewelleryPage";
+import BuildYourJewelleryRings from "./pages/Build_yr_own/BuildYourJewelleryRings";
+import GoldPricePage from "./pages/GoldPricePage";
+import BuildYourJewelleryPendants from "./pages/Build_yr_own/BuildYourJewelleryPendants";
+import BuildYourJewelleryBracelets from "./pages/Build_yr_own/BuildYourJewelleryBracelet";
+import BuildYourJewelleryBands from "./pages/Build_yr_own/BuildYourJewelleryBands";
+import BuildYourJewelleryEarrings from "./pages/Build_yr_own/BuildYourJewelleryEarings";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const isAuthenticated = useSelector(
@@ -97,6 +104,7 @@ function App() {
           <Route path="/product-3d" element={<Product3d />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/product" element={<ProductDetail />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route
             path="/login"
             element={
@@ -184,21 +192,27 @@ function App() {
             path="/upload-your-design/earrings"
             element={<EarringBuilder />}
           />
+          <Route path="/jewellery" element={<JewelleryPage />} />
+          <Route path="/jewellery/:category" element={<JewelleryPage />} />
           <Route
-            path="/jewellery"
-            element={
-              <div className="min-h-screen flex items-center justify-center">
-                <h1 className="text-4xl">Jewellery Page</h1>
-              </div>
-            }
+            path="/build-your-jewellery/Rings"
+            element={<BuildYourJewelleryRings />}
           />
           <Route
-            path="/jewellery/:category"
-            element={
-              <div className="min-h-screen flex items-center justify-center">
-                <h1 className="text-4xl">Jewellery Category</h1>
-              </div>
-            }
+            path="/build-your-jewellery/Pendants"
+            element={<BuildYourJewelleryPendants />}
+          />
+          <Route
+            path="/build-your-jewellery/Bracelets"
+            element={<BuildYourJewelleryBracelets />}
+          />
+          <Route
+            path="/build-your-jewellery/Bands"
+            element={<BuildYourJewelleryBands />}
+          />
+          <Route
+            path="/build-your-jewellery/Earrings"
+            element={<BuildYourJewelleryEarrings />}
           />
           <Route
             path="/engraving"
@@ -249,6 +263,7 @@ function App() {
             }
           />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/gold-prices" element={<GoldPricePage />} />
         </Routes>
 
         <Footer />
