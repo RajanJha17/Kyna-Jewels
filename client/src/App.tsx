@@ -157,6 +157,14 @@ function App() {
             path="/pendants/:subcategory"
             element={<ProductsPage category="pendants" />}
           />
+          <Route
+            path="/bracelets"
+            element={<ProductsPage category="bracelets" />}
+          />
+          <Route
+            path="/bracelets/:subcategory"
+            element={<ProductsPage category="bracelets" />}
+          />
           <Route path="/terms-conditions" element={<TermsAndConditions />} />
           <Route path="/customer-service" element={<CustomerService />} />
           <Route

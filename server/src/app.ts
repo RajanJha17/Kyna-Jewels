@@ -33,66 +33,77 @@ import { TrackingService } from "./services/TrackingService";
 import { createSequel247Service } from "./services/Sequel247Service";
 import { Sequel247Config } from "./types/tracking";
 import { seedTrackingData } from "./utils/seedTrackingData";
-import { startCronJobs, startTrackingCronJob } from './services/cronService';
-import { errorHandler, notFoundHandler, asyncHandler } from './middleware/errorHandler';
-import { healthService } from './services/healthService';
-import { validateProductionConfig } from './config/production';
-import { dynamicSizeLimit } from './middleware/requestLimits';
-import { apiVersioning, getVersionInfo, deprecationWarning } from './middleware/apiVersioning';
-import { monitoringMiddleware } from './services/advancedMonitoring';
-import { initializeRedis, closeRedisConnection } from './services/sessionService';
+import { startCronJobs, startTrackingCronJob } from "./services/cronService";
+import {
+  errorHandler,
+  notFoundHandler,
+  asyncHandler,
+} from "./middleware/errorHandler";
+import { healthService } from "./services/healthService";
+import { validateProductionConfig } from "./config/production";
+import { dynamicSizeLimit } from "./middleware/requestLimits";
+import {
+  apiVersioning,
+  getVersionInfo,
+  deprecationWarning,
+} from "./middleware/apiVersioning";
+import { monitoringMiddleware } from "./services/advancedMonitoring";
+import {
+  initializeRedis,
+  closeRedisConnection,
+} from "./services/sessionService";
 
 // Load environment variables FIRST
 dotenv.config();
 
 // Environment variable validation
 const requiredEnvVars = [
-  'JWT_SECRET',
-  'MONGO_URI',
-  'CCAVENUE_MERCHANT_ID',
-  'CCAVENUE_ACCESS_CODE',
-  'CCAVENUE_WORKING_KEY'
+  "JWT_SECRET",
+  "MONGO_URI",
+  "CCAVENUE_MERCHANT_ID",
+  "CCAVENUE_ACCESS_CODE",
+  "CCAVENUE_WORKING_KEY",
 ];
 
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 if (missingVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingVars);
-  console.error('Please set these variables in your .env file');
-  console.error('Current .env file location:', process.cwd() + '/.env');
+  console.error("❌ Missing required environment variables:", missingVars);
+  console.error("Please set these variables in your .env file");
+  console.error("Current .env file location:", process.cwd() + "/.env");
   process.exit(1);
 }
 
 // Set default environment variables for development only
-if (process.env.NODE_ENV !== 'production') {
-if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = "development";
-}
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = "dev-secret-key-change-in-production";
-}
-if (!process.env.PORT) {
-  process.env.PORT = "5000";
-}
-if (!process.env.MONGO_URI) {
-  process.env.MONGO_URI = "mongodb://localhost:27017/kyna-jewels";
+if (process.env.NODE_ENV !== "production") {
+  if (!process.env.NODE_ENV) {
+    process.env.NODE_ENV = "development";
+  }
+  if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = "dev-secret-key-change-in-production";
+  }
+  if (!process.env.PORT) {
+    process.env.PORT = "5000";
+  }
+  if (!process.env.MONGO_URI) {
+    process.env.MONGO_URI = "mongodb://localhost:27017/kyna-jewels";
   }
 }
 
 // Sequel247 configuration - NO DEFAULT VALUES FOR PRODUCTION
 if (!process.env.SEQUEL247_TEST_ENDPOINT) {
-  console.warn('⚠️ SEQUEL247_TEST_ENDPOINT not set');
+  console.warn("⚠️ SEQUEL247_TEST_ENDPOINT not set");
 }
 if (!process.env.SEQUEL247_TEST_TOKEN) {
-  console.warn('⚠️ SEQUEL247_TEST_TOKEN not set');
+  console.warn("⚠️ SEQUEL247_TEST_TOKEN not set");
 }
 if (!process.env.SEQUEL247_PROD_ENDPOINT) {
-  console.warn('⚠️ SEQUEL247_PROD_ENDPOINT not set');
+  console.warn("⚠️ SEQUEL247_PROD_ENDPOINT not set");
 }
 if (!process.env.SEQUEL247_PROD_TOKEN) {
-  console.warn('⚠️ SEQUEL247_PROD_TOKEN not set');
+  console.warn("⚠️ SEQUEL247_PROD_TOKEN not set");
 }
 if (!process.env.SEQUEL247_STORE_CODE) {
-  console.warn('⚠️ SEQUEL247_STORE_CODE not set');
+  console.warn("⚠️ SEQUEL247_STORE_CODE not set");
 }
 
 const app: Express = express();
@@ -116,10 +127,11 @@ app.use(
 const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
-      'https://kynajewels.com',
-      'https://www.kynajewels.com',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173'
+      "https://kynajewels.com",
+      "https://www.kynajewels.com",
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+      "http://localhost:5173",
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -130,16 +142,15 @@ const corsOptions = {
   credentials: true,
 };
 
-
 app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // limit each IP to 100 requests per windowMs in production
+  max: process.env.NODE_ENV === "production" ? 100 : 1000, // limit each IP to 100 requests per windowMs in production
   message: {
-    error: 'Too many requests from this IP, please try again later.',
-    retryAfter: '15 minutes'
+    error: "Too many requests from this IP, please try again later.",
+    retryAfter: "15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -152,7 +163,7 @@ app.use(limiter);
 app.use(dynamicSizeLimit);
 
 // Apply API versioning
-app.use('/api', apiVersioning);
+app.use("/api", apiVersioning);
 
 // Apply monitoring middleware
 app.use(monitoringMiddleware);
@@ -162,8 +173,8 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // limit each IP to 5 requests per windowMs
   message: {
-    error: 'Too many authentication attempts, please try again later.',
-    retryAfter: '15 minutes'
+    error: "Too many authentication attempts, please try again later.",
+    retryAfter: "15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -187,13 +198,13 @@ app.use(cookieParser());
 // Request metrics middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
-  
-  res.on('finish', () => {
+
+  res.on("finish", () => {
     const duration = Date.now() - startTime;
     const success = res.statusCode < 400;
     healthService.recordRequest(success, duration);
   });
-  
+
   next();
 });
 
@@ -238,26 +249,26 @@ initializeTrackingServices();
 if (process.env.REDIS_HOST) {
   try {
     initializeRedis();
-    console.log('✅ Redis initialized for session storage');
+    console.log("✅ Redis initialized for session storage");
   } catch (error) {
-    console.warn('⚠️ Redis not available, using memory storage');
+    console.warn("⚠️ Redis not available, using memory storage");
   }
 }
 
 // Startup validation
 const validateStartup = () => {
-  console.log('🔍 Validating startup configuration...');
-  
+  console.log("🔍 Validating startup configuration...");
+
   // Use production config validation
   const validation = validateProductionConfig();
-  
+
   if (!validation.isValid) {
-    console.error('❌ Configuration validation failed:');
-    validation.errors.forEach(error => console.error(`  - ${error}`));
+    console.error("❌ Configuration validation failed:");
+    validation.errors.forEach((error) => console.error(`  - ${error}`));
     process.exit(1);
   }
-  
-  console.log('✅ Startup validation completed');
+
+  console.log("✅ Startup validation completed");
 };
 
 // Run startup validation
@@ -269,16 +280,22 @@ app.get("/api/test", (req: Request, res: Response) => {
 });
 
 // Comprehensive health check endpoint
-app.get("/api/health", asyncHandler(async (req: Request, res: Response) => {
-  const health = await healthService.getHealthStatus();
-  res.json(health);
-}));
+app.get(
+  "/api/health",
+  asyncHandler(async (req: Request, res: Response) => {
+    const health = await healthService.getHealthStatus();
+    res.json(health);
+  })
+);
 
 // Simple health check endpoint for load balancers
-app.get("/api/health/simple", asyncHandler(async (req: Request, res: Response) => {
-  const health = await healthService.getSimpleHealth();
-  res.json(health);
-}));
+app.get(
+  "/api/health/simple",
+  asyncHandler(async (req: Request, res: Response) => {
+    const health = await healthService.getSimpleHealth();
+    res.json(health);
+  })
+);
 
 // API Documentation endpoint
 app.get("/api", (req: Request, res: Response) => {
@@ -312,30 +329,50 @@ app.get("/api", (req: Request, res: Response) => {
 app.get("/api/version", getVersionInfo);
 
 // Advanced monitoring endpoints
-app.get("/api/monitoring/health", asyncHandler(async (req: Request, res: Response) => {
-  const { advancedMonitoring } = await import('./services/advancedMonitoring');
-  const health = await advancedMonitoring.getSystemHealth();
-  res.json(health);
-}));
+app.get(
+  "/api/monitoring/health",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { advancedMonitoring } = await import(
+      "./services/advancedMonitoring"
+    );
+    const health = await advancedMonitoring.getSystemHealth();
+    res.json(health);
+  })
+);
 
-app.get("/api/monitoring/metrics", asyncHandler(async (req: Request, res: Response) => {
-  const { advancedMonitoring } = await import('./services/advancedMonitoring');
-  const metrics = advancedMonitoring.getMetrics();
-  res.json({ success: true, metrics });
-}));
+app.get(
+  "/api/monitoring/metrics",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { advancedMonitoring } = await import(
+      "./services/advancedMonitoring"
+    );
+    const metrics = advancedMonitoring.getMetrics();
+    res.json({ success: true, metrics });
+  })
+);
 
-app.get("/api/monitoring/alerts", asyncHandler(async (req: Request, res: Response) => {
-  const { advancedMonitoring } = await import('./services/advancedMonitoring');
-  const alerts = advancedMonitoring.getAlerts();
-  res.json({ success: true, alerts });
-}));
+app.get(
+  "/api/monitoring/alerts",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { advancedMonitoring } = await import(
+      "./services/advancedMonitoring"
+    );
+    const alerts = advancedMonitoring.getAlerts();
+    res.json({ success: true, alerts });
+  })
+);
 
-app.get("/api/monitoring/trends", asyncHandler(async (req: Request, res: Response) => {
-  const { advancedMonitoring } = await import('./services/advancedMonitoring');
-  const hours = parseInt(req.query.hours as string) || 1;
-  const trends = advancedMonitoring.getPerformanceTrends(hours);
-  res.json({ success: true, trends });
-}));
+app.get(
+  "/api/monitoring/trends",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { advancedMonitoring } = await import(
+      "./services/advancedMonitoring"
+    );
+    const hours = parseInt(req.query.hours as string) || 1;
+    const trends = advancedMonitoring.getPerformanceTrends(hours);
+    res.json({ success: true, trends });
+  })
+);
 
 // Routes with deprecation warnings
 app.use("/api/auth", deprecationWarning, authRoutes);
@@ -363,100 +400,103 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // System health check endpoint
-app.get('/api/system/health', async (req: Request, res: Response) => {
+app.get("/api/system/health", async (req: Request, res: Response) => {
   try {
-    const { TrackingOrder } = await import('./models/TrackingOrder');
-    const { OrderModel } = await import('./models/orderModel');
-    
+    const { TrackingOrder } = await import("./models/TrackingOrder");
+    const { OrderModel } = await import("./models/orderModel");
+
     // Check orders pending updates
     const ordersToUpdate = await TrackingOrder.countDocuments({
       docketNumber: { $exists: true, $ne: null },
-      status: { $nin: ['DELIVERED', 'CANCELLED'] }
+      status: { $nin: ["DELIVERED", "CANCELLED"] },
     });
-    
+
     // Get last 5 successful updates
     const recentUpdates = await TrackingOrder.find({
-      status: { $nin: ['ORDER_PLACED'] }
+      status: { $nin: ["ORDER_PLACED"] },
     })
-    .sort({ updatedAt: -1 })
-    .limit(5)
-    .select('orderNumber status updatedAt');
-    
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .select("orderNumber status updatedAt");
+
     // Basic database connectivity check
     const totalOrders = await OrderModel.countDocuments();
     const totalTracking = await TrackingOrder.countDocuments();
-    
+
     res.json({
       success: true,
-      message: 'System is healthy',
+      message: "System is healthy",
       timestamp: new Date().toISOString(),
       cronJob: {
-        status: 'running',
-        frequency: 'Every 30 minutes',
-        nextUpdate: 'Within 30 minutes'
+        status: "running",
+        frequency: "Every 30 minutes",
+        nextUpdate: "Within 30 minutes",
       },
       database: {
         connected: true,
         totalOrders,
         totalTracking,
-        ordersToUpdate
+        ordersToUpdate,
       },
       recentActivity: recentUpdates,
       systemInfo: {
         environment: process.env.NODE_ENV,
-        uptime: process.uptime() + ' seconds'
-      }
+        uptime: process.uptime() + " seconds",
+      },
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    console.error("Health check error:", error);
     res.status(500).json({
       success: false,
-      message: 'System health check failed',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
+      message: "System health check failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
     });
   }
 });
 
 // Manual tracking update endpoint (for testing)
-app.post('/api/tracking/manual-update', async (req: Request, res: Response) => {
+app.post("/api/tracking/manual-update", async (req: Request, res: Response) => {
   try {
     // Get tracking service from the global scope
-    const { runTrackingUpdateJob } = await import('./services/cronService');
-    
+    const { runTrackingUpdateJob } = await import("./services/cronService");
+
     // We need to create a tracking service instance
     const sequelConfig: Sequel247Config = {
-      endpoint: process.env.NODE_ENV === "production"
-        ? process.env.SEQUEL247_PROD_ENDPOINT || "https://sequel247.com/"
-        : process.env.SEQUEL247_TEST_ENDPOINT || "https://test.sequel247.com/",
-      token: process.env.NODE_ENV === "production"
-        ? process.env.SEQUEL247_PROD_TOKEN || ""
-        : process.env.SEQUEL247_TEST_TOKEN || "",
+      endpoint:
+        process.env.NODE_ENV === "production"
+          ? process.env.SEQUEL247_PROD_ENDPOINT || "https://sequel247.com/"
+          : process.env.SEQUEL247_TEST_ENDPOINT ||
+            "https://test.sequel247.com/",
+      token:
+        process.env.NODE_ENV === "production"
+          ? process.env.SEQUEL247_PROD_TOKEN || ""
+          : process.env.SEQUEL247_TEST_TOKEN || "",
       storeCode: process.env.SEQUEL247_STORE_CODE || "BLRAK",
     };
-    
+
     const sequelService = createSequel247Service(sequelConfig);
     const trackingService = new TrackingService(sequelService);
-    
+
     const result = await runTrackingUpdateJob(trackingService);
-    
+
     res.json({
       success: true,
-      message: 'Manual tracking update completed',
-      data: result
+      message: "Manual tracking update completed",
+      data: result,
     });
   } catch (error) {
-    console.error('Manual tracking update error:', error);
+    console.error("Manual tracking update error:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to run manual tracking update',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      message: "Failed to run manual tracking update",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
 
 // 404 handler for undefined routes
-app.use('*', notFoundHandler);
+app.use("*", notFoundHandler);
 
 // Global error handling middleware
 app.use(errorHandler);
@@ -465,36 +505,36 @@ app.use(errorHandler);
 const PORT: number = parseInt(process.env.PORT || "5000", 10);
 
 // Database error handling
-mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB connection error:', err);
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB connection error:", err);
   process.exit(1);
 });
 
-mongoose.connection.on('disconnected', () => {
-  console.error('❌ MongoDB disconnected');
+mongoose.connection.on("disconnected", () => {
+  console.error("❌ MongoDB disconnected");
   process.exit(1);
 });
 
-mongoose.connection.on('reconnected', () => {
-  console.log('✅ MongoDB reconnected');
+mongoose.connection.on("reconnected", () => {
+  console.log("✅ MongoDB reconnected");
 });
 
 // Graceful shutdown handling
-process.on('SIGINT', async () => {
-  console.log('\n🛑 Received SIGINT. Graceful shutdown...');
+process.on("SIGINT", async () => {
+  console.log("\n🛑 Received SIGINT. Graceful shutdown...");
   await mongoose.connection.close();
   await closeRedisConnection();
-  console.log('✅ MongoDB connection closed');
-  console.log('✅ Redis connection closed');
+  console.log("✅ MongoDB connection closed");
+  console.log("✅ Redis connection closed");
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  console.log('\n🛑 Received SIGTERM. Graceful shutdown...');
+process.on("SIGTERM", async () => {
+  console.log("\n🛑 Received SIGTERM. Graceful shutdown...");
   await mongoose.connection.close();
   await closeRedisConnection();
-  console.log('✅ MongoDB connection closed');
-  console.log('✅ Redis connection closed');
+  console.log("✅ MongoDB connection closed");
+  console.log("✅ Redis connection closed");
   process.exit(0);
 });
 

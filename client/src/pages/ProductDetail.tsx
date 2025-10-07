@@ -20,12 +20,6 @@ import { useParams, Link } from "react-router-dom";
 import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import Engrave from "./Engrave";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import ProductReviews from "@/components/ProductReviews";
 import {
   Select,
@@ -36,8 +30,75 @@ import {
 } from "@/components/ui/select";
 // import { Checkbox } from "@/components/ui/checkbox";
 import { StickyTwoColumnLayout } from "@/components/StickyTwoColumnLayout";
+import Faqs from "@/components/Products/Faqs";
 
 // Sample product data - in a real app this would come from API/database
+// const sampleProduct = {
+//   id: 1,
+//   name: "4 2/5 ctw Oval Lab Grown Diamond Bridal Set",
+//   rating: 4.9,
+//   reviewCount: 67,
+//   price: "₹5,224",
+//   monthlyPrice: "Starting at ₹988/mo",
+//   description:
+//     "This stunning 4 2/5 ctw Oval set features an oval lab-grown diamond surrounded by a halo of round diamonds, offering brilliant sparkle and timeless elegance.",
+//   images: [
+//     "/product_detail/display.png",
+//     "/product_detail/glb.glb", // This will be rendered as 3D
+//     "/product_detail/display.png",
+//     "/about/2.jpg",
+//     "/product_detail/display.png",
+//     "/about/3.jpg",
+//     "/product_detail/display.png",
+//     "/about/4.jpg",
+//   ],
+//   diamondShapes: [
+//     { name: "Round", img: "/DIAMOND_SHAPES_WEBP/round.webp" },
+//     { name: "Princess", img: "/DIAMOND_SHAPES_WEBP/princess.webp" },
+//     { name: "Emerald", img: "/DIAMOND_SHAPES_WEBP/emerald.webp" },
+//     { name: "Asscher", img: "/DIAMOND_SHAPES_WEBP/asscher.jpg" },
+//     { name: "Radiant", img: "/DIAMOND_SHAPES_WEBP/radient.jpg" },
+//     { name: "Cushion", img: "/DIAMOND_SHAPES_WEBP/cushion.webp" },
+//     { name: "Oval", img: "/DIAMOND_SHAPES_WEBP/oval.webp" },
+//     { name: "Pear", img: "/DIAMOND_SHAPES_WEBP/pear.webp" },
+//     { name: "Marquise", img: "/DIAMOND_SHAPES_WEBP/marquise.webp" },
+//     { name: "Heart", img: "/DIAMOND_SHAPES_WEBP/heart.jpg" },
+//   ],
+//   metalTypes: ["Gold", "Silver", "Platinum", "Palladium", "Titanium", "Cobalt"],
+//   metalColors: [
+//     { name: "White Gold", img: "/colors/white.png" },
+//     { name: "Yellow Gold", img: "/colors/gold.png" },
+//     { name: "Rose Gold", img: "/colors/rosegold.png" },
+//     { name: "Silver", color: "#C0C0C0" },
+//     { name: "Platinum", color: "#E5E4E2" },
+//   ],
+//   ringSize: "Select Ring Size",
+//   estimatedShipDate: "Monday, October 21st",
+//   inStock: true,
+//   matchingBands: [
+//     {
+//       id: 1,
+//       name: "Comfort Fit Band",
+//       image: "/images/collections/bracelet.jpg",
+//       price: "₹2,999",
+//     },
+//     {
+//       id: 2,
+//       name: "Petite Shared Prong Half",
+//       image: "/images/collections/earrings.jpg",
+//       price: "₹3,999",
+//     },
+//     {
+//       id: 3,
+//       name: "Petite Shared Prong Three",
+//       image: "/images/collections/pendant.jpg",
+//       price: "₹4,999",
+//     },
+//   ],
+// };
+
+// Sample product data - in a real app this would come from API/database
+// Only names are stored, images are fetched from frontend mappings
 const sampleProduct = {
   id: 1,
   name: "4 2/5 ctw Oval Lab Grown Diamond Bridal Set",
@@ -57,49 +118,62 @@ const sampleProduct = {
     "/product_detail/display.png",
     "/about/4.jpg",
   ],
+  // Only store names - images fetched from DIAMOND_SHAPE_IMAGES
   diamondShapes: [
-    { name: "Round", img: "/DIAMOND_SHAPES_WEBP/round.webp" },
-    { name: "Princess", img: "/DIAMOND_SHAPES_WEBP/princess.webp" },
-    { name: "Emerald", img: "/DIAMOND_SHAPES_WEBP/emerald.webp" },
-    { name: "Asscher", img: "/DIAMOND_SHAPES_WEBP/asscher.jpg" },
-    { name: "Radiant", img: "/DIAMOND_SHAPES_WEBP/radient.jpg" },
-    { name: "Cushion", img: "/DIAMOND_SHAPES_WEBP/cushion.webp" },
-    { name: "Oval", img: "/DIAMOND_SHAPES_WEBP/oval.webp" },
-    { name: "Pear", img: "/DIAMOND_SHAPES_WEBP/pear.webp" },
-    { name: "Marquise", img: "/DIAMOND_SHAPES_WEBP/marquise.webp" },
-    { name: "Heart", img: "/DIAMOND_SHAPES_WEBP/heart.jpg" },
+    "Round",
+    "Princess",
+    "Emerald",
+    "Asscher",
+    "Radiant",
+    "Cushion",
+    "Oval",
+    "Pear",
+    "Marquise",
+    "Heart",
   ],
   metalTypes: ["Gold", "Silver", "Platinum", "Palladium", "Titanium", "Cobalt"],
-  metalColors: [
-    { name: "White Gold", img: "/colors/white.png" },
-    { name: "Yellow Gold", img: "/colors/gold.png" },
-    { name: "Rose Gold", img: "/colors/rosegold.png" },
-    { name: "Silver", color: "#C0C0C0" },
-    { name: "Platinum", color: "#E5E4E2" },
+  // Only store names - images fetched from METAL_COLOR_IMAGES
+  metalColors: ["White Gold", "Yellow Gold", "Rose Gold", "Silver", "Platinum"],
+  Size: "Select Ring Size",
+  ringsizes: [
+    "4",
+    "4.5",
+    "5",
+    "5.5",
+    "6",
+    "6.5",
+    "7",
+    "7.5",
+    "8",
+    "8.5",
+    "9",
+    "9.5",
+    "10",
   ],
-  ringSize: "Select Ring Size",
   estimatedShipDate: "Monday, October 21st",
   inStock: true,
-  matchingBands: [
-    {
-      id: 1,
-      name: "Comfort Fit Band",
-      image: "/images/collections/bracelet.jpg",
-      price: "₹2,999",
-    },
-    {
-      id: 2,
-      name: "Petite Shared Prong Half",
-      image: "/images/collections/earrings.jpg",
-      price: "₹3,999",
-    },
-    {
-      id: 3,
-      name: "Petite Shared Prong Three",
-      image: "/images/collections/pendant.jpg",
-      price: "₹4,999",
-    },
-  ],
+};
+
+// Frontend image mappings - these stay on the frontend
+const DIAMOND_SHAPE_IMAGES: Record<string, string> = {
+  Round: "/DIAMOND_SHAPES_WEBP/round.webp",
+  Princess: "/DIAMOND_SHAPES_WEBP/princess.webp",
+  Emerald: "/DIAMOND_SHAPES_WEBP/emerald.webp",
+  Asscher: "/DIAMOND_SHAPES_WEBP/asscher.jpg",
+  Radiant: "/DIAMOND_SHAPES_WEBP/radient.jpg",
+  Cushion: "/DIAMOND_SHAPES_WEBP/cushion.webp",
+  Oval: "/DIAMOND_SHAPES_WEBP/oval.webp",
+  Pear: "/DIAMOND_SHAPES_WEBP/pear.webp",
+  Marquise: "/DIAMOND_SHAPES_WEBP/marquise.webp",
+  Heart: "/DIAMOND_SHAPES_WEBP/heart.jpg",
+};
+
+const METAL_COLOR_IMAGES: Record<string, string> = {
+  "White Gold": "/colors/white.png",
+  "Yellow Gold": "/colors/gold.png",
+  "Rose Gold": "/colors/rosegold.png",
+  Silver: "/colors/white.png", // Fallback or actual silver image
+  Platinum: "/colors/white.png", // Fallback or actual platinum image
 };
 
 const EnhancedGLBViewer = ({
@@ -512,22 +586,6 @@ const ProductDetail = () => {
     }
   };
 
-  const ringSizes = [
-    "4",
-    "4.5",
-    "5",
-    "5.5",
-    "6",
-    "6.5",
-    "7",
-    "7.5",
-    "8",
-    "8.5",
-    "9",
-    "9.5",
-    "10",
-  ];
-
   // Show all images for scrolling, not just first 4
   const thumbnailImages = sampleProduct.images;
 
@@ -783,25 +841,25 @@ const ProductDetail = () => {
                   <div className="grid grid-cols-5 gap-2">
                     {sampleProduct.diamondShapes.map((shape) => (
                       <button
-                        key={shape.name}
-                        onClick={() => setSelectedDiamondShape(shape.name)}
+                        key={shape}
+                        onClick={() => setSelectedDiamondShape(shape)}
                         className={`group relative aspect-square border rounded-lg flex flex-col items-center justify-center text-xs ${
-                          selectedDiamondShape === shape.name
+                          selectedDiamondShape === shape
                             ? "border-primary bg-primary/5"
                             : "border-neutral-300"
                         }`}
                       >
                         <img
                           className="w-20"
-                          src={shape.img}
-                          alt={shape.name}
+                          src={DIAMOND_SHAPE_IMAGES[shape]}
+                          alt={shape}
                         />
                         {/* Tooltip: shape name */}
                         <span
                           className="absolute bottom-[-16px] right-[-32px] px-3 py-2 rounded bg-black text-white text-base opacity-0 pointer-events-none transition-opacity duration-150 group-hover:opacity-100"
                           style={{ zIndex: 10 }}
                         >
-                          <p className="text-xs">{shape.name}</p>
+                          <p className="text-xs">{shape}</p>
                         </span>
                       </button>
                     ))}
@@ -907,54 +965,58 @@ const ProductDetail = () => {
                   <div className="flex gap-3">
                     {sampleProduct.metalColors.map((colorOption) => (
                       <button
-                        key={colorOption.name}
-                        onClick={() => setSelectedMetalColor(colorOption.name)}
+                        key={colorOption}
+                        onClick={() => setSelectedMetalColor(colorOption)}
                         className={`w-8 h-8 rounded-full border-2 ${
-                          selectedMetalColor === colorOption.name
+                          selectedMetalColor === colorOption
                             ? "border-[#328F94]"
                             : "border-neutral-300"
                         }`}
-                        title={colorOption.name}
+                        title={colorOption}
                       >
                         <img
                           className="w-full h-full object-cover"
-                          src={colorOption.img}
-                          alt={colorOption.name}
+                          src={METAL_COLOR_IMAGES[colorOption]}
+                          alt={colorOption}
                         />
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Ring Size */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm mb-2">Ring Size</label>
-                    <Select
-                      value={selectedSize}
-                      onValueChange={setSelectedSize}
+                {sampleProduct.Size && (
+                  // Ring Size
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm mb-2">Ring Size</label>
+                        <Select
+                          value={selectedSize}
+                          onValueChange={setSelectedSize}
+                        >
+                          <SelectTrigger className="text-sm border-neutral-300">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            {(sampleProduct.ringsizes as string[]).map(
+                              (size: string) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Link
+                      to={"/ring-size-guide"}
+                      className="text-sm text-primary font-medium underline block"
                     >
-                      <SelectTrigger className="text-sm border-neutral-300">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ringSizes.map((size) => (
-                          <SelectItem key={size} value={size}>
-                            Size {size}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Ring Size Guide */}
-                <Link
-                  to={"/ring-size-guide"}
-                  className="text-sm text-primary font-medium underline block"
-                >
-                  Ring Size Guide
-                </Link>
+                      Ring Size Guide
+                    </Link>
+                  </>
+                )}
 
                 {/* Free Engraving */}
                 <div className="flex items-center space-x-2">
@@ -1047,28 +1109,8 @@ const ProductDetail = () => {
             }
           />
 
-          {/* Matching Wedding Bands */}
-          <div className="mt-16">
-            <h2 className="text-xl font-bold mb-6">Matching Wedding Bands</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {sampleProduct.matchingBands.map((band) => (
-                <div key={band.id} className="text-center">
-                  <div className="aspect-square bg-neutral-50 rounded-lg mb-3 overflow-hidden">
-                    <img
-                      src={band.image}
-                      alt={band.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="font-medium text-sm mb-1">{band.name}</h3>
-                  <p className="text-sm text-muted-foreground">{band.price}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* FAQ Section */}
-          <div className="mt-16">
+          {/* <div className="mt-16">
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="details">
                 <AccordionTrigger className="text-lg text-[#328F94] font-semibold">
@@ -1104,6 +1146,10 @@ const ProductDetail = () => {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+          </div> */}
+
+          <div className="mt-16">
+            <Faqs />
           </div>
 
           {/* Reviews Section */}

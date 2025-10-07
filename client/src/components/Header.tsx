@@ -242,16 +242,7 @@ function MobileMenu() {
           />
           <CollapsibleSection
             title="Jewellery"
-            items={[
-              "Rings",
-              "Earrings",
-              "Pendants",
-              "Bracelets",
-              "Design Your Own",
-              "Upload Your Design",
-              "Build Your Jewellery",
-              "Engraving",
-            ]}
+            items={["Rings", "Earrings", "Pendants", "Bracelets"]}
             isOpen={!!openSections["Jewellery"]}
             onToggle={() => toggleSection("Jewellery")}
           />

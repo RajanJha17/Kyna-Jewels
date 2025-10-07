@@ -128,15 +128,16 @@ const Navigation: React.FC = () => {
                       ["earrings", "Earrings"],
                       ["pendants", "Pendants"],
                       ["bracelets", "Bracelets"],
-                      ["/design-your-own", "Design Your Own"],
-                      ["/upload-design", "Upload Your Design"],
-                      ["/build-jewellery", "Build Your Jewellery"],
+                      // ["/design-your-own", "Design Your Own"],
+                      // ["/upload-design", "Upload Your Design"],
+                      // ["/build-jewellery", "Build Your Jewellery"],
                     ].map(([path, label]) => (
                       <Link
                         key={path}
-                        to={`/jewellery${
-                          path.startsWith("/") ? path : "/" + path
-                        }`}
+                        // to={`/jewellery${
+                        //   path.startsWith("/") ? path : "/" + path
+                        // }`}
+                        to={"/" + path}
                         className="block px-2 py-2 text-sm text-gray-700 hover:bg-[#68C5C0] hover:text-white"
                       >
                         {label}
@@ -145,13 +146,25 @@ const Navigation: React.FC = () => {
                   </div>
                   <div>
                     {[
-                      ["mens-rings", "Men's Rings"],
-                      ["mens-studs", "Men's Studs"],
-                      ["mens-bracelets", "Men's Bracelets"],
+                      ["rings/mens-ring", "Men's Rings"],
+                      ["earrings/mens-studs", "Men's Studs"],
+                      ["bracelets/mens-bracelets", "Men's Bracelets"],
+                    ].map(([path, label]) => (
+                      <Link
+                        key={path}
+                        to={"/" + path}
+                        className="block px-2 py-2 text-sm text-gray-700 hover:bg-[#68C5C0] hover:text-white"
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div>
+                    {[
                       ["platinum", "Platinum Jewellery"],
                       ["silver", "Silver Jewellery"],
                       ["silver-gold-plated", "Silver Gold Plated Jewellery"],
-                      ["/engraving", "Engraving"],
+                      // ["/engraving", "Engraving"],
                     ].map(([path, label]) => (
                       <Link
                         key={path}
