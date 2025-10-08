@@ -67,19 +67,28 @@ export class UploadYouOwnController {
         // Validate images - must have either uploaded files or image URLs
         const uploadedFiles = req.files as Express.Multer.File[];
         let finalImageUrls: string[] = [];
+        let imageSources: Array<{ url: string; source: 'cloudinary' | 'external_url' }> = [];
 
         if (uploadedFiles && uploadedFiles.length > 0) {
-          // Images were uploaded via files
+          // Images were uploaded via files - Cloudinary URLs
           finalImageUrls = uploadedFiles.map(file => file.path);
+          imageSources = uploadedFiles.map(file => ({
+            url: file.path,
+            source: 'cloudinary' as const
+          }));
         } else if (images && typeof images === 'string') {
           // Single image URL provided
           finalImageUrls = [images];
+          imageSources = [{ url: images, source: 'external_url' as const }];
         } else if (Array.isArray(images)) {
           // Multiple image URLs provided
           finalImageUrls = images;
+          imageSources = images.map(url => ({ url, source: 'external_url' as const }));
         } else if (imageUrls) {
           // Alternative field for image URLs
-          finalImageUrls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+          const urls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+          finalImageUrls = urls;
+          imageSources = urls.map(url => ({ url, source: 'external_url' as const }));
         } else {
           return res.status(400).json({
             success: false,
@@ -94,7 +103,7 @@ export class UploadYouOwnController {
           });
         }
 
-        // Validate image URLs if provided
+        // Validate image URLs if provided (not uploaded files)
         if (!uploadedFiles || uploadedFiles.length === 0) {
           const urlPattern = /^https?:\/\/.+/;
           for (const url of finalImageUrls) {
@@ -145,7 +154,7 @@ export class UploadYouOwnController {
             source: uploadedFiles && uploadedFiles[index] ? 'upload' : 'url'
           })),
           customization: customizationData,
-          status: 'payment_pending', // Ready for payment
+          status: 'payment_pending' as const, // Ready for payment
           createdAt: new Date()
         };
 
@@ -164,10 +173,7 @@ export class UploadYouOwnController {
               customization: result.data?.customization,
               status: result.data?.status,
               createdAt: result.data?.createdAt,
-              imageSources: finalImageUrls.map((url, index) => ({
-                url,
-                source: uploadedFiles && uploadedFiles[index] ? 'cloudinary' : 'external_url'
-              }))
+              imageSources: imageSources
             }
           });
         } else {

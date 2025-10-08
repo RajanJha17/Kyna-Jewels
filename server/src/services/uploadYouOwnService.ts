@@ -15,6 +15,12 @@ export interface IUploadResponse {
     jewelryType: string;
     sameAsImage: boolean;
     status: RingStatus;
+    customization?: ICustomizationData;
+    createdAt?: Date;
+    imageSources?: Array<{
+      url: string;
+      source: 'cloudinary' | 'external_url';
+    }>;
   };
   error?: string;
 }
@@ -389,8 +395,7 @@ export class UploadYouOwnService {
       console.error('Get upload stats error:', error);
       return {
         success: false,
-        message: 'Error fetching upload statistics',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: 'Error fetching upload statistics'
       };
     }
   }
