@@ -281,6 +281,24 @@ export class ImageService {
   }
 
   /**
+   * Get file extension based on product type and attributes
+   */
+  private getFileExtension(sku: string, attributes: any): string {
+    const skuPrefix = sku.match(/^[A-Z]+/)?.[0] || '';
+    
+    // Check if this is a pendant with specific attributes that use MP4
+    if (skuPrefix === 'PD') {
+      // Some pendants use MP4 format based on specific patterns
+      if (attributes.tone === '2T' || attributes.finish) {
+        return '.mp4';
+      }
+    }
+    
+    // Default to WebP for most cases
+    return '.webp';
+  }
+
+  /**
    * Build attribute string for filename based on product type and naming conventions
    */
   private buildAttributeString(sku: string, attributes: any): string {
@@ -404,16 +422,20 @@ export class ImageService {
       const attributeString = this.buildAttributeString(sku, attributes);
       const filename = `${sku}-${attributeString}`;
       
+      // Determine file extension based on product type and attributes
+      const extension = this.getFileExtension(sku, attributes);
+      
       return {
-        main: `${baseUrl}/${categoryPath}/${filename}-GP.webp`,
+        main: `${baseUrl}/${categoryPath}/${filename}-GP${extension}`,
         sub: [
-          `${baseUrl}/${categoryPath}/${filename}-45.webp`,
-          `${baseUrl}/${categoryPath}/${filename}-BV.webp`,
-          `${baseUrl}/${categoryPath}/${filename}-EV.webp`,
-          `${baseUrl}/${categoryPath}/${filename}-FV.webp`,
-          `${baseUrl}/${categoryPath}/${filename}-TV.webp`,
-          `${baseUrl}/${categoryPath}/${filename}-NBV.webp`,
-          `${baseUrl}/${categoryPath}/${filename}-SV.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-45${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-BV${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-EV${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-FV${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-TV${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-NBV${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-SV${extension}`,
+          `${baseUrl}/${categoryPath}/${filename}-NV${extension}`,
           `${baseUrl}/${categoryPath}/${filename}-360.glb`
         ]
       };

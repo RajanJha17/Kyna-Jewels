@@ -33,7 +33,7 @@ export class ImageUrlParser {
       const urlParts = decodedUrl.split('/');
       
       // Extract filename and remove extension
-      const filename = urlParts[urlParts.length - 1].replace('.webp', '').replace('.glb', '');
+      const filename = urlParts[urlParts.length - 1].replace('.webp', '').replace('.glb', '').replace('.mp4', '');
       const folder = urlParts[urlParts.length - 2];
       const category = urlParts[urlParts.length - 3];
       const baseUrl = urlParts.slice(0, -3).join('/');
@@ -63,7 +63,7 @@ export class ImageUrlParser {
     const attributes: { [key: string]: string } = {};
     
     // Remove view type from the end if present
-    const viewTypes = ['GP', '45', 'BV', 'EV', 'FV', 'TV', 'NBV', 'SV', '360', 'AV', 'SIDE', 'BACK', 'TRV'];
+    const viewTypes = ['GP', '45', 'BV', 'EV', 'FV', 'TV', 'NBV', 'SV', '360', 'AV', 'SIDE', 'BACK', 'TRV', 'NV'];
     let attributeParts = [...parts];
     const lastPart = parts[parts.length - 1];
     
@@ -78,12 +78,41 @@ export class ImageUrlParser {
     switch (sku) {
       case 'ENG':
       case 'SR':
-        // Engagement/Solitaire: ENG1-EM-30-18-LG-EFVVS
-        if (attributeParts[0]) attributes.diamondShape = attributeParts[0]; // EM
-        if (attributeParts[1]) attributes.diamondSize = attributeParts[1]; // 30
-        if (attributeParts[2]) attributes.karat = attributeParts[2]; // 18
-        if (attributeParts[3]) attributes.metal = attributeParts[3]; // LG
-        if (attributeParts[4]) attributes.diamondColor = attributeParts[4]; // EFVVS
+        // Engagement/Solitaire: Handle multiple patterns
+        // ENG137-RD-50-RG-TV.webp
+        // ENG123-MQ-130-WG-FV.webp
+        // ENG123-MQ-130-2T-YG-WG-SV.webp
+        // ENG1-EM-30-18-LG-EFVVS (old pattern)
+        
+        if (attributeParts.length >= 5) {
+          // Complex pattern: ENG123-MQ-130-2T-YG-WG-SV
+          if (this.isDiamondShape(attributeParts[0])) {
+            attributes.diamondShape = attributeParts[0]; // MQ, RD, etc.
+            attributes.diamondSize = attributeParts[1]; // 130, 50, etc.
+            if (this.isTone(attributeParts[2])) {
+              attributes.tone = attributeParts[2]; // 2T
+              attributes.metal = attributeParts[3]; // YG
+              attributes.finish = attributeParts[4]; // WG
+            } else {
+              // No tone: ENG137-RD-50-RG-TV
+              attributes.metal = attributeParts[2]; // RG
+            }
+          }
+        } else if (attributeParts.length === 4) {
+          // Medium pattern: ENG137-RD-50-RG-TV
+          if (this.isDiamondShape(attributeParts[0])) {
+            attributes.diamondShape = attributeParts[0]; // RD
+            attributes.diamondSize = attributeParts[1]; // 50
+            attributes.metal = attributeParts[2]; // RG
+          }
+        } else if (attributeParts.length >= 5) {
+          // Old pattern: ENG1-EM-30-18-LG-EFVVS
+          if (attributeParts[0]) attributes.diamondShape = attributeParts[0]; // EM
+          if (attributeParts[1]) attributes.diamondSize = attributeParts[1]; // 30
+          if (attributeParts[2]) attributes.karat = attributeParts[2]; // 18
+          if (attributeParts[3]) attributes.metal = attributeParts[3]; // LG
+          if (attributeParts[4]) attributes.diamondColor = attributeParts[4]; // EFVVS
+        }
         break;
         
       case 'GR':
@@ -97,16 +126,48 @@ export class ImageUrlParser {
         break;
         
       case 'PD':
-        // Pendants: PD40-OV-50-2T-WG-RG-BV or PD9-WG-BV
-        if (attributeParts[0] && this.isDiamondShape(attributeParts[0])) {
-          attributes.diamondShape = attributeParts[0]; // OV
-          if (attributeParts[1]) attributes.diamondSize = attributeParts[1]; // 50
-          if (attributeParts[2]) attributes.tone = attributeParts[2]; // 2T
-          if (attributeParts[3]) attributes.metal = attributeParts[3]; // WG
-          if (attributeParts[4]) attributes.finish = attributeParts[4]; // RG
-        } else {
+        // Pendants: Handle multiple patterns
+        // PD19-PRS-300-2T-WG-YG-NV.mp4
+        // PD9-2T-YG-BR-NV.mp4
+        // PD21-PRN-50-2T-WG-RG-FV.webp
+        // PD9-WG-BV.webp
+        
+        if (attributeParts.length >= 6) {
+          // Complex pendant: PD19-PRS-300-2T-WG-YG-NV
+          if (this.isDiamondShape(attributeParts[0])) {
+            attributes.diamondShape = attributeParts[0]; // PRS, PRN, etc.
+            attributes.diamondSize = attributeParts[1]; // 300, 50, etc.
+            attributes.tone = attributeParts[2]; // 2T
+            attributes.metal = attributeParts[3]; // WG
+            attributes.finish = attributeParts[4]; // YG, RG, etc.
+          }
+        } else if (attributeParts.length === 4) {
+          // Medium complexity: PD9-2T-YG-BR-NV
+          if (this.isTone(attributeParts[0])) {
+            attributes.tone = attributeParts[0]; // 2T
+            attributes.metal = attributeParts[1]; // YG
+            attributes.finish = attributeParts[2]; // BR
+          }
+        } else if (attributeParts.length === 2) {
           // Simple pendant: PD9-WG-BV
-          if (attributeParts[0]) attributes.metal = attributeParts[0]; // WG
+          if (this.isMetal(attributeParts[0])) {
+            attributes.metal = attributeParts[0]; // WG
+          }
+        } else {
+          // Fallback: parse by type detection
+          attributeParts.forEach((part, index) => {
+            if (this.isDiamondShape(part)) {
+              attributes.diamondShape = part;
+            } else if (this.isTone(part)) {
+              attributes.tone = part;
+            } else if (this.isMetal(part)) {
+              attributes.metal = part;
+            } else if (this.isFinish(part)) {
+              attributes.finish = part;
+            } else if (this.isNumeric(part)) {
+              attributes.diamondSize = part;
+            }
+          });
         }
         break;
         
@@ -175,7 +236,7 @@ export class ImageUrlParser {
    * Helper methods to identify attribute types
    */
   private isDiamondShape(part: string): boolean {
-    const shapes = ['RD', 'PR', 'EM', 'OV', 'CU', 'AS', 'MQ', 'PE', 'HS', 'CUS'];
+    const shapes = ['RD', 'PR', 'PRS', 'PRN', 'EM', 'OV', 'CU', 'AS', 'MQ', 'PE', 'HS', 'CUS'];
     return shapes.includes(part.toUpperCase());
   }
 

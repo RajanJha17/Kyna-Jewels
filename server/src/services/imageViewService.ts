@@ -96,17 +96,20 @@ export class ImageViewService {
         this.getThumbnailViews(category)
       ]);
 
+      // Determine file extension
+      const extension = this.getFileExtension(sku, attributes);
+      
       // Generate main image URL (always GP)
-      const main = `${baseUrl}/${categoryPath}/${filename}-GP.webp`;
+      const main = `${baseUrl}/${categoryPath}/${filename}-GP${extension}`;
 
       // Generate sub view URLs
       const sub = subViews.map(view => 
-        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.webp`
+        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}${extension}`
       );
 
       // Generate thumbnail URLs
       const thumbnails = thumbnailViews.map(view => 
-        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.webp`
+        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}${extension}`
       );
 
       return { main, sub, thumbnails };
@@ -118,6 +121,24 @@ export class ImageViewService {
   }
 
   /**
+   * Get file extension based on product type and attributes
+   */
+  private static getFileExtension(sku: string, attributes: any): string {
+    const skuPrefix = sku.match(/^[A-Z]+/)?.[0] || '';
+    
+    // Check if this is a pendant with specific attributes that use MP4
+    if (skuPrefix === 'PD') {
+      // Some pendants use MP4 format based on specific patterns
+      if (attributes.tone === '2T' || attributes.finish) {
+        return '.mp4';
+      }
+    }
+    
+    // Default to WebP for most cases
+    return '.webp';
+  }
+
+  /**
    * Get default image URLs (fallback)
    */
   private static getDefaultImageUrls(sku: string, attributes: any): { main: string; sub: string[]; thumbnails: string[] } {
@@ -126,16 +147,19 @@ export class ImageViewService {
     const attributeString = this.buildAttributeString(sku, attributes);
     const filename = `${sku}-${attributeString}`;
 
+    const extension = this.getFileExtension(sku, attributes);
+    
     return {
-      main: `${baseUrl}/${categoryPath}/${filename}-GP.webp`,
+      main: `${baseUrl}/${categoryPath}/${filename}-GP${extension}`,
       sub: [
-        `${baseUrl}/${categoryPath}/${filename}-45.webp`,
-        `${baseUrl}/${categoryPath}/${filename}-BV.webp`,
-        `${baseUrl}/${categoryPath}/${filename}-EV.webp`,
-        `${baseUrl}/${categoryPath}/${filename}-FV.webp`,
-        `${baseUrl}/${categoryPath}/${filename}-TV.webp`,
-        `${baseUrl}/${categoryPath}/${filename}-NBV.webp`,
-        `${baseUrl}/${categoryPath}/${filename}-SV.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-45${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-BV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-EV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-FV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-TV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-NBV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-SV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-NV${extension}`,
         `${baseUrl}/${categoryPath}/${filename}-360.glb`
       ],
       thumbnails: []
