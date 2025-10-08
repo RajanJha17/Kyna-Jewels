@@ -26,6 +26,8 @@ import adminRoutes from "./routes/admin";
 import buildYourJewelryRoutes from "./routes/buildYourJewelry";
 import subProductRoutes from "./routes/subProduct";
 import blogRoutes from "./routes/blog";
+import uploadYouOwnRoutes from "./routes/uploadYouOwn";
+import imageViewAdminRoutes from "./routes/imageViewAdmin";
 
 // Import tracking services
 import { TrackingController } from "./controllers/trackingController";
@@ -321,6 +323,8 @@ app.get("/api", (req: Request, res: Response) => {
       buildYourJewelry: "/api/build-your-jewelry",
       subProducts: "/api/sub-products",
       blogs: "/api/blogs",
+      uploadYouOwn: "/api/upload-you-own",
+      imageViewAdmin: "/api/admin/image-views",
     },
   });
 });
@@ -393,6 +397,8 @@ app.use("/api/admin", deprecationWarning, adminRoutes);
 app.use("/api/build-your-jewelry", deprecationWarning, buildYourJewelryRoutes);
 app.use("/api/sub-products", deprecationWarning, subProductRoutes);
 app.use("/api/blogs", deprecationWarning, blogRoutes);
+app.use("/api/upload-you-own", deprecationWarning, uploadYouOwnRoutes);
+app.use("/api/admin/image-views", deprecationWarning, imageViewAdminRoutes);
 
 // Home route
 app.get("/", (req: Request, res: Response) => {
