@@ -322,8 +322,8 @@ export class ImageService {
         if (attributes.diamondClarity) parts.push(attributes.diamondClarity);
         break;
         
-      case 'GR': // Gents Rings: GR1-RD-70-2T-BR-RG-45
-        if (attributes.diamondShape) parts.push(attributes.diamondShape);
+      case 'GR': // Gents Rings: Handle multiple patterns
+        if (attributes.diamondShape) parts.push(attributes.diamondShape); // BR, NF, MF, BF, RD, etc.
         if (attributes.diamondSize) parts.push(attributes.diamondSize.toString());
         if (attributes.tone) parts.push(attributes.tone); // 2T support
         if (attributes.finish) parts.push(attributes.finish);
@@ -332,7 +332,7 @@ export class ImageService {
         break;
         
       case 'FR': // Fashion Rings: Similar to gents rings
-        if (attributes.diamondShape) parts.push(attributes.diamondShape);
+        if (attributes.diamondShape) parts.push(attributes.diamondShape); // BR, NF, MF, BF, RD, etc.
         if (attributes.diamondSize) parts.push(attributes.diamondSize.toString());
         if (attributes.tone) parts.push(attributes.tone); // 2T support
         if (attributes.finish) parts.push(attributes.finish);

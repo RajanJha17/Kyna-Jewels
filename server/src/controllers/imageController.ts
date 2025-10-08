@@ -161,11 +161,11 @@ export class ImageController {
    */
   private getAvailableOptions(productType: string): any {
     const baseOptions = {
-      diamondShapes: ['RD', 'PR', 'PRS', 'PRN', 'EM', 'OV', 'CU', 'AS', 'MQ', 'PE', 'HS'],
+      diamondShapes: ['RD', 'PR', 'PRS', 'PRN', 'EM', 'OV', 'CU', 'AS', 'MQ', 'PE', 'HS', 'BR', 'NF', 'MF', 'BF'],
       diamondSizes: ['10', '15', '20', '25', '30', '40', '50', '70', '100', '130', '150', '200', '300'],
       metals: ['WG', 'YG', 'RG', 'PT'],
       tones: ['1T', '2T'],
-      finishes: ['BR', 'NR', 'PL', 'YG', 'RG'],
+      finishes: ['BR', 'NR', 'PL', 'YG', 'RG', 'WG'],
       viewTypes: ['GP', '45', 'BV', 'EV', 'FV', 'TV', 'NBV', 'SV', 'NV', '360']
     };
 

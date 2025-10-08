@@ -117,12 +117,66 @@ export class ImageUrlParser {
         
       case 'GR':
       case 'FR':
-        // Gents/Fashion Rings: GR1-RD-70-2T-BR-RG-45
-        if (attributeParts[0]) attributes.diamondShape = attributeParts[0]; // RD
-        if (attributeParts[1]) attributes.diamondSize = attributeParts[1]; // 70
-        if (attributeParts[2]) attributes.tone = attributeParts[2]; // 2T
-        if (attributeParts[3]) attributes.finish = attributeParts[3]; // BR
-        if (attributeParts[4]) attributes.metal = attributeParts[4]; // RG
+        // Gents/Fashion Rings: Handle multiple patterns
+        // GR9-BR-NBV.webp (2 attributes)
+        // GR9-2T-YG-WG-TV.webp (4 attributes)
+        // GR10-NF-BR-360.glb (3 attributes)
+        // GR10-MF-2T-WG-YG-FV.webp (5 attributes)
+        // GR10-MF-2T-RG-BR-GP.webp (5 attributes)
+        // GR10-BF-2T-YG-BR-SV.webp (5 attributes)
+        // GR1-RD-70-2T-BR-RG-45 (old pattern)
+        
+        if (attributeParts.length === 2) {
+          // Simple pattern: GR9-BR-NBV
+          if (this.isDiamondShape(attributeParts[0])) {
+            attributes.diamondShape = attributeParts[0]; // BR
+          }
+        } else if (attributeParts.length === 3) {
+          // Medium pattern: GR10-NF-BR-360
+          if (this.isDiamondShape(attributeParts[0])) {
+            attributes.diamondShape = attributeParts[0]; // NF
+            if (this.isFinish(attributeParts[1])) {
+              attributes.finish = attributeParts[1]; // BR
+            }
+          }
+        } else if (attributeParts.length === 4) {
+          // Tone pattern: GR9-2T-YG-WG-TV
+          if (this.isTone(attributeParts[0])) {
+            attributes.tone = attributeParts[0]; // 2T
+            attributes.metal = attributeParts[1]; // YG
+            attributes.finish = attributeParts[2]; // WG
+          }
+        } else if (attributeParts.length >= 5) {
+          // Complex pattern: GR10-MF-2T-WG-YG-FV
+          if (this.isDiamondShape(attributeParts[0])) {
+            attributes.diamondShape = attributeParts[0]; // MF
+            if (this.isTone(attributeParts[1])) {
+              attributes.tone = attributeParts[1]; // 2T
+              attributes.metal = attributeParts[2]; // WG
+              attributes.finish = attributeParts[3]; // YG
+            } else {
+              // No tone: GR1-RD-70-BR-RG (old pattern)
+              attributes.diamondSize = attributeParts[1]; // 70
+              attributes.finish = attributeParts[2]; // BR
+              attributes.metal = attributeParts[3]; // RG
+            }
+          }
+        } else {
+          // Fallback: parse by type detection
+          attributeParts.forEach((part, index) => {
+            if (this.isDiamondShape(part)) {
+              attributes.diamondShape = part;
+            } else if (this.isTone(part)) {
+              attributes.tone = part;
+            } else if (this.isMetal(part)) {
+              attributes.metal = part;
+            } else if (this.isFinish(part)) {
+              attributes.finish = part;
+            } else if (this.isNumeric(part)) {
+              attributes.diamondSize = part;
+            }
+          });
+        }
         break;
         
       case 'PD':
@@ -236,7 +290,7 @@ export class ImageUrlParser {
    * Helper methods to identify attribute types
    */
   private isDiamondShape(part: string): boolean {
-    const shapes = ['RD', 'PR', 'PRS', 'PRN', 'EM', 'OV', 'CU', 'AS', 'MQ', 'PE', 'HS', 'CUS'];
+    const shapes = ['RD', 'PR', 'PRS', 'PRN', 'EM', 'OV', 'CU', 'AS', 'MQ', 'PE', 'HS', 'CUS', 'BR', 'NF', 'MF', 'BF'];
     return shapes.includes(part.toUpperCase());
   }
 
