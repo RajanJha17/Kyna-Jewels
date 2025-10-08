@@ -227,9 +227,22 @@ export class ImageService {
    * Get gents ring subfolder based on SKU
    */
   private getGentsRingSubfolder(sku: string): string {
-    // Based on your structure, you have specific folders for gents rings
-    // You can add more specific logic here based on your actual SKU patterns
-    return 'GENTS RINGS/GR1-3-4-5-47-37-46-12-14-22-IMG-GLB';
+    const match = sku.match(/GR(\d+)/);
+    if (!match) return 'GENTS RINGS/GR1-10';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 10) return 'GENTS RINGS/GR1-10';
+    if (num >= 11 && num <= 20) return 'GENTS RINGS/GR11-20';
+    if (num >= 21 && num <= 30) return 'GENTS RINGS/GR21-30';
+    if (num >= 31 && num <= 40) return 'GENTS RINGS/GR31-40';
+    if (num >= 41 && num <= 50) return 'GENTS RINGS/GR41-50';
+    if (num >= 51 && num <= 60) return 'GENTS RINGS/GR51-60';
+    if (num >= 61 && num <= 70) return 'GENTS RINGS/GR61-70';
+    if (num >= 71 && num <= 80) return 'GENTS RINGS/GR71-80';
+    if (num >= 81 && num <= 90) return 'GENTS RINGS/GR81-90';
+    if (num >= 91 && num <= 100) return 'GENTS RINGS/GR91-100';
+    // Add more ranges as needed
+    return 'GENTS RINGS/GR1-10'; // Fallback
   }
 
   /**

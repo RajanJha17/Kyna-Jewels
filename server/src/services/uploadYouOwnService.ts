@@ -43,7 +43,39 @@ export interface ICustomizationData {
 export class UploadYouOwnService {
   
   /**
-   * Upload custom jewelry images
+   * Create complete jewelry with all data in one operation
+   */
+  static async createCompleteJewelry(jewelryData: any): Promise<IUploadResponse> {
+    try {
+      const jewelry = new Ring(jewelryData);
+      await jewelry.save();
+
+      return {
+        success: true,
+        message: 'Custom jewelry created successfully',
+        data: {
+          jewelryId: jewelry._id.toString(),
+          userId: jewelry.userId,
+          images: jewelry.images.map(img => img.url),
+          jewelryType: (jewelry as any).jewelryType || 'custom',
+          sameAsImage: jewelry.sameAsImage,
+          status: jewelry.status,
+          customization: jewelry.customization,
+          createdAt: jewelry.createdAt
+        }
+      };
+    } catch (error) {
+      console.error('Create complete jewelry error:', error);
+      return {
+        success: false,
+        message: 'Error creating custom jewelry',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+  
+  /**
+   * Upload custom jewelry images (legacy method - kept for backward compatibility)
    */
   static async uploadJewelry(
     files: Express.Multer.File[],
@@ -309,6 +341,56 @@ export class UploadYouOwnService {
       return {
         success: false,
         message: 'Error during cleanup',
+      };
+    }
+  }
+
+  /**
+   * Get upload statistics (admin function)
+   */
+  static async getUploadStats(): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      const totalUploads = await Ring.countDocuments();
+      const totalUsers = await Ring.distinct('userId').then(users => users.length);
+      
+      // Count images by source
+      const uploadSourceStats = await Ring.aggregate([
+        { $unwind: '$images' },
+        { $group: { _id: '$images.source', count: { $sum: 1 } } }
+      ]);
+
+      // Count by jewelry type
+      const jewelryTypeStats = await Ring.aggregate([
+        { $group: { _id: '$jewelryType', count: { $sum: 1 } } }
+      ]);
+
+      // Count by status
+      const statusStats = await Ring.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]);
+
+      return {
+        success: true,
+        message: 'Upload statistics retrieved successfully',
+        data: {
+          totalUploads,
+          totalUsers,
+          totalImages: await Ring.aggregate([
+            { $project: { imageCount: { $size: '$images' } } },
+            { $group: { _id: null, total: { $sum: '$imageCount' } } }
+          ]).then(result => result[0]?.total || 0),
+          uploadSourceStats,
+          jewelryTypeStats,
+          statusStats,
+          storageUsed: 'Calculated based on Cloudinary usage'
+        }
+      };
+    } catch (error) {
+      console.error('Get upload stats error:', error);
+      return {
+        success: false,
+        message: 'Error fetching upload statistics',
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }

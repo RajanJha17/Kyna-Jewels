@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
-import { UploadYouOwnService, ICustomizationData } from '../services/uploadYouOwnService';
+import { UploadYouOwnService } from '../services/uploadYouOwnService';
 import { uploadMultipleJewelry, handleUploadError } from '../middleware/uploadYouOwn';
 
 /**
@@ -9,86 +9,176 @@ import { uploadMultipleJewelry, handleUploadError } from '../middleware/uploadYo
 export class UploadYouOwnController {
 
   /**
-   * Upload custom jewelry images
-   * POST /api/upload-you-own/upload
+   * Complete Upload You Own process - Single comprehensive route
+   * POST /api/upload-you-own/complete
+   * Handles both image uploads and image URLs with full customization data
    */
-  static uploadJewelry = [
-    uploadMultipleJewelry,
+  static completeUploadYouOwn = [
+    // Handle file uploads (optional - only if images are provided)
+    (req: Request, res: Response, next: any) => {
+      // Check if files are being uploaded
+      if (req.body.images && typeof req.body.images === 'string') {
+        // If images is a string, it means image URLs are provided, skip multer
+        return next();
+      }
+      // If images are files, use multer
+      return uploadMultipleJewelry(req, res, next);
+    },
     handleUploadError,
     async (req: Request, res: Response) => {
       try {
-        const { 
-          sameAsImage, 
-          modificationRequest, 
-          description, 
-          userId, 
-          jewelryType = 'custom' 
-        } = req.body;
-        
-        const files = req.files as Express.Multer.File[];
-        
-        const result = await UploadYouOwnService.uploadJewelry(
-          files,
+        const {
+          // User information
           userId,
-          jewelryType,
-          sameAsImage === 'true',
+          jewelryType = 'custom',
+          
+          // Image data (either files or URLs)
+          images, // Can be files or array of URLs
+          imageUrls, // Alternative field for URLs
+          
+          // Customization data
+          sameAsImage = false,
+          metal,
+          metalColor,
+          goldKarat,
+          diamondShape,
+          diamondSize,
+          diamondColor,
+          diamondClarity,
+          ringSize,
+          engraving,
           modificationRequest,
-          description
-        );
+          description,
+          
+          // Additional options
+          priority = 'normal',
+          estimatedDelivery,
+          specialInstructions
+        } = req.body;
 
-        if (result.success) {
-          res.status(201).json(result);
-        } else {
-          res.status(400).json(result);
-        }
-      } catch (error) {
-        console.error('Upload jewelry controller error:', error);
-        res.status(500).json({
-          success: false,
-          message: 'Internal server error during upload',
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    }
-  ];
-
-  /**
-   * Save customization details for jewelry
-   * POST /api/upload-you-own/customize
-   */
-  static customizeJewelry = [
-    body('jewelryId').notEmpty().withMessage('Jewelry ID is required'),
-    body('customization.metal').optional().isIn(['Gold', 'Silver', 'Platinum', 'Rose Gold', 'White Gold']),
-    body('customization.goldKarat').optional().isIn(['10KT', '14KT', '18KT', '22KT']),
-    body('customization.diamondShape').optional().isIn(['Round', 'Oval', 'Cushion', 'Pear', 'Princess', 'Emerald', 'Radiant', 'Heart', 'Marquise']),
-    body('customization.engraving').optional().isLength({ max: 15 }).withMessage('Engraving must be 15 characters or less'),
-    body('customization.modificationRequest').optional().isLength({ min: 15 }).withMessage('Modification request must be at least 15 characters'),
-    body('customization.description').optional().isLength({ max: 500 }).withMessage('Description must be 500 characters or less'),
-    async (req: Request, res: Response) => {
-      try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
+        // Validate required fields
+        if (!userId) {
           return res.status(400).json({
             success: false,
-            message: 'Validation errors',
-            errors: errors.array()
+            message: 'User ID is required'
           });
         }
 
-        const { jewelryId, customization } = req.body;
-        
-        const result = await UploadYouOwnService.saveCustomization(jewelryId, customization);
-        
-        if (result.success) {
-          res.json(result);
+        // Validate images - must have either uploaded files or image URLs
+        const uploadedFiles = req.files as Express.Multer.File[];
+        let finalImageUrls: string[] = [];
+
+        if (uploadedFiles && uploadedFiles.length > 0) {
+          // Images were uploaded via files
+          finalImageUrls = uploadedFiles.map(file => file.path);
+        } else if (images && typeof images === 'string') {
+          // Single image URL provided
+          finalImageUrls = [images];
+        } else if (Array.isArray(images)) {
+          // Multiple image URLs provided
+          finalImageUrls = images;
+        } else if (imageUrls) {
+          // Alternative field for image URLs
+          finalImageUrls = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
         } else {
-          res.status(404).json(result);
+          return res.status(400).json({
+            success: false,
+            message: 'Either upload images or provide image URLs'
+          });
         }
+
+        if (finalImageUrls.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'At least one image is required'
+          });
+        }
+
+        // Validate image URLs if provided
+        if (!uploadedFiles || uploadedFiles.length === 0) {
+          const urlPattern = /^https?:\/\/.+/;
+          for (const url of finalImageUrls) {
+            if (!urlPattern.test(url)) {
+              return res.status(400).json({
+                success: false,
+                message: `Invalid image URL: ${url}`
+              });
+            }
+          }
+        }
+
+        // Prepare customization data
+        const customizationData: any = {
+          sameAsImage: sameAsImage === 'true' || sameAsImage === true,
+          metal,
+          metalColor,
+          goldKarat,
+          diamondShape,
+          diamondSize,
+          diamondColor,
+          diamondClarity,
+          ringSize,
+          engraving,
+          modificationRequest,
+          description,
+          priority,
+          estimatedDelivery,
+          specialInstructions
+        };
+
+        // Remove undefined values
+        Object.keys(customizationData).forEach(key => {
+          if (customizationData[key] === undefined || customizationData[key] === '') {
+            delete customizationData[key];
+          }
+        });
+
+        // Create complete jewelry data
+        const jewelryData = {
+          userId,
+          jewelryType,
+          images: finalImageUrls.map((url, index) => ({
+            url,
+            publicId: uploadedFiles && uploadedFiles[index] ? uploadedFiles[index].filename : `url-${Date.now()}-${index}`,
+            userId,
+            uploadedAt: new Date(),
+            source: uploadedFiles && uploadedFiles[index] ? 'upload' : 'url'
+          })),
+          customization: customizationData,
+          status: 'payment_pending', // Ready for payment
+          createdAt: new Date()
+        };
+
+        // Save to database using the service
+        const result = await UploadYouOwnService.createCompleteJewelry(jewelryData);
+
+        if (result.success) {
+          res.status(201).json({
+            success: true,
+            message: 'Custom jewelry created successfully',
+            data: {
+              jewelryId: result.data?.jewelryId,
+              userId: result.data?.userId,
+              jewelryType: result.data?.jewelryType,
+              images: result.data?.images,
+              customization: result.data?.customization,
+              status: result.data?.status,
+              createdAt: result.data?.createdAt,
+              imageSources: finalImageUrls.map((url, index) => ({
+                url,
+                source: uploadedFiles && uploadedFiles[index] ? 'cloudinary' : 'external_url'
+              }))
+            }
+          });
+        } else {
+          res.status(400).json(result);
+        }
+
       } catch (error) {
-        console.error('Customize jewelry controller error:', error);
+        console.error('Complete upload you own error:', error);
         res.status(500).json({
           success: false,
-          message: 'Internal server error during customization',
+          message: 'Internal server error during upload',
           error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
@@ -196,6 +286,10 @@ export class UploadYouOwnController {
   };
 
   /**
+   * Admin routes
+   */
+
+  /**
    * Cleanup orphaned images (admin function)
    * POST /api/upload-you-own/admin/cleanup
    */
@@ -224,17 +318,13 @@ export class UploadYouOwnController {
    */
   static getUploadStats = async (req: Request, res: Response) => {
     try {
-      // This would require additional implementation
-      res.json({
-        success: true,
-        message: 'Upload statistics retrieved successfully',
-        data: {
-          totalUploads: 0,
-          totalUsers: 0,
-          totalImages: 0,
-          storageUsed: '0 MB'
-        }
-      });
+      const result = await UploadYouOwnService.getUploadStats();
+      
+      if (result.success) {
+        res.json(result);
+      } else {
+        res.status(500).json(result);
+      }
     } catch (error) {
       console.error('Get upload stats controller error:', error);
       res.status(500).json({
