@@ -28,6 +28,7 @@ import subProductRoutes from "./routes/subProduct";
 import blogRoutes from "./routes/blog";
 import uploadYouOwnRoutes from "./routes/uploadYouOwn";
 import imageViewAdminRoutes from "./routes/imageViewAdmin";
+import imageRoutes from "./routes/images";
 
 // Import tracking services
 import { TrackingController } from "./controllers/trackingController";
@@ -308,6 +309,7 @@ app.get("/api", (req: Request, res: Response) => {
       blogs: "/api/blogs",
       uploadYouOwn: "/api/upload-you-own",
       imageViewAdmin: "/api/admin/image-views",
+      images: "/api/images",
     },
   });
 });
@@ -362,6 +364,7 @@ app.use("/api/sub-products", deprecationWarning, subProductRoutes);
 app.use("/api/blogs", deprecationWarning, blogRoutes);
 app.use("/api/upload-you-own", deprecationWarning, uploadYouOwnRoutes);
 app.use("/api/admin/image-views", deprecationWarning, imageViewAdminRoutes);
+app.use("/api/images", deprecationWarning, imageRoutes);
 
 // Home route
 app.get("/", (req: Request, res: Response) => {

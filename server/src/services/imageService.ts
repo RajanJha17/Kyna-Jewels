@@ -307,7 +307,7 @@ export class ImageService {
       case 'GR': // Gents Rings: GR1-RD-70-2T-BR-RG-45
         if (attributes.diamondShape) parts.push(attributes.diamondShape);
         if (attributes.diamondSize) parts.push(attributes.diamondSize.toString());
-        if (attributes.tone) parts.push(attributes.tone);
+        if (attributes.tone) parts.push(attributes.tone); // 2T support
         if (attributes.finish) parts.push(attributes.finish);
         if (attributes.metal) parts.push(attributes.metal);
         if (attributes.view) parts.push(attributes.view);
@@ -316,7 +316,7 @@ export class ImageService {
       case 'FR': // Fashion Rings: Similar to gents rings
         if (attributes.diamondShape) parts.push(attributes.diamondShape);
         if (attributes.diamondSize) parts.push(attributes.diamondSize.toString());
-        if (attributes.tone) parts.push(attributes.tone);
+        if (attributes.tone) parts.push(attributes.tone); // 2T support
         if (attributes.finish) parts.push(attributes.finish);
         if (attributes.metal) parts.push(attributes.metal);
         if (attributes.view) parts.push(attributes.view);
@@ -338,10 +338,12 @@ export class ImageService {
         if (attributes.view) parts.push(attributes.view);
         break;
         
-      case 'PD': // Pendants: Similar to earrings
+      case 'PD': // Pendants: Handle complex and simple variants
         if (attributes.diamondShape) parts.push(attributes.diamondShape);
-        if (attributes.diamondSize) parts.push(attributes.diamondSize.toString().padStart(2, '0'));
-        if (attributes.metalColour) parts.push(attributes.metalColour);
+        if (attributes.diamondSize) parts.push(attributes.diamondSize.toString());
+        if (attributes.tone) parts.push(attributes.tone); // 2T support
+        if (attributes.metal) parts.push(attributes.metal);
+        if (attributes.finish) parts.push(attributes.finish);
         if (attributes.view) parts.push(attributes.view);
         break;
         
