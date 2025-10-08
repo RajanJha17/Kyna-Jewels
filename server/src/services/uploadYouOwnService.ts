@@ -395,8 +395,7 @@ export class UploadYouOwnService {
       console.error('Get upload stats error:', error);
       return {
         success: false,
-        message: 'Error fetching upload statistics',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        message: 'Error fetching upload statistics'
       };
     }
   }

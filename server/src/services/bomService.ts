@@ -147,7 +147,7 @@ export class BOMService {
           hasDiamond: hasDiamond,
           mainImage: this.generateImageUrl(bomEntry.uniqueVariantId, 'main'),
           thumbnailImages: this.generateThumbnailImages(bomEntry.uniqueVariantId),
-          variantImages: this.generateVariantImages(bomEntry.uniqueVariantId),
+          variantImages: await this.generateVariantImages(bomEntry.uniqueVariantId),
           availableDiamondShapes: this.getAvailableDiamondShapes(),
           availableDiamondSizes: this.getAvailableDiamondSizes(),
           availableDiamondColors: this.getAvailableDiamondColors(),
@@ -252,9 +252,9 @@ export class BOMService {
   /**
    * Generate variant images array using ImageService
    */
-  private generateVariantImages(variantId: string): string[] {
+  private async generateVariantImages(variantId: string): Promise<string[]> {
     const attributes = this.extractAttributesFromVariantId(variantId);
-    const images = this.imageService.generateImageUrlsFlexible(variantId, attributes);
+    const images = await this.imageService.generateImageUrlsFlexible(variantId, attributes);
     return images.sub;
   }
 
