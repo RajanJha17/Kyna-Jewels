@@ -18,12 +18,14 @@ export interface IImage {
   publicId: string;
   userId: string;
   uploadedAt: Date;
+  source?: 'upload' | 'url'; // Track if image was uploaded or provided as URL
 }
 
 /**
  * Customization Interface
  */
 export interface ICustomization {
+  sameAsImage?: boolean;
   metal?: string;
   metalColor?: string;
   goldKarat?: string;
@@ -35,6 +37,9 @@ export interface ICustomization {
   engraving?: string;
   modificationRequest?: string;
   description?: string;
+  priority?: string;
+  estimatedDelivery?: string;
+  specialInstructions?: string;
 }
 
 /**
@@ -70,10 +75,15 @@ const imageSchema = new Schema<IImage>({
   url: { type: String, required: true },
   publicId: { type: String, required: true },
   userId: { type: String, required: true },
-  uploadedAt: { type: Date, default: Date.now }
+  uploadedAt: { type: Date, default: Date.now },
+  source: { type: String, enum: ['upload', 'url'], default: 'upload' }
 }, { _id: false });
 
 const customizationSchema = new Schema<ICustomization>({
+  sameAsImage: {
+    type: Boolean,
+    default: false
+  },
   metal: {
     type: String,
     enum: ['Gold', 'Silver', 'Platinum', 'Rose Gold', 'White Gold']
@@ -116,6 +126,18 @@ const customizationSchema = new Schema<ICustomization>({
   description: {
     type: String,
     maxlength: 500
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'normal', 'high', 'urgent'],
+    default: 'normal'
+  },
+  estimatedDelivery: {
+    type: String
+  },
+  specialInstructions: {
+    type: String,
+    maxlength: 1000
   }
 }, { _id: false });
 

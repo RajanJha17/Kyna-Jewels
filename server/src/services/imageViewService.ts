@@ -149,14 +149,107 @@ export class ImageViewService {
     const skuPrefix = sku.substring(0, 2).toUpperCase();
     
     switch (skuPrefix) {
-      case 'GR': return 'Rings';
-      case 'ENG': return 'Rings';
-      case 'SR': return 'Rings';
-      case 'BR': return 'Bracelets';
-      case 'PN': return 'Pendants';
-      case 'ER': return 'Earrings';
-      default: return 'Rings';
+      case 'GR': return this.getGentsRingSubfolder(sku);
+      case 'ENG': return this.getEngagementRingSubfolder(sku);
+      case 'SR': return this.getSolitaireRingSubfolder(sku);
+      case 'BR': return 'BRACELETS/ALL BRACELETS';
+      case 'PN': return 'PENDANTS';
+      case 'ER': return this.getEarringSubfolder(sku);
+      case 'FR': return this.getFashionRingSubfolder(sku);
+      default: return 'GENTS RINGS/GR1-10';
     }
+  }
+
+  /**
+   * Get gents ring subfolder based on SKU
+   */
+  private static getGentsRingSubfolder(sku: string): string {
+    const match = sku.match(/GR(\d+)/);
+    if (!match) return 'GENTS RINGS/GR1-10';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 10) return 'GENTS RINGS/GR1-10';
+    if (num >= 11 && num <= 20) return 'GENTS RINGS/GR11-20';
+    if (num >= 21 && num <= 30) return 'GENTS RINGS/GR21-30';
+    if (num >= 31 && num <= 40) return 'GENTS RINGS/GR31-40';
+    if (num >= 41 && num <= 50) return 'GENTS RINGS/GR41-50';
+    if (num >= 51 && num <= 60) return 'GENTS RINGS/GR51-60';
+    if (num >= 61 && num <= 70) return 'GENTS RINGS/GR61-70';
+    if (num >= 71 && num <= 80) return 'GENTS RINGS/GR71-80';
+    if (num >= 81 && num <= 90) return 'GENTS RINGS/GR81-90';
+    if (num >= 91 && num <= 100) return 'GENTS RINGS/GR91-100';
+    return 'GENTS RINGS/GR1-10'; // Fallback
+  }
+
+  /**
+   * Get engagement ring subfolder based on SKU
+   */
+  private static getEngagementRingSubfolder(sku: string): string {
+    const match = sku.match(/ENG(\d+)/);
+    if (!match) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 10) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10';
+    if (num >= 11 && num <= 20) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG11-20';
+    if (num >= 21 && num <= 30) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG21-30';
+    if (num >= 31 && num <= 40) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG31-40';
+    if (num >= 41 && num <= 50) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG41-50';
+    if (num >= 51 && num <= 60) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG51-60';
+    if (num >= 61 && num <= 70) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG61-70';
+    if (num >= 71 && num <= 80) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG71-80';
+    if (num >= 81 && num <= 90) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG81-90';
+    if (num >= 91 && num <= 100) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG91-100';
+    return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10'; // Fallback
+  }
+
+  /**
+   * Get solitaire ring subfolder based on SKU
+   */
+  private static getSolitaireRingSubfolder(sku: string): string {
+    const match = sku.match(/SR(\d+)/);
+    if (!match) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 10) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10';
+    if (num >= 11 && num <= 20) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR11-20';
+    if (num >= 21 && num <= 30) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR21-30';
+    if (num >= 31 && num <= 40) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR31-40';
+    if (num >= 41 && num <= 50) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR41-50';
+    return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10'; // Fallback
+  }
+
+  /**
+   * Get earring subfolder based on SKU
+   */
+  private static getEarringSubfolder(sku: string): string {
+    const match = sku.match(/ER(\d+)/);
+    if (!match) return 'EARINGS/ER1-50';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 50) return 'EARINGS/ER1-50';
+    if (num >= 51 && num <= 100) return 'EARINGS/ER51-100';
+    if (num >= 101 && num <= 150) return 'EARINGS/ER101-150';
+    if (num >= 151 && num <= 200) return 'EARINGS/ER151-200';
+    if (num >= 201 && num <= 250) return 'EARINGS/ER201-250';
+    if (num >= 251 && num <= 300) return 'EARINGS/ER251-300';
+    return 'EARINGS/ER1-50'; // Fallback
+  }
+
+  /**
+   * Get fashion ring subfolder based on SKU
+   */
+  private static getFashionRingSubfolder(sku: string): string {
+    const match = sku.match(/FR(\d+)/);
+    if (!match) return 'FASHION RINGS/FR1-50';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 50) return 'FASHION RINGS/FR1-50';
+    if (num >= 51 && num <= 100) return 'FASHION RINGS/FR51-100';
+    if (num >= 101 && num <= 150) return 'FASHION RINGS/FR101-150';
+    if (num >= 151 && num <= 200) return 'FASHION RINGS/FR151-200';
+    if (num >= 201 && num <= 250) return 'FASHION RINGS/FR201-250';
+    if (num >= 251 && num <= 300) return 'FASHION RINGS/FR251-300';
+    return 'FASHION RINGS/FR1-50'; // Fallback
   }
 
   /**

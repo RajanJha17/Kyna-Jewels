@@ -4,16 +4,11 @@ import { UploadYouOwnController } from '../controllers/uploadYouOwnController';
 const router = express.Router();
 
 /**
- * Upload custom jewelry images
- * POST /api/upload-you-own/upload
+ * Complete Upload You Own process - Single comprehensive route
+ * POST /api/upload-you-own/complete
+ * Handles both image uploads and image URLs with full customization data
  */
-router.post('/upload', UploadYouOwnController.uploadJewelry);
-
-/**
- * Save customization details for jewelry
- * POST /api/upload-you-own/customize
- */
-router.post('/customize', UploadYouOwnController.customizeJewelry);
+router.post('/complete', UploadYouOwnController.completeUploadYouOwn);
 
 /**
  * Get jewelry by user ID
