@@ -97,16 +97,16 @@ export class ImageViewService {
       ]);
 
       // Generate main image URL (always GP)
-      const main = `${baseUrl}/${categoryPath}/${filename}-GP.jpg`;
+      const main = `${baseUrl}/${categoryPath}/${filename}-GP.webp`;
 
       // Generate sub view URLs
       const sub = subViews.map(view => 
-        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.jpg`
+        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.webp`
       );
 
       // Generate thumbnail URLs
       const thumbnails = thumbnailViews.map(view => 
-        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.jpg`
+        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.webp`
       );
 
       return { main, sub, thumbnails };
@@ -127,15 +127,15 @@ export class ImageViewService {
     const filename = `${sku}-${attributeString}`;
 
     return {
-      main: `${baseUrl}/${categoryPath}/${filename}-GP.jpg`,
+      main: `${baseUrl}/${categoryPath}/${filename}-GP.webp`,
       sub: [
-        `${baseUrl}/${categoryPath}/${filename}-45.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-BV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-EV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-FV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-TV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-NBV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-SV.jpg`,
+        `${baseUrl}/${categoryPath}/${filename}-45.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-BV.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-EV.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-FV.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-TV.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-NBV.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-SV.webp`,
         `${baseUrl}/${categoryPath}/${filename}-360.glb`
       ],
       thumbnails: []

@@ -212,7 +212,7 @@ export class ImageService {
   }
 
   /**
-   * Get gents ring subfolder based on SKU
+   * Get gents ring subfolder based on SKU (matches real VPS structure)
    */
   private getGentsRingSubfolder(sku: string): string {
     const match = sku.match(/GR(\d+)/);
@@ -225,11 +225,6 @@ export class ImageService {
     if (num >= 31 && num <= 40) return 'GENTS RINGS/GR31-40';
     if (num >= 41 && num <= 50) return 'GENTS RINGS/GR41-50';
     if (num >= 51 && num <= 60) return 'GENTS RINGS/GR51-60';
-    if (num >= 61 && num <= 70) return 'GENTS RINGS/GR61-70';
-    if (num >= 71 && num <= 80) return 'GENTS RINGS/GR71-80';
-    if (num >= 81 && num <= 90) return 'GENTS RINGS/GR81-90';
-    if (num >= 91 && num <= 100) return 'GENTS RINGS/GR91-100';
-    // Add more ranges as needed
     return 'GENTS RINGS/GR1-10'; // Fallback
   }
 
@@ -279,11 +274,9 @@ export class ImageService {
     
     const num = parseInt(match[1], 10);
     if (num >= 1 && num <= 40) return 'PENDANTS/PD1-40';
-    if (num >= 41 && num <= 100) return 'PENDANTS/PD41-100';
     if (num >= 101 && num <= 150) return 'PENDANTS/PD101-150';
     if (num >= 151 && num <= 200) return 'PENDANTS/PD151-200';
     if (num >= 201 && num <= 250) return 'PENDANTS/PD201-250';
-    if (num >= 251 && num <= 300) return 'PENDANTS/PD251-300';
     return 'PENDANTS/PD1-40'; // Fallback
   }
 
@@ -376,11 +369,11 @@ export class ImageService {
     const filename = `${sku}-${attributeString}`;
     
       return {
-      main: `${baseUrl}/${categoryPath}/${filename}-GP.jpg`,
+      main: `${baseUrl}/${categoryPath}/${filename}-GP.webp`,
       thumbnails: [
-        `${baseUrl}/${categoryPath}/${filename}-TH1.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-TH2.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-TH3.jpg`
+        `${baseUrl}/${categoryPath}/${filename}-TH1.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-TH2.webp`,
+        `${baseUrl}/${categoryPath}/${filename}-TH3.webp`
       ]
     };
   }
@@ -410,15 +403,15 @@ export class ImageService {
       const filename = `${sku}-${attributeString}`;
       
       return {
-        main: `${baseUrl}/${categoryPath}/${filename}-GP.jpg`,
+        main: `${baseUrl}/${categoryPath}/${filename}-GP.webp`,
         sub: [
-          `${baseUrl}/${categoryPath}/${filename}-45.jpg`,
-          `${baseUrl}/${categoryPath}/${filename}-BV.jpg`,
-          `${baseUrl}/${categoryPath}/${filename}-EV.jpg`,
-          `${baseUrl}/${categoryPath}/${filename}-FV.jpg`,
-          `${baseUrl}/${categoryPath}/${filename}-TV.jpg`,
-          `${baseUrl}/${categoryPath}/${filename}-NBV.jpg`,
-          `${baseUrl}/${categoryPath}/${filename}-SV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-45.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-BV.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-EV.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-FV.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-TV.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-NBV.webp`,
+          `${baseUrl}/${categoryPath}/${filename}-SV.webp`,
           `${baseUrl}/${categoryPath}/${filename}-360.glb`
         ]
       };
