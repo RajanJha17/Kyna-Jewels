@@ -374,26 +374,43 @@ export class ImageService {
   }
 
   /**
-   * Generate flexible image URLs for Hostinger VPS
+   * Generate flexible image URLs for Hostinger VPS using dynamic views
    */
-  generateImageUrlsFlexible(sku: string, attributes: any): any {
-    const baseUrl = process.env.IMAGE_BASE_URL || 'https://kynajewels.com/images/RENDERING%20PHOTOS';
-    const categoryPath = this.getCategoryPath(sku);
-    const attributeString = this.buildAttributeString(sku, attributes);
-    const filename = `${sku}-${attributeString}`;
-    
-    return {
-      main: `${baseUrl}/${categoryPath}/${filename}-GP.jpg`,
-      sub: [
-        `${baseUrl}/${categoryPath}/${filename}-SIDE.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-TOP.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-DETAIL.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-LIFESTYLE.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-COMPARISON.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-CUSTOM.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-360.jpg`
-      ]
-    };
+  async generateImageUrlsFlexible(sku: string, attributes: any, category: string = 'all'): Promise<any> {
+    try {
+      // Import ImageViewService dynamically to avoid circular dependency
+      const { ImageViewService } = await import('./imageViewService');
+      
+      // Use dynamic view service
+      const imageUrls = await ImageViewService.generateDynamicImageUrls(sku, attributes, category);
+      
+      return {
+        main: imageUrls.main,
+        sub: imageUrls.sub
+      };
+    } catch (error) {
+      console.error('Error generating dynamic image URLs, falling back to default:', error);
+      
+      // Fallback to hardcoded views if dynamic service fails
+      const baseUrl = process.env.IMAGE_BASE_URL || 'https://kynajewels.com/images/RENDERING%20PHOTOS';
+      const categoryPath = this.getCategoryPath(sku);
+      const attributeString = this.buildAttributeString(sku, attributes);
+      const filename = `${sku}-${attributeString}`;
+      
+      return {
+        main: `${baseUrl}/${categoryPath}/${filename}-GP.jpg`,
+        sub: [
+          `${baseUrl}/${categoryPath}/${filename}-45.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-BV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-EV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-FV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-TV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-NBV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-SV.jpg`,
+          `${baseUrl}/${categoryPath}/${filename}-360.glb`
+        ]
+      };
+    }
   }
 }
 

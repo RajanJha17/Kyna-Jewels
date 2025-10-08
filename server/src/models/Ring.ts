@@ -38,11 +38,24 @@ export interface ICustomization {
 }
 
 /**
- * Ring Interface
+ * Jewelry Types Enum
+ */
+export enum JewelryType {
+  RING = 'ring',
+  NECKLACE = 'necklace',
+  BRACELET = 'bracelet',
+  EARRINGS = 'earrings',
+  PENDANT = 'pendant',
+  CUSTOM = 'custom'
+}
+
+/**
+ * Ring Interface (now supports all jewelry types)
  */
 export interface IRing extends Document {
   userId: string;
   images: IImage[];
+  jewelryType?: JewelryType;
   sameAsImage: boolean;
   customization?: ICustomization;
   status: RingStatus;
@@ -113,6 +126,12 @@ const ringSchema = new Schema<IRing>({
     index: true
   },
   images: [imageSchema],
+  jewelryType: {
+    type: String,
+    enum: Object.values(JewelryType),
+    default: JewelryType.CUSTOM,
+    index: true
+  },
   sameAsImage: {
     type: Boolean,
     default: false
@@ -132,6 +151,8 @@ const ringSchema = new Schema<IRing>({
 // Indexes for better query performance
 ringSchema.index({ userId: 1, createdAt: -1 });
 ringSchema.index({ status: 1 });
+ringSchema.index({ jewelryType: 1 });
+ringSchema.index({ userId: 1, jewelryType: 1 });
 
 const Ring = mongoose.model<IRing>('Ring', ringSchema);
 

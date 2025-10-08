@@ -289,7 +289,7 @@ export const getProductImages = async (req: Request, res: Response) => {
       }
     });
 
-    // Get images using flexible BOM naming convention
+    // Get images using flexible BOM naming convention with dynamic views
     const images = await productService.getProductImages(id, attributes);
 
     // Get product details for additional context
@@ -300,6 +300,13 @@ export const getProductImages = async (req: Request, res: Response) => {
         message: 'Product not found'
       });
     }
+
+    // Get dynamic view configuration
+    const { ImageViewService } = await import('../services/imageViewService');
+    const [mainView, subViews] = await Promise.all([
+      ImageViewService.getMainView(),
+      ImageViewService.getSubViews(product.subCategory?.toLowerCase() || 'all')
+    ]);
 
     res.status(200).json({
       success: true,
@@ -318,9 +325,20 @@ export const getProductImages = async (req: Request, res: Response) => {
             'Pendant': 'PN1-EM-25-1T-SL-GP',
             'Earrings': 'ER1-CUS-40-2T-BR-RG-GP'
           },
+          viewTypes: {
+            'GP': 'Ground Pose (Main View)',
+            '45': '45° Angle View',
+            'BV': 'Builder View',
+            'EV': 'Engraving View',
+            'FV': 'Front View',
+            'TV': 'Top View',
+            'NBV': 'New Builder View',
+            'SV': 'Side View',
+            '360': '3D View (.glb file)'
+          },
           views: {
-            main: 'GP (Ground View)',
-            sub: ['SIDE', 'TOP', 'DETAIL', 'LIFESTYLE', 'COMPARISON', 'CUSTOM', '360']
+            main: mainView ? { type: mainView.viewType, name: mainView.displayName } : { type: 'GP', name: 'Ground View' },
+            sub: subViews.map(view => ({ type: view.viewType, name: view.displayName }))
           },
           supportedAttributes: [
             'diamondShape', 'diamondSize', 'diamondColor', 'diamondOrigin',

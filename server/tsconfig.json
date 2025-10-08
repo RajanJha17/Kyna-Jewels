@@ -18,7 +18,8 @@
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "lib": ["es2020"]
+    "lib": ["es2020", "dom"],
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
