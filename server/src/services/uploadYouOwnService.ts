@@ -15,6 +15,12 @@ export interface IUploadResponse {
     jewelryType: string;
     sameAsImage: boolean;
     status: RingStatus;
+    customization?: ICustomizationData;
+    createdAt?: Date;
+    imageSources?: Array<{
+      url: string;
+      source: 'cloudinary' | 'external_url';
+    }>;
   };
   error?: string;
 }
