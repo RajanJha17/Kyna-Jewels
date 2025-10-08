@@ -161,30 +161,18 @@ export class ImageService {
    * Get category folder path based on SKU for Hostinger VPS
    */
   private getCategoryPath(sku: string): string {
-    const skuPrefix = sku.match(/^[A-Z]+/)?.[0] || '';
+    const skuUpper = sku.toUpperCase();
     
-    switch (skuPrefix) {
-      case 'BR':
-        return 'BRACELETS/ALL BRACELETS';
-      
-      case 'ER':
-        return this.getEarringSubfolder(sku);
-      
-      case 'FR':
-        return this.getFashionRingSubfolder(sku);
-      
-      case 'GR':
-        return this.getGentsRingSubfolder(sku);
-      
-      case 'ENG':
-        return this.getEngagementRingSubfolder(sku);
-      
-      case 'SR':
-        return this.getSolitaireRingSubfolder(sku);
-      
-      default:
-        return 'OTHERS';
-    }
+    // Check for longer prefixes first
+    if (skuUpper.startsWith('ENG')) return this.getEngagementRingSubfolder(sku);
+    if (skuUpper.startsWith('SR')) return this.getSolitaireRingSubfolder(sku);
+    if (skuUpper.startsWith('GR')) return this.getGentsRingSubfolder(sku);
+    if (skuUpper.startsWith('BR')) return 'BRACELETS/ALL BRACELETS';
+    if (skuUpper.startsWith('PD')) return this.getPendantSubfolder(sku);
+    if (skuUpper.startsWith('ER')) return this.getEarringSubfolder(sku);
+    if (skuUpper.startsWith('FR')) return this.getFashionRingSubfolder(sku);
+    
+    return 'OTHERS';
   }
 
   /**
@@ -201,7 +189,7 @@ export class ImageService {
     if (num >= 151 && num <= 200) return 'EARINGS/ER151-200';
     if (num >= 201 && num <= 250) return 'EARINGS/ER201-250';
     if (num >= 251 && num <= 300) return 'EARINGS/ER251-300';
-    // Add more ranges as needed
+    if (num >= 301 && num <= 400) return 'EARINGS/ER301-400';
     return 'EARINGS/ER1-50'; // Fallback
   }
 
@@ -219,7 +207,7 @@ export class ImageService {
     if (num >= 151 && num <= 200) return 'FASHION RINGS/FR151-200';
     if (num >= 201 && num <= 250) return 'FASHION RINGS/FR201-250';
     if (num >= 251 && num <= 300) return 'FASHION RINGS/FR251-300';
-    // Add more ranges as needed
+    if (num >= 301 && num <= 350) return 'FASHION RINGS/FR301-350';
     return 'FASHION RINGS/FR1-50'; // Fallback
   }
 
@@ -263,18 +251,9 @@ export class ImageService {
     if (num >= 71 && num <= 80) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG71-80';
     if (num >= 81 && num <= 90) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG81-90';
     if (num >= 91 && num <= 100) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG91-100';
-    if (num >= 101 && num <= 110) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG101-110';
-    if (num >= 111 && num <= 120) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG111-120';
-    if (num >= 121 && num <= 130) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG121-130';
-    if (num >= 131 && num <= 140) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG131-140';
-    if (num >= 141 && num <= 150) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG141-150';
-    if (num >= 151 && num <= 160) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG151-160';
-    if (num >= 161 && num <= 170) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG161-170';
-    if (num >= 171 && num <= 180) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG171-180';
-    if (num >= 181 && num <= 190) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG181-190';
-    if (num >= 191 && num <= 200) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG191-200';
+    if (num >= 101 && num <= 150) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG101-150';
+    if (num >= 151 && num <= 200) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG151-200';
     if (num >= 201 && num <= 250) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG201-250';
-    // Add more ranges as needed
     return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10'; // Fallback
   }
 
@@ -287,12 +266,25 @@ export class ImageService {
     
     const num = parseInt(match[1], 10);
     if (num >= 1 && num <= 10) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10';
-    if (num >= 11 && num <= 20) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR11-20';
-    if (num >= 21 && num <= 30) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR21-30';
-    if (num >= 31 && num <= 40) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR31-40';
-    if (num >= 41 && num <= 50) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR41-50';
-    // Add more ranges as needed
+    if (num >= 11 && num <= 21) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR11-21';
     return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10'; // Fallback
+  }
+
+  /**
+   * Get pendant subfolder based on SKU
+   */
+  private getPendantSubfolder(sku: string): string {
+    const match = sku.match(/PD(\d+)/);
+    if (!match) return 'PENDANTS/PD1-40';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 40) return 'PENDANTS/PD1-40';
+    if (num >= 41 && num <= 100) return 'PENDANTS/PD41-100';
+    if (num >= 101 && num <= 150) return 'PENDANTS/PD101-150';
+    if (num >= 151 && num <= 200) return 'PENDANTS/PD151-200';
+    if (num >= 201 && num <= 250) return 'PENDANTS/PD201-250';
+    if (num >= 251 && num <= 300) return 'PENDANTS/PD251-300';
+    return 'PENDANTS/PD1-40'; // Fallback
   }
 
   /**
@@ -350,6 +342,13 @@ export class ImageService {
         if (attributes.material) parts.push(attributes.material);
         if (attributes.size) parts.push(attributes.size);
         if (attributes.clasp) parts.push(attributes.clasp);
+        if (attributes.view) parts.push(attributes.view);
+        break;
+        
+      case 'PD': // Pendants: Similar to earrings
+        if (attributes.diamondShape) parts.push(attributes.diamondShape);
+        if (attributes.diamondSize) parts.push(attributes.diamondSize.toString().padStart(2, '0'));
+        if (attributes.metalColour) parts.push(attributes.metalColour);
         if (attributes.view) parts.push(attributes.view);
         break;
         
