@@ -9,6 +9,13 @@ interface User {
   displayName?: string;
   role?: string;
   isVerified?: boolean;
+  profileImage?: string;
+  secondaryEmail?: string;
+  phoneNumber?: string;
+  phone?: string;
+  zipCode?: string;
+  state?: string;
+  country?: string;
   // Add other relevant user properties here
 }
 

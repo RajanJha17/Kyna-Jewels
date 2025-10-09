@@ -13,6 +13,12 @@ import {
 // import { Progress } from "@/components/ui/progress";
 import { X, Edit, Upload } from "lucide-react";
 import { StickyTwoColumnLayout } from "@/components/StickyTwoColumnLayout";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import EngravingPage from "../Engrave";
+import PaymentForm from "../../components/PaymentForm";
+import { json } from "stream/consumers";
+
 const steps = [
   { number: 1, title: "Inspiration Upload", active: true },
   { number: 2, title: "Customize Properties", active: false },
@@ -54,37 +60,81 @@ const goldKarat = ["22KT", "18KT", "14KT", "10KT"];
 
 export default function RingBuilder() {
   const [currentStep, setCurrentStep] = useState(1);
+  const authUser = useSelector((state: RootState) => state.auth.user);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  // const navigate = useNavigate();
+  const [selectedEngravingImage, setSelectedEngravingImage] =
+    useState<string>("");
+  const [showEngravingPopup, setShowEngravingPopup] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [orderData, setOrderData] = useState<any>(null);
+  const [createdOrderId, setCreatedOrderId] = useState<string>("");
+
   const [formData, setFormData] = useState({
+    // API matching fields
+    userId: authUser?.id || "",
+    jewelryType: "ring",
+
+    // Image data
     url: "",
-    modification: "",
+    images: [] as string[],
+    imageUrls: [] as string[],
+
+    // Customization data
+    sameAsImage: false,
+    modificationRequest: "",
     description: "",
     diamondShape: "Round",
     diamondSize: "Center Stone",
     diamondColor: "Center Stone",
-    metalType: "Gold",
+    diamondClarity: "Center Stone",
+    metal: "Gold",
     metalColor: "Same as Image",
-    ringSize: "",
     goldKarat: "22KT",
+    ringSize: "",
     engraving: "",
-    firstName: "",
-    lastName: "",
+
+    // Additional options
+    priority: "normal",
+    specialInstructions: "",
+
+    // Contact information
+    firstName: authUser?.firstName || "",
+    lastName: authUser?.lastName || "",
     address: "",
-    country: "",
-    region: "",
+    country: authUser?.country || "",
+    region: authUser?.state || "",
     city: "",
-    zipCode: "",
-    email: "",
-    phoneNumber: "",
+    zipCode: authUser?.zipCode || "",
+    email: authUser?.email || "",
+    phoneNumber: authUser?.phoneNumber || authUser?.phone || "",
   });
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const imageUrls = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const newFiles = Array.from(files);
+      const imageUrls = newFiles.map((file) => URL.createObjectURL(file));
+
       setUploadedImages([...uploadedImages, ...imageUrls]);
+      setUploadedFiles([...uploadedFiles, ...newFiles]);
+
+      // Update formData with new image data
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...imageUrls],
+      }));
+
+      console.log("📸 Images uploaded:", {
+        totalImages: uploadedImages.length + imageUrls.length,
+        newImages: imageUrls.length,
+        filesInfo: newFiles.map((file) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        })),
+      });
     }
   };
 
@@ -94,43 +144,99 @@ export default function RingBuilder() {
 
   const updateSteps = (step: number) => {
     setCurrentStep(step);
+
+    // Log step-specific data matching API structure
+    if (step === 1) {
+      console.log("🎯 Step 1 - Image Upload Data:", {
+        userId: formData.userId,
+        jewelryType: formData.jewelryType,
+        totalImages: uploadedImages.length,
+        imageUrls: formData.url ? [formData.url] : [],
+        uploadedFiles: uploadedFiles.length,
+        modificationRequest: formData.modificationRequest,
+        description: formData.description,
+        sameAsImage: formData.sameAsImage,
+      });
+    } else if (step === 2) {
+      console.log("⚙️ Step 2 - Customization Data:", {
+        userId: formData.userId,
+        jewelryType: formData.jewelryType,
+        customization: {
+          sameAsImage: formData.sameAsImage,
+          diamondShape: formData.diamondShape,
+          diamondSize: formData.diamondSize,
+          diamondColor: formData.diamondColor,
+          diamondClarity: formData.diamondClarity,
+          metal: formData.metal,
+          metalColor: formData.metalColor,
+          goldKarat: formData.goldKarat,
+          ringSize: formData.ringSize,
+          engraving: formData.engraving,
+          modificationRequest: formData.modificationRequest,
+          description: formData.description,
+          priority: formData.priority,
+          specialInstructions: formData.specialInstructions,
+        },
+        images: {
+          uploadedCount: uploadedFiles.length,
+          urlProvided: !!formData.url,
+          totalImageSources: uploadedImages.length,
+        },
+      });
+    } else if (step === 3) {
+      // Complete API payload structure
+      const completePayload = {
+        userId: formData.userId,
+        jewelryType: formData.jewelryType,
+
+        // Image data - will be handled by FormData in actual API call
+        images:
+          uploadedFiles.length > 0
+            ? uploadedFiles
+            : formData.url
+            ? [formData.url]
+            : [],
+        imageUrls: formData.url ? [formData.url] : [],
+
+        // Customization data
+        sameAsImage: formData.sameAsImage,
+        metal: formData.metal,
+        metalColor: formData.metalColor,
+        goldKarat: formData.goldKarat,
+        diamondShape: formData.diamondShape,
+        diamondSize: formData.diamondSize,
+        diamondColor: formData.diamondColor,
+        diamondClarity: formData.diamondClarity,
+        ringSize: formData.ringSize,
+        engraving: formData.engraving,
+        modificationRequest: formData.modificationRequest,
+        description: formData.description,
+
+        // Additional options
+        priority: formData.priority,
+        specialInstructions: formData.specialInstructions,
+
+        // Contact information (for payment step)
+        contactInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: formData.address,
+          country: formData.country,
+          region: formData.region,
+          city: formData.city,
+          zipCode: formData.zipCode,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+        },
+      };
+
+      console.log("💳 Step 3 - Complete API Payload:", completePayload);
+      console.log(
+        "📋 Ready for API call to: POST /api/upload-you-own/complete"
+      );
+    }
   };
 
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      {steps.map((step, index) => (
-        <div key={step.number} className="flex items-center">
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step.number <= currentStep
-                  ? "bg-[#328F94] text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {step.number}
-            </div>
-            <span
-              className={`text-xs mt-2 text-center max-w-20 ${
-                step.number <= currentStep
-                  ? "text-[#328F94] font-medium"
-                  : "text-muted-foreground"
-              }`}
-            >
-              {step.title}
-            </span>
-          </div>
-          {index < steps.length - 1 && (
-            <div
-              className={`w-16 h-1 mb-6 mx-4 ${
-                step.number < currentStep ? "bg-[#328F94]" : "bg-gray-300"
-              }`}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
   const [same_as_image, setSame_as_image] = useState(false);
   const renderStep1 = () => (
     <div className="max-w-6xl mx-auto">
@@ -210,7 +316,7 @@ export default function RingBuilder() {
             </div>
 
             {/* URL Input */}
-            <div>
+            {/* <div>
               <p className="text-center text-sm text-muted-foreground mb-4">
                 OR
               </p>
@@ -219,9 +325,21 @@ export default function RingBuilder() {
                 <Input
                   placeholder="Add URL"
                   value={formData.url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, url: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const newUrl = e.target.value;
+                    setFormData({
+                      ...formData,
+                      url: newUrl,
+                      imageUrls: newUrl ? [newUrl] : [],
+                    });
+
+                    console.log("🔗 URL Updated:", {
+                      url: newUrl,
+                      imageUrls: newUrl ? [newUrl] : [],
+                      userId: formData.userId,
+                      jewelryType: formData.jewelryType,
+                    });
+                  }}
                 />
                 <p className="text-xs text-muted-foreground">
                   Please upload a URL link to your chosen design or sketch, and
@@ -229,7 +347,7 @@ export default function RingBuilder() {
                   further!
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         }
         rightColumn={
@@ -250,10 +368,20 @@ export default function RingBuilder() {
               </label>
               <Input
                 placeholder="Enter Input"
-                value={formData.modification}
-                onChange={(e) =>
-                  setFormData({ ...formData, modification: e.target.value })
-                }
+                value={formData.modificationRequest}
+                onChange={(e) => {
+                  const newModification = e.target.value;
+                  setFormData({
+                    ...formData,
+                    modificationRequest: newModification,
+                  });
+
+                  console.log("✏️ Modification Request Updated:", {
+                    modificationRequest: newModification,
+                    length: newModification.length,
+                    meetRequirement: newModification.length >= 15,
+                  });
+                }}
               />
             </div>
 
@@ -265,12 +393,23 @@ export default function RingBuilder() {
               <Textarea
                 placeholder="Enter Description..."
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => {
+                  const newDescription = e.target.value;
+                  const wordCount = newDescription.trim().split(/\s+/).length;
+                  setFormData({ ...formData, description: newDescription });
+
+                  console.log("📝 Description Updated:", {
+                    description: newDescription,
+                    characterCount: newDescription.length,
+                    wordCount: wordCount,
+                    withinLimit: wordCount <= 100,
+                  });
+                }}
                 className="min-h-24"
               />
-              <p className="text-xs text-muted-foreground">0 characters.</p>
+              <p className="text-xs text-muted-foreground">
+                {formData.description.length} characters.
+              </p>
               <p className="text-xs text-muted-foreground">
                 "We want to make sure your ring is exactly how you envision it.
                 Please share your thoughts on."
@@ -280,8 +419,16 @@ export default function RingBuilder() {
                   type="checkbox"
                   id="same-image"
                   className="rounded border-border"
-                  onClick={() => {
-                    setSame_as_image(!same_as_image);
+                  checked={formData.sameAsImage}
+                  onChange={(e) => {
+                    const sameAsImage = e.target.checked;
+                    setFormData({ ...formData, sameAsImage });
+
+                    console.log("🎯 Same as Image Updated:", {
+                      sameAsImage,
+                      willDisableCustomization: sameAsImage,
+                      userId: formData.userId,
+                    });
                   }}
                 />
                 <label htmlFor="same-image" className="text-sm">
@@ -304,6 +451,7 @@ export default function RingBuilder() {
     </div>
   );
 
+  // Update renderStep2 with proper logging
   const renderStep2 = () => (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
@@ -323,14 +471,14 @@ export default function RingBuilder() {
         leftColumn={
           <div
             className={`space-y-6 ${
-              same_as_image ? "pointer-events-none opacity-50" : ""
+              formData.sameAsImage ? "pointer-events-none opacity-50" : ""
             }`}
           >
             {/* Selected Images */}
             <div>
               <div
                 className={`flex items-center justify-between mb-4 ${
-                  same_as_image ? "text-gray-400" : ""
+                  formData.sameAsImage ? "text-gray-400" : ""
                 }`}
               >
                 <h3 className="font-medium">Selected Images</h3>
@@ -338,7 +486,9 @@ export default function RingBuilder() {
                   variant="link"
                   size="sm"
                   className={`text-[#328F94] ${
-                    same_as_image ? "text-gray-400 pointer-events-none" : ""
+                    formData.sameAsImage
+                      ? "text-gray-400 pointer-events-none"
+                      : ""
                   }`}
                 >
                   Change Image
@@ -354,7 +504,7 @@ export default function RingBuilder() {
                     />
                     <button
                       className={`absolute top-1 right-1 w-6 h-6 bg-white/80 rounded-full flex items-center justify-center ${
-                        same_as_image ? "pointer-events-none" : ""
+                        formData.sameAsImage ? "pointer-events-none" : ""
                       }`}
                     >
                       <Edit className="w-3 h-3" />
@@ -368,7 +518,7 @@ export default function RingBuilder() {
             <div>
               <h3
                 className={`font-medium mb-4 ${
-                  same_as_image ? "text-gray-400" : ""
+                  formData.sameAsImage ? "text-gray-400" : ""
                 }`}
               >
                 Select Diamond Shape * : {formData.diamondShape}
@@ -377,15 +527,24 @@ export default function RingBuilder() {
                 {diamondShapes.map((shape) => (
                   <button
                     key={shape.name}
-                    onClick={() =>
-                      setFormData({ ...formData, diamondShape: shape.name })
-                    }
+                    onClick={() => {
+                      setFormData({ ...formData, diamondShape: shape.name });
+
+                      console.log("💎 Diamond Shape Selected:", {
+                        diamondShape: shape.name,
+                        userId: formData.userId,
+                        sameAsImage: formData.sameAsImage,
+                        customizationDisabled: formData.sameAsImage,
+                      });
+                    }}
                     className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 text-xs ${
                       formData.diamondShape === shape.name
                         ? "bg-[#328F94]/20"
                         : ""
                     } ${
-                      same_as_image ? "text-gray-400 pointer-events-none" : ""
+                      formData.sameAsImage
+                        ? "text-gray-400 pointer-events-none"
+                        : ""
                     }`}
                   >
                     <span className="text-2xl mb-1">{shape.icon}</span>
@@ -398,7 +557,7 @@ export default function RingBuilder() {
             <div>
               <h3
                 className={`font-medium mb-4 ${
-                  same_as_image ? "text-gray-400" : ""
+                  formData.sameAsImage ? "text-gray-400" : ""
                 }`}
               >
                 Select Diamond Specification
@@ -407,7 +566,7 @@ export default function RingBuilder() {
                 <div className="bg-white/50 rounded-lg ">
                   <label
                     className={`text-sm text-muted-foreground ${
-                      same_as_image ? "text-gray-400" : ""
+                      formData.sameAsImage ? "text-gray-400" : ""
                     }`}
                   >
                     Diamond Size *
@@ -417,7 +576,7 @@ export default function RingBuilder() {
                     onValueChange={(value) =>
                       setFormData({ ...formData, diamondSize: value })
                     }
-                    disabled={same_as_image}
+                    disabled={formData.sameAsImage}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -433,7 +592,7 @@ export default function RingBuilder() {
                 <div>
                   <label
                     className={`text-sm text-muted-foreground ${
-                      same_as_image ? "text-gray-400" : ""
+                      formData.sameAsImage ? "text-gray-400" : ""
                     }`}
                   >
                     Diamond Color & Clarity *
@@ -443,7 +602,7 @@ export default function RingBuilder() {
                     onValueChange={(value) =>
                       setFormData({ ...formData, diamondColor: value })
                     }
-                    disabled={same_as_image}
+                    disabled={formData.sameAsImage}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -463,17 +622,17 @@ export default function RingBuilder() {
             <div>
               <label
                 className={`text-sm text-muted-foreground ${
-                  same_as_image ? "text-gray-400" : ""
+                  formData.sameAsImage ? "text-gray-400" : ""
                 }`}
               >
                 Metal Type *
               </label>
               <Select
-                value={formData.metalType}
+                value={formData.metal}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, metalType: value })
+                  setFormData({ ...formData, metal: value })
                 }
-                disabled={same_as_image}
+                disabled={formData.sameAsImage}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -486,11 +645,11 @@ export default function RingBuilder() {
               </Select>
             </div>
 
-            {/* Gold Karat */}
+            {/* Gold Karat with logging */}
             <div>
               <label
                 className={`text-sm font-medium mb-2 block ${
-                  same_as_image ? "text-gray-400" : ""
+                  formData.sameAsImage ? "text-gray-400" : ""
                 }`}
               >
                 Select Gold Karat
@@ -499,15 +658,24 @@ export default function RingBuilder() {
                 {goldKarat.map((karat) => (
                   <button
                     key={karat}
-                    onClick={() =>
-                      setFormData({ ...formData, goldKarat: karat })
-                    }
+                    onClick={() => {
+                      setFormData({ ...formData, goldKarat: karat });
+
+                      console.log("🥇 Gold Karat Selected:", {
+                        goldKarat: karat,
+                        metal: formData.metal,
+                        metalColor: formData.metalColor,
+                        sameAsImage: formData.sameAsImage,
+                      });
+                    }}
                     className={`px-4 py-2 rounded-md text-sm ${
                       formData.goldKarat === karat
                         ? "bg-[#328F94] text-white"
                         : "bg-muted hover:bg-muted/80"
                     } ${
-                      same_as_image ? "text-gray-400 pointer-events-none" : ""
+                      formData.sameAsImage
+                        ? "text-gray-400 pointer-events-none"
+                        : ""
                     }`}
                   >
                     {karat}
@@ -520,7 +688,7 @@ export default function RingBuilder() {
         rightColumn={
           <div
             className={`space-y-6 ${
-              same_as_image ? "pointer-events-none opacity-50" : ""
+              formData.sameAsImage ? "pointer-events-none opacity-50" : ""
             }`}
           >
             {/* Metal Color */}
@@ -567,22 +735,134 @@ export default function RingBuilder() {
               </Button>
             </div>
 
-            {/* Add Engraving */}
-            <Link to="/engrave-your-ring" className="text-sm text-[#328F94]">
-              <div className="bg-[#328F94]/5 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-[#328F94] text-white rounded-full flex items-center justify-center text-xs font-bold">
-                    +
-                  </div>
-                  <span className="font-medium">Add Engraving</span>
+            {/* Add Engraving - Updated with Popup */}
+            <div className="bg-[#328F94]/5 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 bg-[#328F94] text-white rounded-full flex items-center justify-center text-xs font-bold">
+                  +
                 </div>
-                <p className="text-sm text-[#8D8A91] mb-3">
-                  Max 15 characters. We suggest 12 characters or less. More
-                  characters will make the font size smaller. Engraving will
-                  appear on the side of the ring on the inside.
-                </p>
+                <span className="font-medium">Add Engraving</span>
               </div>
-            </Link>
+              <p className="text-sm text-[#8D8A91] mb-3">
+                Max 15 characters. We suggest 12 characters or less. More
+                characters will make the font size smaller. Engraving will
+                appear on the side of the ring on the inside.
+              </p>
+
+              {/* Image Selection for Engraving */}
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-gray-700">
+                  Select an image for engraving:
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {uploadedImages.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`relative cursor-pointer border-2 rounded-lg overflow-hidden transition-all ${
+                        selectedEngravingImage === image
+                          ? "border-[#328F94] bg-[#328F94]/10"
+                          : "border-gray-200 hover:border-[#328F94]/50"
+                      }`}
+                      onClick={() => {
+                        setSelectedEngravingImage(image);
+                        console.log("🖼️ Engraving image selected:", {
+                          imageIndex: index,
+                          imageUrl: image,
+                          userId: formData.userId,
+                        });
+                      }}
+                    >
+                      <img
+                        src={image}
+                        alt={`Engraving option ${index + 1}`}
+                        className="w-full h-16 object-cover"
+                      />
+                      {selectedEngravingImage === image && (
+                        <div className="absolute inset-0 bg-[#328F94]/20 flex items-center justify-center">
+                          <div className="w-4 h-4 bg-[#328F94] text-white rounded-full flex items-center justify-center text-xs">
+                            ✓
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-1 py-0.5">
+                        View {index + 1}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* URL Image option if provided */}
+                  {formData.url && (
+                    <div
+                      className={`relative cursor-pointer border-2 rounded-lg overflow-hidden transition-all ${
+                        selectedEngravingImage === formData.url
+                          ? "border-[#328F94] bg-[#328F94]/10"
+                          : "border-gray-200 hover:border-[#328F94]/50"
+                      }`}
+                      onClick={() => {
+                        setSelectedEngravingImage(formData.url);
+                        console.log("🖼️ URL engraving image selected:", {
+                          imageUrl: formData.url,
+                          userId: formData.userId,
+                        });
+                      }}
+                    >
+                      <img
+                        src={formData.url}
+                        alt="URL engraving option"
+                        className="w-full h-16 object-cover"
+                      />
+                      {selectedEngravingImage === formData.url && (
+                        <div className="absolute inset-0 bg-[#328F94]/20 flex items-center justify-center">
+                          <div className="w-4 h-4 bg-[#328F94] text-white rounded-full flex items-center justify-center text-xs">
+                            ✓
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-1 py-0.5">
+                        URL Image
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Proceed to Engraving Button */}
+                <Button
+                  onClick={() => {
+                    if (!selectedEngravingImage) {
+                      alert("Please select an image for engraving first.");
+                      return;
+                    }
+
+                    console.log("🎨 Opening engraving popup with image:", {
+                      selectedImage: selectedEngravingImage,
+                      jewelryType: formData.jewelryType,
+                      userId: formData.userId,
+                    });
+
+                    setShowEngravingPopup(true);
+                  }}
+                  className={`w-full text-sm py-2 transition-all ${
+                    selectedEngravingImage
+                      ? "bg-[#328F94] text-white hover:bg-[#328F94]/90"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  }`}
+                  disabled={!selectedEngravingImage}
+                >
+                  {selectedEngravingImage
+                    ? "Proceed to Engraving"
+                    : "Select Image First"}
+                </Button>
+
+                {/* Current Engraving Display */}
+                {formData.engraving && (
+                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                    <p className="text-xs text-green-700">
+                      <strong>Current Engraving:</strong> "{formData.engraving}"
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         }
       />
@@ -605,294 +885,591 @@ export default function RingBuilder() {
     </div>
   );
 
+  // Update renderStep3 with API call simulation
   const renderStep3 = () => (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Secure Payment</h1>
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>• Complete your purchase with 100% secure transactions.</p>
-          <p>• Pay via Card/Debit Card, UPI, Net Banking, or Wallets.</p>
-          <p>
-            • View a detailed product summary, including design choices and
-            pricing, with the option to make final edits.
-          </p>
-        </div>
-      </div>
+      {showPaymentForm && orderData && authUser ? (
+        <PaymentForm
+          orderData={orderData}
+          userInfo={{
+            userId: authUser.id || "",
+            firstName: authUser.firstName || formData.firstName,
+            lastName: authUser.lastName || formData.lastName,
+            email: authUser.email || formData.email,
+            phone: authUser.phoneNumber || formData.phoneNumber,
+            address: formData.address,
+            city: formData.city,
+            state: formData.region,
+            zipCode: formData.zipCode,
+            country: formData.country,
+          }}
+          onPaymentInitiated={handlePaymentInitiated}
+          onError={handlePaymentError}
+        />
+      ) : (
+        <>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-4">Secure Payment</h1>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>• Complete your purchase with 100% secure transactions.</p>
+              <p>• Pay via Card/Debit Card, UPI, Net Banking, or Wallets.</p>
+              <p>
+                • View a detailed product summary, including design choices and
+                pricing, with the option to make final edits.
+              </p>
+            </div>
+          </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          {/* Selected Images Summary */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Selected Images</h3>
-              <Button variant="link" size="sm" className="text-[#328F94]">
-                Change Image
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-6">
+              {/* Selected Images Summary */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium">Selected Images</h3>
+                  <Button variant="link" size="sm" className="text-[#328F94]">
+                    Change Image
+                  </Button>
+                </div>
+                <div className="flex gap-4">
+                  {uploadedImages.slice(0, 3).map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={image}
+                        alt={`Final ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border"
+                      />
+                      <button className="absolute top-1 right-1 w-5 h-5 bg-white/80 rounded-full flex items-center justify-center">
+                        <Edit className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Properties */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium">Selected Properties</h3>
+                  <Button variant="link" size="sm" className="text-[#328F94]">
+                    Change Properties
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">
+                      Diamond Shape:
+                    </span>
+                    <span className="text-sm">{formData.diamondShape}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">
+                        Diamond Size:
+                      </span>
+                      <div>{formData.diamondSize}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">
+                        Diamond Color & Clarity:
+                      </span>
+                      <div>{formData.diamondColor}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Metal Type:</span>
+                      <div>{formData.metal}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Gold Karat:</span>
+                      <div>{formData.goldKarat}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">
+                        Metal Color:
+                      </span>
+                      <div>{formData.metalColor}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Ring Size:</span>
+                      <div>{formData.ringSize}</div>
+                    </div>
+                  </div>
+                  {formData.engraving && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        Engraving Added:
+                      </span>
+                      <span className="text-sm">{formData.engraving}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div>
+                <h3 className="font-medium mb-4">Contact Information</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm">Enter Your Name *</label>
+                      <Input
+                        placeholder="First name"
+                        value={formData.firstName}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            firstName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Last name"
+                        value={formData.lastName}
+                        onChange={(e) =>
+                          setFormData({ ...formData, lastName: e.target.value })
+                        }
+                        className="mt-6"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm">Address *</label>
+                    <Input
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm">Country *</label>
+                      <Select
+                        value={formData.country}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, country: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="india">India</SelectItem>
+                          <SelectItem value="usa">USA</SelectItem>
+                          <SelectItem value="uk">UK</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm">Region/State *</label>
+                      <Select
+                        value={formData.region}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, region: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="maharashtra">
+                            Maharashtra
+                          </SelectItem>
+                          <SelectItem value="delhi">Delhi</SelectItem>
+                          <SelectItem value="bengaluru">Bengaluru</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm">City *</label>
+                      <Select
+                        value={formData.city}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, city: value })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mumbai">Mumbai</SelectItem>
+                          <SelectItem value="pune">Pune</SelectItem>
+                          <SelectItem value="delhi">Delhi</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm">Zip Code *</label>
+                      <Input
+                        value={formData.zipCode}
+                        onChange={(e) =>
+                          setFormData({ ...formData, zipCode: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm">Email</label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm">Phone Number *</label>
+                    <Input
+                      value={formData.phoneNumber}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phoneNumber: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="save-info"
+                      className="rounded border-border"
+                    />
+                    <label htmlFor="save-info" className="text-sm">
+                      Save This For Future Use
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Cost */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h3 className="font-medium mb-4">
+                  Service Cost For Customisations
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Value</span>
+                    <span>₹6500</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>GST</span>
+                    <span>18%</span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between font-medium">
+                      <span>Total</span>
+                      <span>₹7,670</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                onClick={createOrder}
+                className="w-full bg-[#328F94] hover:bg-[#328F94]/90 text-white"
+              >
+                create order →
               </Button>
-            </div>
-            <div className="flex gap-4">
-              {uploadedImages.slice(0, 3).map((image, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image}
-                    alt={`Final ${index + 1}`}
-                    className="w-20 h-20 object-cover rounded-lg border"
-                  />
-                  <button className="absolute top-1 right-1 w-5 h-5 bg-white/80 rounded-full flex items-center justify-center">
-                    <Edit className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Selected Properties */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Selected Properties</h3>
-              <Button variant="link" size="sm" className="text-[#328F94]">
-                Change Properties
-              </Button>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">
-                  Diamond Shape:
-                </span>
-                <span className="text-sm">{formData.diamondShape}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Diamond Size:</span>
-                  <div>{formData.diamondSize}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">
-                    Diamond Color & Clarity:
-                  </span>
-                  <div>{formData.diamondColor}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Metal Type:</span>
-                  <div>{formData.metalType}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Gold Karat:</span>
-                  <div>{formData.goldKarat}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Metal Color:</span>
-                  <div>{formData.metalColor}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Ring Size:</span>
-                  <div>{formData.ringSize}</div>
-                </div>
-              </div>
-              {formData.engraving && (
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    Engraving Added:
-                  </span>
-                  <span className="text-sm">{formData.engraving}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          {/* Contact Information */}
-          <div>
-            <h3 className="font-medium mb-4">Contact Information</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm">Enter Your Name *</label>
-                  <Input
-                    placeholder="First name"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, firstName: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Input
-                    placeholder="Last name"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, lastName: e.target.value })
-                    }
-                    className="mt-6"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm">Address *</label>
-                <Input
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm">Country *</label>
-                  <Select
-                    value={formData.country}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, country: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="india">India</SelectItem>
-                      <SelectItem value="usa">USA</SelectItem>
-                      <SelectItem value="uk">UK</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm">Region/State *</label>
-                  <Select
-                    value={formData.region}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, region: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="maharashtra">Maharashtra</SelectItem>
-                      <SelectItem value="delhi">Delhi</SelectItem>
-                      <SelectItem value="bengaluru">Bengaluru</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm">City *</label>
-                  <Select
-                    value={formData.city}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, city: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mumbai">Mumbai</SelectItem>
-                      <SelectItem value="pune">Pune</SelectItem>
-                      <SelectItem value="delhi">Delhi</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm">Zip Code *</label>
-                  <Input
-                    value={formData.zipCode}
-                    onChange={(e) =>
-                      setFormData({ ...formData, zipCode: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm">Email</label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                />
-              </div>
-
-              <div>
-                <label className="text-sm">Phone Number *</label>
-                <Input
-                  value={formData.phoneNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phoneNumber: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="save-info"
-                  className="rounded border-border"
-                />
-                <label htmlFor="save-info" className="text-sm">
-                  Save This For Future Use
-                </label>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>Need assistance? Call us at 080-61919123</p>
+                <p className="font-medium text-red-500">
+                  * Your custom jewelry is in progress till proper and organised
+                  within 7 business days
+                </p>
+                <p className="font-medium text-red-500">
+                  * Upon order confirmation, this amount will be adjusted in
+                  your total value.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Service Cost */}
-          <div className="bg-muted/50 rounded-lg p-4">
-            <h3 className="font-medium mb-4">
-              Service Cost For Customisations
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Value</span>
-                <span>₹6500</span>
-              </div>
-              <div className="flex justify-between">
-                <span>GST</span>
-                <span>18%</span>
-              </div>
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between font-medium">
-                  <span>Total</span>
-                  <span>₹7,670</span>
-                </div>
-              </div>
+          <div className="flex justify-between mt-8">
+            <Button
+              variant="outline"
+              onClick={() => updateSteps(2)}
+              className="border-[#328F94] text-[#328F94] hover:bg-[#328F94] hover:text-white"
+            >
+              Back
+            </Button>
+            {/* <Button
+              onClick={createOrder}
+              className="bg-[#328F94] hover:bg-[#328F94]/90 text-white"
+            >
+              Create Order →
+            </Button> */}
+          </div>
+
+          {/* Order Status Display */}
+          {createdOrderId && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">
+                ✅ Order Created Successfully!
+              </h3>
+              <p className="text-sm text-green-700">
+                <strong>Order ID:</strong> {createdOrderId}
+              </p>
+              <p className="text-sm text-green-600 mt-1">
+                Your custom jewelry order has been submitted and is ready for
+                payment.
+              </p>
             </div>
-          </div>
-
-          <Button className="w-full bg-[#328F94] hover:bg-[#328F94]/90 text-white">
-            Make Payment →
-          </Button>
-
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>Need assistance? Call us at 080-61919123</p>
-            <p className="font-medium text-red-500">
-              * Your custom jewelry is in progress till proper and organised
-              within 7 business days
-            </p>
-            <p className="font-medium text-red-500">
-              * Upon order confirmation, this amount will be adjusted in your
-              total value.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-between mt-8">
-        <Button
-          variant="outline"
-          onClick={() => updateSteps(2)}
-          className="border-[#328F94] text-[#328F94] hover:bg-[#328F94] hover:text-white"
-        >
-          Back
-        </Button>
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      {steps.map((step, index) => (
+        <div key={step.number} className="flex items-center">
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                step.number <= currentStep
+                  ? "bg-[#328F94] text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {step.number}
+            </div>
+            <span
+              className={`text-xs mt-2 text-center max-w-20 ${
+                step.number <= currentStep
+                  ? "text-[#328F94] font-medium"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {step.title}
+            </span>
+          </div>
+          {index < steps.length - 1 && (
+            <div
+              className={`w-16 h-1 mb-6 mx-4 ${
+                step.number < currentStep ? "bg-[#328F94]" : "bg-gray-300"
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  const handleCloseEngraving = () => {
+    setShowEngravingPopup(false);
+  };
+
+  const handleEngravingSaved = (
+    engravingText: string,
+    engravingImageUrl?: string
+  ) => {
+    console.log("💾 Engraving saved:", { engravingText, engravingImageUrl });
+
+    // Update form data with engraving text
+    setFormData((prev) => ({ ...prev, engraving: engravingText }));
+
+    // If we received an engraved image URL, add it to our images
+    if (engravingImageUrl) {
+      setUploadedImages((prev) => [...prev, engravingImageUrl]);
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, engravingImageUrl],
+      }));
+
+      console.log("🖼️ Added engraved image to collection:", engravingImageUrl);
+    }
+
+    setShowEngravingPopup(false);
+  };
+
+  const createOrder = async () => {
+    try {
+      console.log("🚀 Starting order creation process...");
+
+      // Prepare the complete payload for upload-you-own API
+      const formDataPayload = new FormData();
+
+      // Add basic information
+      formDataPayload.append("userId", formData.userId);
+      formDataPayload.append("jewelryType", formData.jewelryType);
+
+      // Add uploaded files
+      if (uploadedFiles.length > 0) {
+        uploadedFiles.forEach((file, index) => {
+          formDataPayload.append("images", file);
+          console.log(`📎 Adding file ${index + 1}:`, {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          });
+        });
+      }
+
+      // Add image URLs if provided
+      if (formData.url) {
+        formDataPayload.append("imageUrls", formData.url);
+        console.log("🔗 Adding URL:", formData.url);
+      }
+
+      // Add customization data
+      formDataPayload.append("sameAsImage", formData.sameAsImage.toString());
+      formDataPayload.append(
+        "modificationRequest",
+        formData.modificationRequest
+      );
+      formDataPayload.append("description", formData.description);
+      formDataPayload.append("diamondShape", formData.diamondShape);
+      formDataPayload.append("diamondSize", formData.diamondSize);
+      formDataPayload.append("diamondColor", formData.diamondColor);
+      formDataPayload.append("diamondClarity", formData.diamondClarity);
+      formDataPayload.append("metal", formData.metal);
+      formDataPayload.append("metalColor", formData.metalColor);
+      formDataPayload.append("goldKarat", formData.goldKarat);
+      formDataPayload.append("ringSize", formData.ringSize);
+      formDataPayload.append("engraving", formData.engraving);
+      formDataPayload.append("priority", formData.priority);
+      formDataPayload.append(
+        "specialInstructions",
+        formData.specialInstructions
+      );
+
+      console.log("📦 Complete order payload prepared:", {
+        userId: formData.userId,
+        jewelryType: formData.jewelryType,
+        filesCount: uploadedFiles.length,
+        hasUrl: !!formData.url,
+        sameAsImage: formData.sameAsImage,
+        customization: {
+          diamondShape: formData.diamondShape,
+          metal: formData.metal,
+          goldKarat: formData.goldKarat,
+          engraving: formData.engraving,
+        },
+        contactInfo: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber,
+        },
+      });
+
+      // Make API call to create jewelry order
+      const response = await fetch("http://localhost:5000/api/rings/upload", {
+        method: "POST",
+        body: formDataPayload,
+      });
+
+      const result = await response.json();
+
+      console.log("🎯 API Response received:", {
+        status: response.status,
+        success: result.success,
+        message: result.message,
+        data: result.data,
+      });
+
+      if (result.success) {
+        console.log("✅ Order created successfully!");
+        console.log("📋 Complete order details:", result.data);
+
+        // Extract jewelry ID from multiple possible response structures
+        const jewelryId =
+          result.data?.ringId ||
+          result.data?.jewelryId ||
+          result.data?._id ||
+          result.data?.id ||
+          "";
+
+        console.log("🆔 Extracted jewelry ID:", jewelryId);
+
+        setCreatedOrderId(jewelryId);
+
+        // Generate payment order data with proper IDs
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substr(2, 9);
+        const orderId = `KYNA${timestamp}${randomSuffix}`;
+
+        const basePrice = 6500;
+        const gst = Math.round(basePrice * 0.18);
+        const totalAmount = basePrice + gst;
+
+        const paymentOrderData = {
+          orderId,
+          amount: totalAmount,
+          items: [
+            {
+              name: `Custom ${formData.jewelryType} Design${
+                jewelryId ? ` - ${jewelryId}` : ""
+              }`,
+              quantity: 1,
+              price: totalAmount,
+            },
+          ],
+          jewelryId: jewelryId || `custom_${timestamp}`, // Ensure we always have an ID
+          userId: formData.userId, // Use the actual user ID from formData
+          customData: {
+            jewelryType: formData.jewelryType,
+            customizationComplete: true,
+            backendJewelryId: jewelryId,
+          },
+        };
+
+        console.log("💳 Payment order prepared:", {
+          orderId: paymentOrderData.orderId,
+          amount: paymentOrderData.amount,
+          jewelryId: paymentOrderData.jewelryId,
+          userId: paymentOrderData.userId,
+          itemCount: paymentOrderData.items.length,
+        });
+
+        setOrderData(paymentOrderData);
+        setShowPaymentForm(true);
+
+        alert(
+          `Order created successfully! ${
+            jewelryId ? `Jewelry ID: ${jewelryId}` : "Ready for payment"
+          }`
+        );
+      } else {
+        console.error("❌ Order creation failed:", result.message);
+        alert(`Failed to create order: ${result.message}`);
+      }
+    } catch (error) {
+      console.error("💥 Order creation error:", error);
+      alert(
+        `Error creating order: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
+  // Add the missing payment handler functions
+  const handlePaymentInitiated = (orderId: string) => {
+    console.log("✅ Payment initiated for order:", orderId);
+    // Could save order info locally or send to backend
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error("❌ Payment error:", error);
+    alert(`Payment Error: ${error}`);
+    setShowPaymentForm(false);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -916,6 +1493,17 @@ export default function RingBuilder() {
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
       </div>
+
+      {/* Engraving Popup */}
+      {showEngravingPopup && (
+        <EngravingPage
+          onClose={handleCloseEngraving}
+          selectedImage={selectedEngravingImage}
+          jewelryType={formData.jewelryType}
+          userId={formData.userId}
+          onSave={handleEngravingSaved}
+        />
+      )}
     </div>
   );
 }

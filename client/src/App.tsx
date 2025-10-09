@@ -47,6 +47,8 @@ import BuildYourJewelleryPendants from "./pages/Build_yr_own/BuildYourJewelleryP
 import BuildYourJewelleryBracelets from "./pages/Build_yr_own/BuildYourJewelleryBracelet";
 import BuildYourJewelleryBands from "./pages/Build_yr_own/BuildYourJewelleryBands";
 import BuildYourJewelleryEarrings from "./pages/Build_yr_own/BuildYourJewelleryEarings";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const isAuthenticated = useSelector(
@@ -272,6 +274,8 @@ function App() {
           />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/gold-prices" element={<GoldPricePage />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
         </Routes>
 
         <Footer />

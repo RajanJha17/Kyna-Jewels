@@ -1,11 +1,32 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { ArrowLeft, X, Download, Move } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface EngraveProps {
   onClose: () => void;
+  selectedImage?: string;
+  jewelryType?: string;
+  userId?: string;
+  onSave?: (engravingText: string, engravingImageUrl?: string) => void;
 }
 
-const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
+const EngravingPage: React.FC<EngraveProps> = ({
+  onClose,
+  selectedImage = "",
+  jewelryType = "ring",
+  userId = "",
+  onSave,
+}) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [currentSelectedImage, setCurrentSelectedImage] =
+    useState<string>(selectedImage);
+  const [engravingData, setEngravingData] = useState({
+    jewelryType: jewelryType,
+    userId: userId,
+    returnTo: "",
+    formData: null,
+  });
   const [selectedFont, setSelectedFont] = useState("My Script One");
   const [fontSize, setFontSize] = useState(24);
   const [engravingText, setEngravingText] = useState("");
@@ -32,6 +53,42 @@ const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
   ];
 
   const fontSizes = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 40, 48];
+
+  // Get data from navigation state or props
+  useEffect(() => {
+    if (location.state) {
+      const {
+        selectedImage: navImage,
+        jewelryType: navJewelryType,
+        userId: navUserId,
+        returnTo,
+        formData,
+      } = location.state;
+      console.log("🎨 Engraving page received navigation data:", {
+        selectedImage: navImage,
+        jewelryType: navJewelryType,
+        userId: navUserId,
+        returnTo,
+      });
+
+      setCurrentSelectedImage(navImage || selectedImage);
+      setEngravingData({
+        jewelryType: navJewelryType || jewelryType,
+        userId: navUserId || userId,
+        returnTo: returnTo || "",
+        formData: formData,
+      });
+    } else {
+      // Use props directly
+      setCurrentSelectedImage(selectedImage);
+      setEngravingData({
+        jewelryType: jewelryType,
+        userId: userId,
+        returnTo: "",
+        formData: null,
+      });
+    }
+  }, [location.state, selectedImage, jewelryType, userId]);
 
   const handleClear = () => {
     setEngravingText("");
@@ -60,61 +117,115 @@ const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
     setIsDragging(false);
   };
 
-  const handleSaveImage = () => {
+  const handleSaveEngravingImage = async (): Promise<string | null> => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) return null;
 
-    canvas.width = 600;
-    canvas.height = 600;
+    return new Promise((resolve) => {
+      canvas.width = 600;
+      canvas.height = 600;
 
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        // Draw the base image
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      if (engravingText) {
-        ctx.font = `${fontSize}px ${selectedFont}`;
-        ctx.fillStyle = "#333";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
+        // Draw the engraving text if present
+        if (engravingText) {
+          ctx.font = `${fontSize}px ${selectedFont}`;
+          ctx.fillStyle = "#333";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
 
-        ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
-        ctx.shadowBlur = 2;
-        ctx.shadowOffsetX = 1;
-        ctx.shadowOffsetY = 1;
+          ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+          ctx.shadowBlur = 2;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
 
-        const textX = (textPosition.x / 100) * canvas.width;
-        const textY = (textPosition.y / 100) * canvas.height;
+          const textX = (textPosition.x / 100) * canvas.width;
+          const textY = (textPosition.y / 100) * canvas.height;
 
-        ctx.save();
-        ctx.translate(textX, textY);
-        ctx.rotate((textRotation.horizontal * Math.PI) / 180);
+          ctx.save();
+          ctx.translate(textX, textY);
+          ctx.rotate((textRotation.horizontal * Math.PI) / 180);
 
-        if (textRotation.vertical !== 0) {
-          const skewFactor =
-            Math.tan((textRotation.vertical * Math.PI) / 180) * 0.5;
-          ctx.transform(1, skewFactor, 0, 1, 0, 0);
+          if (textRotation.vertical !== 0) {
+            const skewFactor =
+              Math.tan((textRotation.vertical * Math.PI) / 180) * 0.5;
+            ctx.transform(1, skewFactor, 0, 1, 0, 0);
+          }
+          ctx.fillText(engravingText, 0, 0);
+          ctx.restore();
         }
-        ctx.fillText(engravingText, 0, 0);
-        ctx.restore();
-      }
 
-      const link = document.createElement("a");
-      link.download = "engraved-jewelry.png";
-      link.href = canvas.toDataURL();
-      link.click();
-    };
+        // Convert canvas to blob and create URL
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const engravingImageUrl = URL.createObjectURL(blob);
+              console.log(
+                "🎨 Generated engraved image URL:",
+                engravingImageUrl
+              );
+              resolve(engravingImageUrl);
+            } else {
+              resolve(null);
+            }
+          },
+          "image/png",
+          0.9
+        );
+      };
 
-    img.src = "/newring.jpg";
+      img.onerror = () => {
+        console.error("Failed to load image for engraving");
+        resolve(null);
+      };
+
+      // Use selected image or fallback to default
+      img.src = currentSelectedImage || "/newring.jpg";
+    });
+  };
+
+  const handleSaveEngraving = async (text: string) => {
+    console.log("💾 Saving engraving:", {
+      text: text,
+      image: currentSelectedImage,
+      jewelryType: engravingData.jewelryType,
+      userId: engravingData.userId,
+    });
+
+    // Generate the engraved image
+    const engravingImageUrl = await handleSaveEngravingImage();
+
+    // If we have an onSave callback (from popup), use it
+    if (onSave) {
+      onSave(text, engravingImageUrl || undefined);
+      return;
+    }
+
+    // If we came from navigation with return path, navigate back
+    if (engravingData.returnTo && engravingData.formData) {
+      navigate(engravingData.returnTo, {
+        state: {
+          ...engravingData.formData,
+          engraving: text,
+          engravingImage: engravingImageUrl || currentSelectedImage,
+        },
+      });
+    } else {
+      onClose();
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
+        {/* Header with selected image info */}
         <div className="bg-white shadow-sm border-b sticky top-0 z-10">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
@@ -126,6 +237,19 @@ const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
                   <ArrowLeft className="w-5 h-5 mr-2" />
                   Back
                 </button>
+                {currentSelectedImage && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <span>•</span>
+                    <span>Working with selected image</span>
+                    <div className="w-6 h-6 rounded border overflow-hidden">
+                      <img
+                        src={currentSelectedImage}
+                        alt="Selected"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <h1 className="text-2xl font-light text-teal-500 tracking-wide">
                 ADD ENGRAVING
@@ -142,9 +266,30 @@ const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
 
         <div className="p-6">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Left Side - Ring Image */}
+            {/* Left Side - Selected Image Display */}
             <div className="lg:w-1/2">
               <div className="bg-gray-50 rounded-lg p-6">
+                {currentSelectedImage ? (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Selected Image for Engraving
+                    </h3>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                      <p className="text-sm text-blue-700">
+                        <strong>Note:</strong> The engraving will be applied to
+                        your {engravingData.jewelryType} based on the design
+                        elements from this selected image.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                      Default Ring for Engraving
+                    </h3>
+                  </div>
+                )}
+
                 <div
                   className="relative cursor-move select-none"
                   onMouseDown={handleMouseDown}
@@ -152,12 +297,34 @@ const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
                 >
-                  <img
-                    src="/newring.jpg"
-                    alt="Diamond Ring"
-                    className="w-full h-auto rounded-lg"
-                    draggable={false}
-                  />
+                  {/* Display selected image or fallback to default */}
+                  {currentSelectedImage ? (
+                    <img
+                      src={currentSelectedImage}
+                      alt="Selected jewelry for engraving"
+                      className="w-full h-auto rounded-lg border-2 border-gray-200"
+                      draggable={false}
+                      onError={(e) => {
+                        console.warn(
+                          "Failed to load selected image, using fallback"
+                        );
+                        e.currentTarget.src = "/newring.jpg";
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
+                      <img
+                        src="/newring.jpg"
+                        alt="Default ring for engraving"
+                        className="w-full h-auto rounded-lg"
+                        draggable={false}
+                      />
+                      <p className="text-sm text-gray-500 mt-2">
+                        No image selected - using default ring
+                      </p>
+                    </div>
+                  )}
+
                   {/* Text Overlay */}
                   {engravingText && (
                     <div
@@ -387,15 +554,75 @@ const EngravingPage: React.FC<EngraveProps> = ({ onClose }) => {
                         CLEAR
                       </button>
                       <button
-                        onClick={() => {
-                          handleSaveImage();
-                          onClose();
+                        onClick={async () => {
+                          if (!engravingText.trim()) {
+                            alert("Please enter some text for engraving");
+                            return;
+                          }
+
+                          console.log(
+                            "💾 Processing engraving with selected image:",
+                            {
+                              text: engravingText,
+                              selectedImage: currentSelectedImage,
+                              jewelryType: engravingData.jewelryType,
+                              userId: engravingData.userId,
+                            }
+                          );
+
+                          // Save and process the engraving
+                          await handleSaveEngraving(engravingText);
                         }}
-                        className="flex-1 py-3 px-6 bg-teal-400 text-white rounded-lg hover:bg-teal-500 transition-colors font-medium flex items-center justify-center"
+                        disabled={!engravingText.trim()}
+                        className={`flex-1 py-3 px-6 rounded-lg font-medium flex items-center justify-center transition-colors ${
+                          engravingText.trim()
+                            ? "bg-teal-400 text-white hover:bg-teal-500"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        SAVE & APPLY
+                        {engravingText.trim()
+                          ? "SAVE & APPLY"
+                          : "ENTER TEXT FIRST"}
                       </button>
+                    </div>
+
+                    {/* Enhanced engraving preview */}
+                    {engravingText && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-xs text-green-700">
+                          <strong>Preview:</strong> "{engravingText}" will be
+                          engraved on your {engravingData.jewelryType}
+                        </p>
+                        <p className="text-xs text-green-600 mt-1">
+                          ✓ This will create a new image with your engraving and
+                          add it to your design collection
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Instructions */}
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-xs text-blue-700">
+                        <strong>How it works:</strong>
+                      </p>
+                      <ul className="text-xs text-blue-600 mt-1 space-y-1">
+                        <li>
+                          • Position your text using the controls or drag it
+                          directly
+                        </li>
+                        <li>
+                          • Click "SAVE & APPLY" to create an engraved version
+                        </li>
+                        <li>
+                          • The new image will be added to your design
+                          collection
+                        </li>
+                        <li>
+                          • You can continue customizing with the new engraved
+                          image
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 )}

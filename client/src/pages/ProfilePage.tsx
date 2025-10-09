@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import {
   User,
@@ -14,6 +15,7 @@ import {
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import apiService from "@/services/api";
+import { updateUser } from "@/store/slices/authSlice";
 
 interface UserData {
   firstName: string;
@@ -30,6 +32,7 @@ interface UserData {
 }
 
 const ProfilePage: React.FC = () => {
+  const dispatch = useDispatch();
   const [activeSection, setActiveSection] = useState("User Account");
   const [profileData, setProfileData] = useState<UserData>({
     firstName: "",
@@ -94,23 +97,26 @@ const ProfilePage: React.FC = () => {
         profileUpdateData
       )) as UpdateProfileResponse;
       console.log("Update response:", response);
-
       if (response.success && response.user) {
-        // Update local state with the response data
         const updatedUser = response.user;
-        setProfileData((prev) => ({
-          ...prev,
-          firstName: updatedUser.firstName || "",
-          lastName: updatedUser.lastName || "",
-          phoneNumber: updatedUser.phone || "",
-          secondaryEmail: updatedUser.secondaryEmail || "",
-          country: updatedUser.country || "",
-          state: updatedUser.state || "",
-          zipCode: updatedUser.zipCode || "",
-        }));
 
-        // Update localStorage
+        // update localStorage
         localStorage.setItem("user", JSON.stringify(updatedUser));
+
+        // also update Redux store
+        dispatch(
+          updateUser({
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            secondaryEmail: updatedUser.secondaryEmail,
+            phoneNumber: updatedUser.phone as string,
+            country: updatedUser.country,
+            state: updatedUser.state,
+            zipCode: updatedUser.zipCode,
+            displayName: updatedUser.displayName as string | undefined,
+            profileImage: updatedUser.profileImage as string, // if returned
+          })
+        );
 
         alert("Profile updated successfully!");
       } else {
@@ -187,6 +193,22 @@ const ProfilePage: React.FC = () => {
             state: user.state || "",
             zipCode: user.zipCode || "",
           });
+          localStorage.setItem("user", JSON.stringify(user));
+          dispatch(
+            updateUser({
+              firstName: user.firstName,
+              lastName: user.lastName,
+              displayName: user.displayName,
+              email: user.email,
+              secondaryEmail: user.secondaryEmail,
+              phoneNumber: user.phone,
+              country: user.country,
+              state: user.state,
+              zipCode: user.zipCode,
+              profileImage: user.profileImage as string, // if available
+            })
+          );
+          console.log("User data saved to localStorage", user);
         } else if (response.user) {
           // Handle direct user object response
           const user = response.user;
@@ -208,7 +230,7 @@ const ProfilePage: React.FC = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [dispatch]);
 
   const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; // optional chaining

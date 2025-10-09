@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://api.kynajewels.com/api";
+const API_BASE_URL = "http://localhost:5000/api"; // Adjust as needed
 import { getAccessToken } from "@/lib/authToken";
 
 interface ApiResponse<T = unknown> {
@@ -97,17 +97,17 @@ class ApiService {
     // If there's an image, use FormData
     if (profileImage) {
       const formData = new FormData();
-      
+
       // Add all profile data fields
-      Object.keys(profileData).forEach(key => {
+      Object.keys(profileData).forEach((key) => {
         if (profileData[key] !== undefined && profileData[key] !== null) {
           formData.append(key, profileData[key]);
         }
       });
-      
+
       // Add the image file
-      formData.append('profileImage', profileImage);
-      
+      formData.append("profileImage", profileImage);
+
       return this.makeRequest("/auth/profile", {
         method: "PUT",
         body: formData, // Don't set Content-Type header, let browser set it with boundary
@@ -124,17 +124,15 @@ class ApiService {
     }
   }
 
-
   async checkAuth() {
     return this.makeRequest("/auth/check-auth");
   }
 
   async getProfile() {
-  return this.makeRequest("/auth/profile", {
-    method: "GET",
-  });
-}
-
+    return this.makeRequest("/auth/profile", {
+      method: "GET",
+    });
+  }
 
   // Test API connection
   async testConnection() {
