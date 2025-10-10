@@ -69,7 +69,7 @@ export default function RingBuilder() {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
   const [createdOrderId, setCreatedOrderId] = useState<string>("");
-
+  const [Loading, setLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({
     // API matching fields
     userId: authUser?.id || "",
@@ -1187,7 +1187,7 @@ export default function RingBuilder() {
                 onClick={createOrder}
                 className="w-full bg-[#328F94] hover:bg-[#328F94]/90 text-white"
               >
-                create order →
+                {!Loading ? "Create Order →" : "Creating Order..."}
               </Button>
 
               <div className="text-xs text-muted-foreground space-y-1">
@@ -1305,6 +1305,7 @@ export default function RingBuilder() {
 
   const createOrder = async () => {
     try {
+      setLoading(true);
       console.log("🚀 Starting order creation process...");
 
       // Prepare the complete payload for upload-you-own API
@@ -1463,6 +1464,7 @@ export default function RingBuilder() {
             jewelryId ? `Jewelry ID: ${jewelryId}` : "Ready for payment"
           }`
         );
+        setLoading(false);
       } else {
         console.error("❌ Order creation failed:", result.message);
         alert(`Failed to create order: ${result.message}`);
