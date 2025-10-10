@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Direct Razorpay Test</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  </head>
+  <body>
+    <h1>Direct Razorpay Payment Test</h1>
+    <p>This tests Razorpay directly with your actual keys</p>
+
+    <button
+      onclick="startPayment()"
+      style="
+        padding: 10px 20px;
+        background: #528f94;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      "
+    >
+      Pay ₹100 (Test)
+    </button>
+
+    <div
+      id="result"
+      style="
+        margin-top: 20px;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 5px;
+      "
+    >
+      Click the button to start payment
+    </div>
+
+    <script>
+      async function startPayment() {
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "Creating order...";
+
+        try {
+          // Create order with your backend
+          const response = await fetch(
+            "http://localhost:5000/api/payment/initiate",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                orderId: "TEST_" + Date.now(),
+                amount: "100.00",
+                currency: "INR",
+                billingInfo: {
+                  name: "Test User",
+                  email: "test@example.com",
+                  phone: "+919999999999",
+                  address: "123 Test Street",
+                  city: "Mumbai",
+                  state: "Maharashtra",
+                  zip: "400001",
+                  country: "India",
+                },
+                redirectUrl: "http://localhost:3001/payment-success",
+                cancelUrl: "http://localhost:3001/payment-cancel",
+                userId: "test_user_123",
+              }),
+            }
+          );
+
+          const data = await response.json();
+
+          if (!data.success) {
+            resultDiv.innerHTML = `❌ Order creation failed: ${
+              data.error || data.message
+            }`;
+            return;
+          }
+
+          resultDiv.innerHTML =
+            "✅ Order created! Opening Razorpay checkout...";
+
+          // Open Razorpay checkout with the data from your backend
+          const options = {
+            key: data.data.razorpayKeyId,
+            amount: data.data.amount,
+            currency: data.data.currency,
+            name: data.data.name,
+            description: data.data.description,
+            order_id: data.data.razorpayOrderId,
+            prefill: data.data.prefill,
+            theme: data.data.theme,
+            notes: data.data.notes,
+            handler: async function (response) {
+              resultDiv.innerHTML = "💳 Payment completed! Verifying...";
+
+              try {
+                // Verify payment with your backend
+                const verifyResponse = await fetch(
+                  "http://localhost:5000/api/payment/verify",
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature,
+                      orderId: data.data.orderId,
+                    }),
+                  }
+                );
+
+                const verifyData = await verifyResponse.json();
+
+                if (verifyData.success) {
+                  resultDiv.innerHTML = `
+                                <div style="color: green;">
+                                    <h3>✅ Payment Successful!</h3>
+                                    <p><strong>Order ID:</strong> ${verifyData.data.orderId}</p>
+                                    <p><strong>Payment ID:</strong> ${verifyData.data.paymentId}</p>
+                                    <p><strong>Status:</strong> ${verifyData.data.status}</p>
+                                </div>
+                            `;
+                } else {
+                  resultDiv.innerHTML = `❌ Payment verification failed: ${verifyData.message}`;
+                }
+              } catch (verifyError) {
+                resultDiv.innerHTML = `❌ Verification error: ${verifyError.message}`;
+              }
+            },
+            modal: {
+              ondismiss: function () {
+                resultDiv.innerHTML = "❌ Payment cancelled by user";
+              },
+            },
+          };
+
+          const rzp = new Razorpay(options);
+
+          rzp.on("payment.failed", function (response) {
+            resultDiv.innerHTML = `
+                    <div style="color: red;">
+                        <h3>❌ Payment Failed</h3>
+                        <p><strong>Error:</strong> ${response.error.description}</p>
+                        <p><strong>Code:</strong> ${response.error.code}</p>
+                        <p><strong>Source:</strong> ${response.error.source}</p>
+                    </div>
+                `;
+          });
+
+          rzp.open();
+        } catch (error) {
+          resultDiv.innerHTML = `❌ Error: ${error.message}`;
+          console.error("Full error:", error);
+        }
+      }
+    </script>
+
+    <hr style="margin-top: 30px" />
+    <h3>Test Cards:</h3>
+    <ul>
+      <li><strong>Success:</strong> 4111 1111 1111 1111</li>
+      <li><strong>Failure:</strong> 4000 0000 0000 0002</li>
+      <li><strong>CVV:</strong> Any 3 digits</li>
+      <li><strong>Expiry:</strong> Any future date</li>
+    </ul>
+
+    <h3>Instructions:</h3>
+    <ol>
+      <li>Make sure your server is running on port 5000 (npm run dev)</li>
+      <li>Click the "Pay ₹100" button above</li>
+      <li>Use test card: 4111 1111 1111 1111</li>
+      <li>Use any CVV (123) and future expiry (12/25)</li>
+      <li>Check the result area for success/failure</li>
+    </ol>
+  </body>
+</html>

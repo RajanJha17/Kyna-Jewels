@@ -11,8 +11,10 @@ const PaymentSuccess: React.FC = () => {
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    const orderId = searchParams.get("order_id");
-    const status = searchParams.get("order_status");
+    // Support both `orderId` and `order_id` query param names
+    const orderId = searchParams.get("orderId") || searchParams.get("order_id");
+    const status =
+      searchParams.get("status") || searchParams.get("order_status");
 
     console.log("Payment callback params:", { orderId, status });
 

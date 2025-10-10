@@ -4,7 +4,7 @@ import { IUser } from "../types";
 // Order interface
 export interface IOrder extends Document {
   user: Schema.Types.ObjectId | IUser;
-  orderNumber: string;
+  orderNumber?: string; // Made optional to avoid unique constraint issues
   estimatedDeliveryDate?: Date;
   statusHistory?: {
     status: string;
@@ -90,7 +90,7 @@ const orderSchema = new Schema<IOrder>(
   {
     // Link to the customer placing the order
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    orderNumber: { type: String, required: true, unique: true }, // ✅ Added
+    orderNumber: { type: String }, // No unique constraint to avoid duplicate key errors
     estimatedDeliveryDate: { type: Date }, // ✅ Added
     statusHistory: [
       {

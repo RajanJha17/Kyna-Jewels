@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import EngravingPage from "../Engrave";
 import PaymentForm from "../../components/PaymentForm";
-import { json } from "stream/consumers";
 
 const steps = [
   { number: 1, title: "Inspiration Upload", active: true },
@@ -63,7 +62,7 @@ export default function RingBuilder() {
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const [selectedEngravingImage, setSelectedEngravingImage] =
     useState<string>("");
   const [showEngravingPopup, setShowEngravingPopup] = useState(false);
@@ -888,6 +887,13 @@ export default function RingBuilder() {
   // Update renderStep3 with API call simulation
   const renderStep3 = () => (
     <div className="max-w-4xl mx-auto">
+      {!authUser && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-sm text-yellow-700">
+            Please log in to proceed with payment.
+          </p>
+        </div>
+      )}
       {showPaymentForm && orderData && authUser ? (
         <PaymentForm
           orderData={orderData}
@@ -1368,6 +1374,13 @@ export default function RingBuilder() {
         },
       });
 
+      //check if user is authenticated
+      if (!authUser) {
+        alert("Please login to proceed with order creation.");
+        navigate("/login");
+        return;
+      }
+
       // Make API call to create jewelry order
       const response = await fetch("http://localhost:5000/api/rings/upload", {
         method: "POST",
@@ -1410,6 +1423,7 @@ export default function RingBuilder() {
 
         const paymentOrderData = {
           orderId,
+          orderNumber: orderId,
           amount: totalAmount,
           items: [
             {
@@ -1435,10 +1449,14 @@ export default function RingBuilder() {
           jewelryId: paymentOrderData.jewelryId,
           userId: paymentOrderData.userId,
           itemCount: paymentOrderData.items.length,
+          orderNumber: paymentOrderData.orderId,
         });
 
         setOrderData(paymentOrderData);
         setShowPaymentForm(true);
+
+        // Automatically navigate to step 3 to show the PaymentForm
+        setCurrentStep(3);
 
         alert(
           `Order created successfully! ${

@@ -62,9 +62,8 @@ dotenv.config();
 const requiredEnvVars = [
   "JWT_SECRET",
   "MONGO_URI",
-  "CCAVENUE_MERCHANT_ID",
-  "CCAVENUE_ACCESS_CODE",
-  "CCAVENUE_WORKING_KEY",
+  "RAZORPAY_KEY_ID",
+  "RAZORPAY_KEY_SECRET",
 ];
 
 const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
@@ -134,6 +133,7 @@ const corsOptions = {
       "http://localhost:3000",
       "http://127.0.0.1:5173",
       "http://localhost:5173",
+      "http://localhost:5174",
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);

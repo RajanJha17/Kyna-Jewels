@@ -1,17 +1,21 @@
 # Kyna Jewels - Enhanced Product API Documentation
 
 ## Overview
+
 This document describes the enhanced Product API endpoints for the Kyna Jewels e-commerce platform. The API supports dynamic pricing, image management, and advanced filtering based on jewelry attributes.
 
 ## Base URL
+
 ```
 https://api.kynajewels.com/api/products
 ```
 
 ## Authentication
+
 All endpoints are currently public. Authentication can be added as needed.
 
 ## Environment Variables Required
+
 ```env
 IMAGE_BASE_URL=https://kyna-jewels.com/images
 IMAGE_BASE_PATH=/var/www/html/kyna-jewels.com/public/images
@@ -22,37 +26,50 @@ IMAGE_BASE_PATH=/var/www/html/kyna-jewels.com/public/images
 ## API Endpoints
 
 ### 1. Get Products (Paginated with Filters)
+
 **GET** `/api/products`
 
 Returns paginated products with lightweight data for listing pages.
 
 #### Query Parameters
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `page` | number | No | Page number (default: 1) | `1` |
-| `limit` | number | No | Items per page (default: 20, max: 100) | `20` |
-| `category` | string | No | Product category | `"Gents Ring"` |
-| `diamondShape` | string | No | Diamond shape | `"RD"` |
-| `metal` | string | No | Metal type | `"RG"` |
-| `minPrice` | number | No | Minimum price filter | `10000` |
-| `maxPrice` | number | No | Maximum price filter | `50000` |
-| `diamondSize` | number | No | Diamond size in carats | `0.70` |
-| `karat` | number | No | Metal karat | `18` |
-| `diamondOrigin` | string | No | Diamond origin | `"Natural Diamond"` |
-| `tone` | string | No | Metal tone | `"2T"` |
-| `finish` | string | No | Metal finish | `"BR"` |
+
+| Parameter       | Type   | Required | Description                            | Example             |
+| --------------- | ------ | -------- | -------------------------------------- | ------------------- |
+| `page`          | number | No       | Page number (default: 1)               | `1`                 |
+| `limit`         | number | No       | Items per page (default: 20, max: 100) | `20`                |
+| `category`      | string | No       | Product category                       | `"Gents Ring"`      |
+| `diamondShape`  | string | No       | Diamond shape                          | `"RD"`              |
+| `metal`         | string | No       | Metal type                             | `"RG"`              |
+| `minPrice`      | number | No       | Minimum price filter                   | `10000`             |
+| `maxPrice`      | number | No       | Maximum price filter                   | `50000`             |
+| `diamondSize`   | number | No       | Diamond size in carats                 | `0.70`              |
+| `karat`         | number | No       | Metal karat                            | `18`                |
+| `diamondOrigin` | string | No       | Diamond origin                         | `"Natural Diamond"` |
+| `tone`          | string | No       | Metal tone                             | `"2T"`              |
+| `finish`        | string | No       | Metal finish                           | `"BR"`              |
 
 #### Example Request
+
 ```bash
 GET /api/products?category=Gents Ring&diamondShape=RD&metal=RG&minPrice=10000&maxPrice=50000&page=1&limit=20
 ```
 
 #### Response
+
 ```json
 {
   "success": true,
   "data": {
     "products": [
+      {
+        "id": "64f8a1b2c3d4e5f6a7b8c9d0",
+        "name": "18Kt Gold 70 cent Lab Grown Diamond Round Cut Ring",
+        "sku": "GR1-RD-70-2T-BR-RG",
+        "displayimg": "fv-G-RD",
+        "category": "Gents Ring",
+        "mainImage": "https://kyna-jewels.com/images/rings/GR1-RD-70-2T-BR-RG-GP.jpg",
+        "price": 45000
+      },
       {
         "id": "64f8a1b2c3d4e5f6a7b8c9d0",
         "name": "18Kt Gold 70 cent Lab Grown Diamond Round Cut Ring",
@@ -75,31 +92,36 @@ GET /api/products?category=Gents Ring&diamondShape=RD&metal=RG&minPrice=10000&ma
 ---
 
 ### 2. Get Product Price (Dynamic Calculation)
+
 **GET** `/api/products/:id/price`
 
 Returns calculated price for a product with optional attribute overrides.
 
 #### Path Parameters
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | Product ID (MongoDB ObjectId) |
+
+| Parameter | Type   | Required | Description                   |
+| --------- | ------ | -------- | ----------------------------- |
+| `id`      | string | Yes      | Product ID (MongoDB ObjectId) |
 
 #### Query Parameters
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `diamondSize` | number | No | Override diamond size | `1.00` |
-| `metal` | string | No | Override metal type | `"WG"` |
-| `karat` | number | No | Override karat | `22` |
-| `diamondOrigin` | string | No | Override diamond origin | `"Lab Grown Diamond"` |
-| `diamondShape` | string | No | Override diamond shape | `"PR"` |
-| `diamondColor` | string | No | Override diamond color | `"F"` |
+
+| Parameter       | Type   | Required | Description             | Example               |
+| --------------- | ------ | -------- | ----------------------- | --------------------- |
+| `diamondSize`   | number | No       | Override diamond size   | `1.00`                |
+| `metal`         | string | No       | Override metal type     | `"WG"`                |
+| `karat`         | number | No       | Override karat          | `22`                  |
+| `diamondOrigin` | string | No       | Override diamond origin | `"Lab Grown Diamond"` |
+| `diamondShape`  | string | No       | Override diamond shape  | `"PR"`                |
+| `diamondColor`  | string | No       | Override diamond color  | `"F"`                 |
 
 #### Example Request
+
 ```bash
-GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0/price?diamondSize=1.00&metal=WG&karat=22
+GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0/price?diamondSize=1.00&metal=G&karat=22
 ```
 
 #### Response
+
 ```json
 {
   "success": true,
@@ -122,32 +144,37 @@ GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0/price?diamondSize=1.00&metal=WG&karat
 ---
 
 ### 3. Get Product Images
+
 **GET** `/api/products/:id/images`
 
 Returns image URLs for a product with optional attribute-based variations.
 
 #### Path Parameters
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | Product ID (MongoDB ObjectId) |
+
+| Parameter | Type   | Required | Description                   |
+| --------- | ------ | -------- | ----------------------------- |
+| `id`      | string | Yes      | Product ID (MongoDB ObjectId) |
 
 #### Query Parameters
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `diamondShape` | string | No | Override diamond shape | `"PR"` |
-| `size` | number | No | Override diamond size | `1.00` |
-| `tone` | string | No | Override metal tone | `"2T"` |
-| `metal` | string | No | Override metal type | `"WG"` |
-| `origin` | string | No | Override diamond origin | `"Natural"` |
-| `diamondColor` | string | No | Override diamond color | `"F"` |
-| `finish` | string | No | Override metal finish | `"BR"` |
+
+| Parameter      | Type   | Required | Description             | Example     |
+| -------------- | ------ | -------- | ----------------------- | ----------- |
+| `diamondShape` | string | No       | Override diamond shape  | `"PR"`      |
+| `size`         | number | No       | Override diamond size   | `1.00`      |
+| `tone`         | string | No       | Override metal tone     | `"2T"`      |
+| `metal`        | string | No       | Override metal type     | `"WG"`      |
+| `origin`       | string | No       | Override diamond origin | `"Natural"` |
+| `diamondColor` | string | No       | Override diamond color  | `"F"`       |
+| `finish`       | string | No       | Override metal finish   | `"BR"`      |
 
 #### Example Request
+
 ```bash
 GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0/images?diamondShape=PR&metal=WG&size=1.00
 ```
 
 #### Response
+
 ```json
 {
   "success": true,
@@ -172,21 +199,25 @@ GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0/images?diamondShape=PR&metal=WG&size=
 ---
 
 ### 4. Get Product Details
+
 **GET** `/api/products/:id`
 
 Returns complete product details including metadata, dynamic price, and image URLs.
 
 #### Path Parameters
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | Product ID (MongoDB ObjectId) |
+
+| Parameter | Type   | Required | Description                   |
+| --------- | ------ | -------- | ----------------------------- |
+| `id`      | string | Yes      | Product ID (MongoDB ObjectId) |
 
 #### Example Request
+
 ```bash
 GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0
 ```
 
 #### Response
+
 ```json
 {
   "success": true,
@@ -200,7 +231,7 @@ GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0
     "subCategory": "Ring",
     "price": 45000,
     "diamondShape": "RD",
-    "diamondSize": 0.70,
+    "diamondSize": 0.7,
     "diamondColor": "G",
     "diamondOrigin": ["Lab Grown Diamond"],
     "tone": "2T",
@@ -234,28 +265,32 @@ GET /api/products/64f8a1b2c3d4e5f6a7b8c9d0
 ---
 
 ### 5. Search Products
+
 **GET** `/api/products/search`
 
 Search products by query string with optional filters.
 
 #### Query Parameters
-| Parameter | Type | Required | Description | Example |
-|-----------|------|----------|-------------|---------|
-| `q` | string | Yes | Search query | `"diamond ring"` |
-| `page` | number | No | Page number (default: 1) | `1` |
-| `limit` | number | No | Items per page (default: 20) | `20` |
-| `category` | string | No | Filter by category | `"Gents Ring"` |
-| `diamondShape` | string | No | Filter by diamond shape | `"RD"` |
-| `metal` | string | No | Filter by metal | `"RG"` |
-| `minPrice` | number | No | Minimum price | `10000` |
-| `maxPrice` | number | No | Maximum price | `50000` |
+
+| Parameter      | Type   | Required | Description                  | Example          |
+| -------------- | ------ | -------- | ---------------------------- | ---------------- |
+| `q`            | string | Yes      | Search query                 | `"diamond ring"` |
+| `page`         | number | No       | Page number (default: 1)     | `1`              |
+| `limit`        | number | No       | Items per page (default: 20) | `20`             |
+| `category`     | string | No       | Filter by category           | `"Gents Ring"`   |
+| `diamondShape` | string | No       | Filter by diamond shape      | `"RD"`           |
+| `metal`        | string | No       | Filter by metal              | `"RG"`           |
+| `minPrice`     | number | No       | Minimum price                | `10000`          |
+| `maxPrice`     | number | No       | Maximum price                | `50000`          |
 
 #### Example Request
+
 ```bash
 GET /api/products/search?q=diamond ring&category=Gents Ring&minPrice=10000&maxPrice=50000
 ```
 
 #### Response
+
 ```json
 {
   "success": true,
@@ -283,16 +318,19 @@ GET /api/products/search?q=diamond ring&category=Gents Ring&minPrice=10000&maxPr
 ---
 
 ### 6. Get Product Filters
+
 **GET** `/api/products/filters`
 
 Returns available filter options for products.
 
 #### Example Request
+
 ```bash
 GET /api/products/filters
 ```
 
 #### Response
+
 ```json
 {
   "success": true,
@@ -312,6 +350,7 @@ GET /api/products/filters
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "success": false,
@@ -326,6 +365,7 @@ GET /api/products/filters
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "success": false,
@@ -334,6 +374,7 @@ GET /api/products/filters
 ```
 
 ### 500 Internal Server Error
+
 ```json
 {
   "success": false,
@@ -353,6 +394,7 @@ https://kyna-jewels.com/images/{category}/{SKU}-{diamondShape}-{size}-{color}-{o
 ```
 
 ### Example Image URLs:
+
 - Main (GP): `GR1-RD-70-2T-BR-RG-GP.jpg`
 - Side: `GR1-RD-70-2T-BR-RG-SIDE.jpg`
 - Top: `GR1-RD-70-2T-BR-RG-TOP.jpg`
@@ -375,6 +417,7 @@ The pricing service calculates dynamic prices based on:
 5. **GST**: `(baseCost + profitMargin) × gstPercentage`
 
 ### Price Factors:
+
 - **Metal Types**: Gold (14kt, 18kt, 22kt), Silver (925), Platinum (950)
 - **Diamond Origins**: Natural Diamond, Lab Grown Diamond
 - **Diamond Colors**: D, E, F, G, H, I, J, K
@@ -387,34 +430,35 @@ The pricing service calculates dynamic prices based on:
 ## Database Schema
 
 ### Enhanced Product Schema
+
 ```typescript
 interface IProduct {
-  sku: string;                    // "GR1-RD-70-2T-BR-RG"
-  variant: string;                // "GR1"
+  sku: string; // "GR1-RD-70-2T-BR-RG"
+  variant: string; // "GR1"
   title: string;
   description?: string;
-  category: string;               // "Gents Ring", "Solitaire", "Engagement Ring"
-  subCategory: 'Ring' | 'Bracelet' | 'Pendant' | 'Earring';
-  price: number;                  // Dynamic price (calculated)
-  
+  category: string; // "Gents Ring", "Solitaire", "Engagement Ring"
+  subCategory: "Ring" | "Bracelet" | "Pendant" | "Earring";
+  price: number; // Dynamic price (calculated)
+
   // Diamond Details
-  diamondShape?: string;          // "RD", "PR", "EM", etc.
-  diamondSize?: number;           // Numeric value for carats
-  diamondColor?: string;          // Diamond color grade
-  diamondOrigin?: string[];       // ["Natural Diamond", "Lab Grown Diamond"]
-  
+  diamondShape?: string; // "RD", "PR", "EM", etc.
+  diamondSize?: number; // Numeric value for carats
+  diamondColor?: string; // Diamond color grade
+  diamondOrigin?: string[]; // ["Natural Diamond", "Lab Grown Diamond"]
+
   // Metal Details
-  tone?: string;                  // "2T", "3T"
-  finish?: string;                // "BR", "PL", "RH"
-  metal?: string;                 // "RG", "YG", "WG", "PT"
-  karat?: number;                 // 14, 18, 22
-  
+  tone?: string; // "2T", "3T"
+  finish?: string; // "BR", "PL", "RH"
+  metal?: string; // "RG", "YG", "WG", "PT"
+  karat?: number; // 14, 18, 22
+
   // Images
   images?: {
-    main: string;                 // Main image URL
-    sub: string[];                // Array of 7 sub image URLs
+    main: string; // Main image URL
+    sub: string[]; // Array of 7 sub image URLs
   };
-  
+
   // Other fields...
   rating?: { score: number; reviews: number };
   isGiftingAvailable?: boolean;

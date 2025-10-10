@@ -1,5 +1,5 @@
-import { OrderStatus } from '../types/tracking';
-import { logError } from './tracking';
+import { OrderStatus } from "../types/tracking";
+import { logError } from "./tracking";
 
 export interface ValidationResult {
   isValid: boolean;
@@ -15,7 +15,7 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!orderNumber) {
-      errors.push('Order number is required');
+      errors.push("Order number is required");
       return { isValid: false, errors };
     }
 
@@ -24,13 +24,13 @@ export class DataValidator {
 
     // Validate format (alphanumeric, 6-20 characters)
     if (!/^[A-Z0-9]{6,20}$/.test(sanitized)) {
-      errors.push('Order number must be 6-20 characters, alphanumeric only');
+      errors.push("Order number must be 6-20 characters, alphanumeric only");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -41,7 +41,7 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!email) {
-      errors.push('Email is required');
+      errors.push("Email is required");
       return { isValid: false, errors };
     }
 
@@ -51,18 +51,18 @@ export class DataValidator {
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(sanitized)) {
-      errors.push('Invalid email format');
+      errors.push("Invalid email format");
     }
 
     // Check length
     if (sanitized.length > 254) {
-      errors.push('Email is too long');
+      errors.push("Email is too long");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -73,22 +73,22 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!docketNumber) {
-      errors.push('Docket number is required');
+      errors.push("Docket number is required");
       return { isValid: false, errors };
     }
 
     // Sanitize docket number
-    const sanitized = docketNumber.trim().replace(/\s+/g, '');
+    const sanitized = docketNumber.trim().replace(/\s+/g, "");
 
     // Validate format (10 digits)
     if (!/^\d{10}$/.test(sanitized)) {
-      errors.push('Docket number must be exactly 10 digits');
+      errors.push("Docket number must be exactly 10 digits");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -99,7 +99,7 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!status) {
-      errors.push('Status is required');
+      errors.push("Status is required");
       return { isValid: false, errors };
     }
 
@@ -109,13 +109,15 @@ export class DataValidator {
     // Validate against allowed statuses
     const validStatuses = Object.values(OrderStatus);
     if (!validStatuses.includes(sanitized as OrderStatus)) {
-      errors.push(`Invalid status. Must be one of: ${validStatuses.join(', ')}`);
+      errors.push(
+        `Invalid status. Must be one of: ${validStatuses.join(", ")}`
+      );
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -126,31 +128,31 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!name) {
-      errors.push('Customer name is required');
+      errors.push("Customer name is required");
       return { isValid: false, errors };
     }
 
     // Sanitize name
-    const sanitized = name.trim().replace(/\s+/g, ' ');
+    const sanitized = name.trim().replace(/\s+/g, " ");
 
     // Validate length
     if (sanitized.length < 2) {
-      errors.push('Customer name must be at least 2 characters');
+      errors.push("Customer name must be at least 2 characters");
     }
 
     if (sanitized.length > 100) {
-      errors.push('Customer name is too long');
+      errors.push("Customer name is too long");
     }
 
     // Validate characters (letters, spaces, hyphens, apostrophes)
     if (!/^[a-zA-Z\s\-']+$/.test(sanitized)) {
-      errors.push('Customer name contains invalid characters');
+      errors.push("Customer name contains invalid characters");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -161,21 +163,21 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!phone) {
-      return { isValid: true, errors: [], sanitizedData: '' };
+      return { isValid: true, errors: [], sanitizedData: "" };
     }
 
     // Sanitize phone number (remove all non-digits)
-    const sanitized = phone.replace(/\D/g, '');
+    const sanitized = phone.replace(/\D/g, "");
 
     // Validate length (10-15 digits)
     if (sanitized.length < 10 || sanitized.length > 15) {
-      errors.push('Phone number must be 10-15 digits');
+      errors.push("Phone number must be 10-15 digits");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -186,40 +188,40 @@ export class DataValidator {
     const errors: string[] = [];
 
     if (!address) {
-      errors.push('Address is required');
+      errors.push("Address is required");
       return { isValid: false, errors };
     }
 
     const sanitized = {
-      line1: address.line1 ? address.line1.trim() : '',
-      line2: address.line2 ? address.line2.trim() : '',
-      city: address.city ? address.city.trim() : '',
-      state: address.state ? address.state.trim() : '',
-      pincode: address.pincode ? address.pincode.trim() : '',
-      country: address.country ? address.country.trim() : 'India'
+      line1: address.line1 ? address.line1.trim() : "",
+      line2: address.line2 ? address.line2.trim() : "",
+      city: address.city ? address.city.trim() : "",
+      state: address.state ? address.state.trim() : "",
+      pincode: address.pincode ? address.pincode.trim() : "",
+      country: address.country ? address.country.trim() : "India",
     };
 
     // Validate required fields
-    if (!sanitized.line1) errors.push('Address line 1 is required');
-    if (!sanitized.city) errors.push('City is required');
-    if (!sanitized.state) errors.push('State is required');
-    if (!sanitized.pincode) errors.push('Pincode is required');
+    if (!sanitized.line1) errors.push("Address line 1 is required");
+    if (!sanitized.city) errors.push("City is required");
+    if (!sanitized.state) errors.push("State is required");
+    if (!sanitized.pincode) errors.push("Pincode is required");
 
     // Validate pincode format (6 digits for India)
     if (sanitized.pincode && !/^\d{6}$/.test(sanitized.pincode)) {
-      errors.push('Pincode must be 6 digits');
+      errors.push("Pincode must be 6 digits");
     }
 
     // Validate lengths
-    if (sanitized.line1.length > 100) errors.push('Address line 1 is too long');
-    if (sanitized.line2.length > 100) errors.push('Address line 2 is too long');
-    if (sanitized.city.length > 50) errors.push('City name is too long');
-    if (sanitized.state.length > 50) errors.push('State name is too long');
+    if (sanitized.line1.length > 100) errors.push("Address line 1 is too long");
+    if (sanitized.line2.length > 100) errors.push("Address line 2 is too long");
+    if (sanitized.city.length > 50) errors.push("City name is too long");
+    if (sanitized.state.length > 50) errors.push("State name is too long");
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -249,7 +251,7 @@ export class DataValidator {
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -308,7 +310,7 @@ export class DataValidator {
     if (data.totalAmount !== undefined) {
       const amount = parseFloat(data.totalAmount);
       if (isNaN(amount) || amount < 0) {
-        errors.push('Total amount must be a positive number');
+        errors.push("Total amount must be a positive number");
       } else {
         sanitized.totalAmount = amount;
       }
@@ -318,7 +320,9 @@ export class DataValidator {
     if (data.shippingAddress) {
       const shippingResult = this.validateAddress(data.shippingAddress);
       if (!shippingResult.isValid) {
-        errors.push(...shippingResult.errors.map(e => `Shipping address: ${e}`));
+        errors.push(
+          ...shippingResult.errors.map((e) => `Shipping address: ${e}`)
+        );
       } else {
         sanitized.shippingAddress = shippingResult.sanitizedData;
       }
@@ -327,7 +331,9 @@ export class DataValidator {
     if (data.billingAddress) {
       const billingResult = this.validateAddress(data.billingAddress);
       if (!billingResult.isValid) {
-        errors.push(...billingResult.errors.map(e => `Billing address: ${e}`));
+        errors.push(
+          ...billingResult.errors.map((e) => `Billing address: ${e}`)
+        );
       } else {
         sanitized.billingAddress = billingResult.sanitizedData;
       }
@@ -336,7 +342,7 @@ export class DataValidator {
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -344,26 +350,23 @@ export class DataValidator {
    * Sanitize HTML content to prevent XSS
    */
   static sanitizeHtml(html: string): string {
-    if (!html) return '';
+    if (!html) return "";
 
     return html
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#x27;')
-      .replace(/\//g, '&#x2F;');
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#x27;")
+      .replace(/\//g, "&#x2F;");
   }
 
   /**
    * Sanitize text input
    */
   static sanitizeText(text: string): string {
-    if (!text) return '';
+    if (!text) return "";
 
-    return text
-      .trim()
-      .replace(/\s+/g, ' ')
-      .replace(/[<>]/g, '');
+    return text.trim().replace(/\s+/g, " ").replace(/[<>]/g, "");
   }
 
   /**
@@ -376,7 +379,7 @@ export class DataValidator {
     // Validate page
     const pageNum = parseInt(page);
     if (isNaN(pageNum) || pageNum < 1) {
-      errors.push('Page must be a positive integer');
+      errors.push("Page must be a positive integer");
     } else {
       sanitized.page = pageNum;
     }
@@ -384,7 +387,7 @@ export class DataValidator {
     // Validate limit
     const limitNum = parseInt(limit);
     if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      errors.push('Limit must be between 1 and 100');
+      errors.push("Limit must be between 1 and 100");
     } else {
       sanitized.limit = limitNum;
     }
@@ -392,7 +395,7 @@ export class DataValidator {
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 
@@ -406,7 +409,7 @@ export class DataValidator {
     if (startDate) {
       const start = new Date(startDate);
       if (isNaN(start.getTime())) {
-        errors.push('Invalid start date format');
+        errors.push("Invalid start date format");
       } else {
         sanitized.startDate = start;
       }
@@ -415,32 +418,39 @@ export class DataValidator {
     if (endDate) {
       const end = new Date(endDate);
       if (isNaN(end.getTime())) {
-        errors.push('Invalid end date format');
+        errors.push("Invalid end date format");
       } else {
         sanitized.endDate = end;
       }
     }
 
-    if (sanitized.startDate && sanitized.endDate && sanitized.startDate > sanitized.endDate) {
-      errors.push('Start date must be before end date');
+    if (
+      sanitized.startDate &&
+      sanitized.endDate &&
+      sanitized.startDate > sanitized.endDate
+    ) {
+      errors.push("Start date must be before end date");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      sanitizedData: sanitized
+      sanitizedData: sanitized,
     };
   }
 }
 
-export const validateAndSanitize = (data: any, validator: (data: any) => ValidationResult): ValidationResult => {
+export const validateAndSanitize = (
+  data: any,
+  validator: (data: any) => ValidationResult
+): ValidationResult => {
   try {
     return validator(data);
   } catch (error) {
-    logError(error as Error, 'validateAndSanitize');
+    logError(error as Error, "validateAndSanitize");
     return {
       isValid: false,
-      errors: ['Validation error occurred']
+      errors: ["Validation error occurred"],
     };
   }
 };

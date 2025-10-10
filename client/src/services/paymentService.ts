@@ -1,5 +1,53 @@
 import apiService from "./api";
 
+// Razorpay types
+export interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  prefill: {
+    name: string;
+    email: string;
+    contact: string;
+  };
+  theme: {
+    color: string;
+  };
+  notes: Record<string, string>;
+  handler: (response: RazorpayResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+}
+
+export interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+
+export interface RazorpayError {
+  code: string;
+  description: string;
+  source: string;
+  step: string;
+  reason: string;
+  metadata: Record<string, unknown>;
+}
+
+// Extend Window interface for Razorpay
+declare global {
+  interface Window {
+    Razorpay: new (options: RazorpayOptions) => {
+      open: () => void;
+      on: (event: string, callback: (error: RazorpayError) => void) => void;
+    };
+  }
+}
+
 export interface PaymentInitiateRequest {
   orderId: string;
   amount: string;
@@ -17,16 +65,32 @@ export interface PaymentInitiateRequest {
   redirectUrl: string;
   cancelUrl: string;
   userId: string;
+  orderNumber: string;
   jewelryId?: string; // Add optional jewelryId
 }
 
 export interface PaymentInitiateResponse {
   success: boolean;
   data: {
-    encryptedData: string;
-    accessCode: string;
+    razorpayOrderId: string;
+    razorpayKeyId: string;
     orderId: string;
-    paymentUrl: string;
+    amount: number;
+    currency: string;
+    name: string;
+    description: string;
+    prefill: {
+      name: string;
+      email: string;
+      contact: string;
+    };
+    theme: {
+      color: string;
+    };
+    notes: {
+      orderId: string;
+      userId: string;
+    };
   };
   message: string;
 }
@@ -103,37 +167,67 @@ class PaymentService {
     }
   }
 
-  // Create a form and submit to CCAvenue
-  submitPaymentForm(
-    encryptedData: string,
-    accessCode: string,
-    paymentUrl: string
+  // Open Razorpay checkout
+  openRazorpayCheckout(
+    options: RazorpayOptions,
+    onSuccess: (response: RazorpayResponse) => void,
+    onError: (error: RazorpayError | { message: string }) => void
   ) {
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = paymentUrl;
+    // Load Razorpay script if not already loaded
+    if (!window.Razorpay) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        this.openRazorpayCheckout(options, onSuccess, onError);
+      };
+      script.onerror = () => {
+        onError({ message: "Failed to load Razorpay checkout script" });
+      };
+      document.head.appendChild(script);
+      return;
+    }
 
-    const encDataInput = document.createElement("input");
-    encDataInput.type = "hidden";
-    encDataInput.name = "encRequest";
-    encDataInput.value = encryptedData;
-
-    const accessCodeInput = document.createElement("input");
-    accessCodeInput.type = "hidden";
-    accessCodeInput.name = "access_code";
-    accessCodeInput.value = accessCode;
-
-    form.appendChild(encDataInput);
-    form.appendChild(accessCodeInput);
-    document.body.appendChild(form);
-
-    console.log("🚀 Submitting payment form to CCAvenue:", {
-      paymentUrl,
-      accessCode,
-      encryptedDataLength: encryptedData.length,
+    const razorpay = new window.Razorpay({
+      ...options,
+      handler: onSuccess,
+      modal: {
+        ondismiss: () => {
+          onError({ message: "Payment cancelled by user" });
+        },
+      },
     });
 
-    form.submit();
+    razorpay.on("payment.failed", onError);
+    razorpay.open();
+  }
+
+  // Verify payment with backend
+  async verifyPayment(verificationData: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    orderId: string;
+  }) {
+    try {
+      const response = await fetch(`${this.baseUrl}/payment/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(verificationData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Payment verification failed");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      throw error;
+    }
   }
 }
 

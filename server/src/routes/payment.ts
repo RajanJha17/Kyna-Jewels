@@ -1,50 +1,78 @@
-import express, { Request, Response } from 'express';
-import { 
-  encrypt, 
-  decrypt, 
-  createQueryString, 
-  validateCallbackResponse, 
-  getCCAvenueConfig,
-  PaymentRequest 
-} from '../utils/ccavenue';
-import PaymentOrder, { OrderStatus, IPaymentResponse } from '../models/PaymentOrder';
+import express, { Request, Response } from "express";
+import {
+  createRazorpayOrder,
+  verifyPaymentSignature,
+  verifyWebhookSignature,
+  getPaymentDetails,
+  getRazorpayConfig,
+  PaymentRequest as RazorpayPaymentRequest,
+} from "../utils/razorpay";
+import PaymentOrder, {
+  OrderStatus,
+  IPaymentResponse,
+} from "../models/PaymentOrder";
 
 const router = express.Router();
 
 /**
  * POST /api/payment/initiate
- * Initiates payment with CCAvenue
+ * Initiates payment with Razorpay
  */
-router.post('/initiate', async (req: Request, res: Response) => {
+router.post("/initiate", async (req: Request, res: Response) => {
   try {
     const {
       orderId,
       amount,
-      currency = 'INR',
+      currency = "INR",
       billingInfo,
       redirectUrl,
       cancelUrl,
-      userId
+      userId,
     } = req.body;
 
     // Validate required fields
-    if (!orderId || !amount || !billingInfo || !redirectUrl || !cancelUrl || !userId) {
+    if (
+      !orderId ||
+      !amount ||
+      !billingInfo ||
+      !redirectUrl ||
+      !cancelUrl ||
+      !userId
+    ) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields',
-        required: ['orderId', 'amount', 'billingInfo', 'redirectUrl', 'cancelUrl', 'userId']
+        error: "Missing required fields",
+        required: [
+          "orderId",
+          "amount",
+          "billingInfo",
+          "redirectUrl",
+          "cancelUrl",
+          "userId",
+        ],
       });
     }
 
     // Validate billing info
-    const requiredBillingFields = ['name', 'address', 'city', 'state', 'zip', 'country', 'phone', 'email'];
-    const missingBillingFields = requiredBillingFields.filter(field => !billingInfo[field]);
-    
+    const requiredBillingFields = [
+      "name",
+      "address",
+      "city",
+      "state",
+      "zip",
+      "country",
+      "phone",
+      "email",
+    ];
+    const missingBillingFields = requiredBillingFields.filter(
+      (field) => !billingInfo[field]
+    );
+
     if (missingBillingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required billing fields',
-        missing: missingBillingFields
+        error: "Missing required billing fields",
+        missing: missingBillingFields,
       });
     }
 
@@ -53,12 +81,24 @@ router.post('/initiate', async (req: Request, res: Response) => {
     if (existingOrder) {
       return res.status(400).json({
         success: false,
-        error: 'Order ID already exists'
+        error: "Order ID already exists",
       });
     }
 
-    // Get CCAvenue configuration
-    const config = getCCAvenueConfig();
+    // Convert amount to paise (Razorpay expects amount in smallest currency unit)
+    const amountInPaise = Math.round(parseFloat(amount) * 100);
+
+    // Prepare Razorpay payment request
+    const paymentRequest: RazorpayPaymentRequest = {
+      orderId,
+      amount: amountInPaise,
+      currency: currency.toUpperCase(),
+      billingInfo,
+      userId,
+    };
+
+    // Create Razorpay order
+    const razorpayOrder = await createRazorpayOrder(paymentRequest);
 
     // Create order in database
     const order = new PaymentOrder({
@@ -69,103 +109,143 @@ router.post('/initiate', async (req: Request, res: Response) => {
       status: OrderStatus.PENDING,
       billingInfo,
       redirectUrl,
-      cancelUrl
+      cancelUrl,
+      razorpayOrderId: razorpayOrder.id,
     });
 
     await order.save();
 
-    // Prepare payment request
-    const paymentRequest: PaymentRequest = {
-      orderId,
-      amount,
-      currency,
-      billingName: billingInfo.name,
-      billingAddress: billingInfo.address,
-      billingCity: billingInfo.city,
-      billingState: billingInfo.state,
-      billingZip: billingInfo.zip,
-      billingCountry: billingInfo.country,
-      billingTel: billingInfo.phone,
-      billingEmail: billingInfo.email,
-      redirectUrl,
-      cancelUrl
-    };
-
-    // Create query string for encryption
-    const queryString = createQueryString(paymentRequest);
-    
-    // Encrypt the query string
-    const encryptedData = encrypt(queryString, config.workingKey);
+    // Get Razorpay configuration for frontend
+    const config = getRazorpayConfig();
 
     // Return response to frontend
     res.json({
       success: true,
       data: {
-        encryptedData,
-        accessCode: config.accessCode,
+        razorpayOrderId: razorpayOrder.id,
+        razorpayKeyId: config.keyId,
         orderId,
-        paymentUrl: config.paymentUrl
+        amount: amountInPaise,
+        currency: currency.toUpperCase(),
+        name: "Kyna Jewels",
+        description: "Payment for jewelry order",
+        prefill: {
+          name: billingInfo.name,
+          email: billingInfo.email,
+          contact: billingInfo.phone,
+        },
+        theme: {
+          color: "#328F94",
+        },
+        notes: {
+          orderId,
+          userId,
+        },
       },
-      message: 'Payment initiated successfully'
+      message: "Payment initiated successfully",
     });
-
   } catch (error) {
-    console.error('Payment initiation error:', error);
+    console.error("Payment initiation error:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to initiate payment',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to initiate payment",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
 
 /**
- * POST /api/payment/callback
- * Handles CCAvenue payment callback
+ * POST /api/payment/verify
+ * Verifies Razorpay payment
  */
-router.post('/callback', async (req: Request, res: Response) => {
+router.post("/verify", async (req: Request, res: Response) => {
   try {
-    // CCAvenue sends data as form-encoded, not JSON
-    const { encResp } = req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId,
+    } = req.body;
 
-    if (!encResp) {
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
-        error: 'Missing encrypted response'
+        error: "Missing required payment verification fields",
+        required: [
+          "razorpay_order_id",
+          "razorpay_payment_id",
+          "razorpay_signature",
+        ],
       });
     }
 
-    // Get CCAvenue configuration
-    const config = getCCAvenueConfig();
+    // Verify payment signature
+    const isValidSignature = verifyPaymentSignature({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
 
-    // Decrypt the response
-    const decryptedResponse = decrypt(encResp, config.workingKey);
-    
-    // Validate and parse the response
-    const callbackData = validateCallbackResponse(decryptedResponse);
+    if (!isValidSignature) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid payment signature",
+      });
+    }
 
-    // Find the order
-    const order = await PaymentOrder.findByOrderId(callbackData.orderId || '');
-    
+    // Find the order by Razorpay order ID or orderId
+    let order;
+    if (orderId) {
+      order = await PaymentOrder.findByOrderId(orderId);
+    } else {
+      order = await PaymentOrder.findOne({
+        razorpayOrderId: razorpay_order_id,
+      });
+    }
+
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: 'PaymentOrder not found'
+        error: "Order not found",
       });
     }
 
+    // Get payment details from Razorpay
+    const paymentDetails = await getPaymentDetails(razorpay_payment_id);
+
     // Determine payment status
     let newStatus: OrderStatus;
-    if (callbackData.orderStatus === 'Success') {
+    if (paymentDetails.status === "captured") {
       newStatus = OrderStatus.SUCCESS;
-    } else if (callbackData.orderStatus === 'Failure') {
+    } else if (paymentDetails.status === "failed") {
       newStatus = OrderStatus.FAILED;
     } else {
-      newStatus = OrderStatus.PENDING;
+      newStatus = OrderStatus.PROCESSING;
     }
 
+    // Prepare payment response
+    const paymentResponse: IPaymentResponse = {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId: order.orderId,
+      amount: (Number(paymentDetails.amount) / 100).toString(), // Convert from paise to rupees
+      currency: paymentDetails.currency,
+      status: paymentDetails.status,
+      method: paymentDetails.method,
+      email: paymentDetails.email,
+      contact: paymentDetails.contact?.toString(),
+      notes: paymentDetails.notes,
+      created_at: paymentDetails.created_at,
+      captured: paymentDetails.captured,
+      international: paymentDetails.international,
+      refund_status: paymentDetails.refund_status,
+    };
+
     // Update order with payment response
-    await order.updateStatus(newStatus, callbackData as IPaymentResponse);
+    order.razorpayPaymentId = razorpay_payment_id;
+    order.razorpaySignature = razorpay_signature;
+    await order.updateStatus(newStatus, paymentResponse);
 
     // Return success response
     res.json({
@@ -173,97 +253,168 @@ router.post('/callback', async (req: Request, res: Response) => {
       data: {
         orderId: order.orderId,
         status: order.status,
-        paymentResponse: order.paymentResponse
+        paymentId: razorpay_payment_id,
+        paymentResponse: order.paymentResponse,
       },
-      message: 'Payment callback processed successfully'
+      message: "Payment verified successfully",
     });
-
   } catch (error) {
-    console.error('Payment callback error:', error);
+    console.error("Payment verification error:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to process payment callback',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to verify payment",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
 
 /**
- * GET /api/payment/callback
- * Handles CCAvenue payment callback (GET request for redirects)
+ * POST /api/payment/webhook
+ * Handles Razorpay webhooks
  */
-router.get('/callback', async (req: Request, res: Response) => {
+router.post("/webhook", async (req: Request, res: Response) => {
   try {
-    // CCAvenue redirects with query parameters
-    const { encResp } = req.query;
+    const webhookSignature = req.headers["x-razorpay-signature"] as string;
+    const webhookBody = JSON.stringify(req.body);
 
-    if (!encResp || typeof encResp !== 'string') {
+    if (!webhookSignature) {
       return res.status(400).json({
         success: false,
-        error: 'Missing encrypted response'
+        error: "Missing webhook signature",
       });
     }
 
-    // Get CCAvenue configuration
-    const config = getCCAvenueConfig();
+    // Verify webhook signature
+    const isValidSignature = verifyWebhookSignature(
+      webhookBody,
+      webhookSignature
+    );
 
-    // Decrypt the response
-    const decryptedResponse = decrypt(encResp, config.workingKey);
-    
-    // Validate and parse the response
-    const callbackData = validateCallbackResponse(decryptedResponse);
-
-    // Find the order
-    const order = await PaymentOrder.findByOrderId(callbackData.orderId || '');
-    
-    if (!order) {
-      return res.status(404).json({
+    if (!isValidSignature) {
+      return res.status(400).json({
         success: false,
-        error: 'PaymentOrder not found'
+        error: "Invalid webhook signature",
       });
     }
 
-    // Determine payment status
-    let newStatus: OrderStatus;
-    if (callbackData.orderStatus === 'Success') {
-      newStatus = OrderStatus.SUCCESS;
-    } else if (callbackData.orderStatus === 'Failure') {
-      newStatus = OrderStatus.FAILED;
-    } else {
-      newStatus = OrderStatus.PENDING;
+    const { event, payload } = req.body;
+
+    // Handle different webhook events
+    switch (event) {
+      case "payment.captured":
+        await handlePaymentCaptured(payload.payment.entity);
+        break;
+
+      case "payment.failed":
+        await handlePaymentFailed(payload.payment.entity);
+        break;
+
+      case "order.paid":
+        await handleOrderPaid(payload.order.entity);
+        break;
+
+      default:
+        console.log(`Unhandled webhook event: ${event}`);
     }
 
-    // Update order with payment response
-    await order.updateStatus(newStatus, callbackData as IPaymentResponse);
-
-    // Redirect to frontend with status
-    const redirectUrl = new URL(order.redirectUrl);
-    redirectUrl.searchParams.set('orderId', order.orderId);
-    redirectUrl.searchParams.set('status', order.status);
-    
-    res.redirect(redirectUrl.toString());
-
+    // Acknowledge webhook
+    res.json({ success: true });
   } catch (error) {
-    console.error('Payment callback error:', error);
-    // Redirect to failure page on error
-    res.redirect(`${process.env.CLIENT_URL || 'http://localhost:3000'}/payment-failure?error=callback_error`);
+    console.error("Webhook processing error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to process webhook",
+    });
   }
 });
+
+/**
+ * Handle payment captured webhook
+ */
+async function handlePaymentCaptured(payment: any) {
+  try {
+    const order = await PaymentOrder.findOne({
+      razorpayOrderId: payment.order_id,
+    });
+
+    if (order && order.status === OrderStatus.PROCESSING) {
+      await order.updateStatus(OrderStatus.SUCCESS, {
+        razorpay_payment_id: payment.id,
+        status: payment.status,
+        method: payment.method,
+        amount: (Number(payment.amount) / 100).toString(),
+        currency: payment.currency,
+        captured: payment.captured,
+        created_at: payment.created_at,
+      });
+    }
+  } catch (error) {
+    console.error("Handle payment captured error:", error);
+  }
+}
+
+/**
+ * Handle payment failed webhook
+ */
+async function handlePaymentFailed(payment: any) {
+  try {
+    const order = await PaymentOrder.findOne({
+      razorpayOrderId: payment.order_id,
+    });
+
+    if (order) {
+      await order.updateStatus(OrderStatus.FAILED, {
+        razorpay_payment_id: payment.id,
+        status: payment.status,
+        method: payment.method,
+        error_code: payment.error_code,
+        error_description: payment.error_description,
+        error_source: payment.error_source,
+        error_step: payment.error_step,
+        error_reason: payment.error_reason,
+      });
+    }
+  } catch (error) {
+    console.error("Handle payment failed error:", error);
+  }
+}
+
+/**
+ * Handle order paid webhook
+ */
+async function handleOrderPaid(orderData: any) {
+  try {
+    const order = await PaymentOrder.findOne({
+      razorpayOrderId: orderData.id,
+    });
+
+    if (order && order.status !== OrderStatus.SUCCESS) {
+      await order.updateStatus(OrderStatus.SUCCESS, {
+        razorpay_order_id: orderData.id,
+        status: "paid",
+        amount: (Number(orderData.amount) / 100).toString(),
+        currency: orderData.currency,
+      });
+    }
+  } catch (error) {
+    console.error("Handle order paid error:", error);
+  }
+}
 
 /**
  * GET /api/payment/status/:orderId
  * Get payment status for an order
  */
-router.get('/status/:orderId', async (req: Request, res: Response) => {
+router.get("/status/:orderId", async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
 
     const order = await PaymentOrder.findByOrderId(orderId);
-    
+
     if (!order) {
       return res.status(404).json({
         success: false,
-        error: 'PaymentOrder not found'
+        error: "PaymentOrder not found",
       });
     }
 
@@ -276,16 +427,15 @@ router.get('/status/:orderId', async (req: Request, res: Response) => {
         currency: order.currency,
         paymentResponse: order.paymentResponse,
         createdAt: order.createdAt,
-        updatedAt: order.updatedAt
-      }
+        updatedAt: order.updatedAt,
+      },
     });
-
   } catch (error) {
-    console.error('Get payment status error:', error);
+    console.error("Get payment status error:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get payment status',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to get payment status",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
@@ -294,13 +444,13 @@ router.get('/status/:orderId', async (req: Request, res: Response) => {
  * GET /api/payment/orders/:userId
  * Get all orders for a user
  */
-router.get('/orders/:userId', async (req: Request, res: Response) => {
+router.get("/orders/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const { limit = 10, page = 1 } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
-    
+
     const orders = await PaymentOrder.find({ userId })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -317,17 +467,16 @@ router.get('/orders/:userId', async (req: Request, res: Response) => {
           totalPages: Math.ceil(totalPaymentOrders / Number(limit)),
           totalPaymentOrders,
           hasNext: skip + orders.length < totalPaymentOrders,
-          hasPrev: Number(page) > 1
-        }
-      }
+          hasPrev: Number(page) > 1,
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Get user orders error:', error);
+    console.error("Get user orders error:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get user orders',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to get user orders",
+      message: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });

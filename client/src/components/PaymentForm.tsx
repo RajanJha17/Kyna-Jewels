@@ -106,6 +106,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         redirectUrl: `${window.location.origin}/payment-success`,
         cancelUrl: `${window.location.origin}/payment-cancel`,
         userId: userInfo.userId,
+        orderNumber: orderData.orderId,
         // jewelryId: orderData.jewelryId, // Include jewelryId if available
       };
 
@@ -116,13 +117,80 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       if (response.success) {
         console.log("✅ Payment initiated successfully:", response.data);
 
-        onPaymentInitiated?.(response.data.orderId); // Use the returned order ID
+        // Prepare Razorpay options
+        const razorpayOptions = {
+          key: response.data.razorpayKeyId,
+          amount: response.data.amount,
+          currency: response.data.currency,
+          name: response.data.name,
+          description: response.data.description,
+          order_id: response.data.razorpayOrderId,
+          prefill: response.data.prefill,
+          theme: response.data.theme,
+          notes: response.data.notes,
+          handler: () => {}, // Will be set by openRazorpayCheckout
+          modal: {
+            ondismiss: () => {},
+          },
+        };
 
-        // Submit to CCAvenue
-        paymentService.submitPaymentForm(
-          response.data.encryptedData,
-          response.data.accessCode,
-          response.data.paymentUrl
+        // Open Razorpay checkout
+        paymentService.openRazorpayCheckout(
+          razorpayOptions,
+          async (paymentResponse) => {
+            try {
+              // Verify payment with backend
+              const verificationResult = await paymentService.verifyPayment({
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+                orderId: response.data.orderId,
+              });
+
+              if (verificationResult.success) {
+                onPaymentInitiated?.(response.data.orderId);
+                // Redirect to success page
+                window.location.href = `${window.location.origin}/payment-success?orderId=${response.data.orderId}&status=success`;
+              } else {
+                throw new Error("Payment verification failed");
+              }
+            } catch (verifyError) {
+              console.error("Payment verification error:", verifyError);
+              onError?.(
+                verifyError instanceof Error
+                  ? verifyError.message
+                  : "Payment verification failed"
+              );
+            }
+          },
+          (paymentError) => {
+            // Log full error object from Razorpay for debugging
+            console.error("Payment error (full object):", paymentError);
+
+            /*
+             Razorpay error object often contains fields like:
+             - code
+             - description
+             - source
+             - step
+             - reason
+             - metadata
+            */
+
+            // Pick a friendly message to show the user
+            const errorMessage = (() => {
+              if (paymentError && typeof paymentError === "object") {
+                // @ts-expect-error - paymentError is any from Razorpay
+                const { description, reason, code } = paymentError;
+                if (description) return String(description);
+                if (reason) return String(reason);
+                if (code) return `Payment failed (${String(code)})`;
+              }
+              return "Payment failed. Please try again or use another payment method.";
+            })();
+
+            onError?.(errorMessage);
+          }
         );
       } else {
         throw new Error(response.message || "Payment initiation failed");
@@ -310,8 +378,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
       <p className="text-xs text-gray-500 text-center mt-4">
         By clicking "Pay Securely", you agree to our Terms of Service and
-        Privacy Policy. You will be redirected to CCAvenue for secure payment
-        processing.
+        Privacy Policy. Payment is processed securely through Razorpay.
       </p>
     </div>
   );

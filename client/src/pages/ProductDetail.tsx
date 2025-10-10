@@ -31,6 +31,7 @@ import {
 // import { Checkbox } from "@/components/ui/checkbox";
 import { StickyTwoColumnLayout } from "@/components/StickyTwoColumnLayout";
 import Faqs from "@/components/Products/Faqs";
+import { div } from "three/src/nodes/TSL.js";
 
 // Sample product data - in a real app this would come from API/database
 // const sampleProduct = {
@@ -693,11 +694,28 @@ const ProductDetail = () => {
                     sampleProduct.images[selectedImage],
                     selectedImage
                   ) ? (
-                    <EnhancedGLBViewer
-                      modelUrl={sampleProduct.images[selectedImage]}
-                      className="w-full h-full"
-                      isMain={true}
-                    />
+                    // <EnhancedGLBViewer
+                    //   modelUrl={sampleProduct.images[selectedImage]}
+                    //   className="w-full h-full"
+                    //   isMain={true}
+                    // />
+                    <div className="h-full">
+                      <iframe
+                        title="glb"
+                        // frameBorder="0"
+                        // mozAllowFullScreen={true}
+                        // webkitAllowFullScreen={true}
+                        xr-spatial-tracking="true"
+                        execution-while-out-of-viewport="true"
+                        execution-while-not-rendered="true"
+                        // webShare="true"
+                        allow="camera; autoplay; fullscreen; xr-spatial-tracking; web-share"
+                        width="100%"
+                        height="100%"
+                        src="https://ijewel.design/embedded?slug=c8d031b"
+                        className="rounded-xl"
+                      />
+                    </div>
                   ) : (
                     <img
                       src={sampleProduct.images[selectedImage]}

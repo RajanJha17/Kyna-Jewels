@@ -1,7 +1,7 @@
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
-      NODE_ENV: 'development' | 'production' | 'test';
+      NODE_ENV: "development" | "production" | "test";
       PORT: string;
       MONGO_URI: string;
       JWT_SECRET: string;
@@ -11,10 +11,9 @@ declare global {
       EMAIL_PASS: string;
       EMAIL_FROM: string;
       EMAIL_SECURE: string;
-      CCAVENUE_MERCHANT_ID: string;
-      CCAVENUE_ACCESS_CODE: string;
-      CCAVENUE_WORKING_KEY: string;
-      CCAVENUE_PAYMENT_URL: string;
+      RAZORPAY_KEY_ID: string;
+      RAZORPAY_KEY_SECRET: string;
+      RAZORPAY_WEBHOOK_SECRET: string;
       CLOUDINARY_CLOUD_NAME: string;
       CLOUDINARY_API_KEY: string;
       CLOUDINARY_API_SECRET: string;

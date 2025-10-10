@@ -167,9 +167,9 @@ const JewelleryFilterSidebar: React.FC<{
               )}
               {showImages && (
                 <img
-                  src={`/diamond-shapes/${shape.toLowerCase()}.png`}
+                  src={`/DIAMOND_SHAPES_WEBP/${shape.toLowerCase()}.png`}
                   alt={shape}
-                  className="h-8 w-8 mb-1"
+                  className="h-6 w-6 mb-1"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
                     const placeholder = document.createElement("div");
