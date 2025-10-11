@@ -42,6 +42,80 @@ export class SubProductService {
     this.imageService = new ImageService();
   }
 
+  /**
+   * Generate dynamic hero image from first variant
+   */
+  private async generateDynamicHeroImage(
+    subProduct: ISubProduct,
+    viewType: string = 'GP'
+  ): Promise<string> {
+    try {
+      // Use the first variant as base for hero image
+      const baseVariant = subProduct.productVariants[0];
+      
+      if (!baseVariant) {
+        return subProduct.heroImage; // Fallback to static
+      }
+
+      // Default attributes for hero image
+      const defaultAttributes = {
+        diamondShape: 'RD', // Round diamond as default
+        metal: 'WG',       // White Gold as default
+        diamondSize: 1.0,   // 1 carat as default
+        tone: '1T',        // Single tone
+        finish: 'BR'       // Black rhodium finish
+      };
+
+      // Generate dynamic image URL
+      const imageUrls = await this.imageService.generateImageUrlsFlexible(
+        baseVariant,
+        defaultAttributes,
+        subProduct.category.toLowerCase()
+      );
+
+      return imageUrls.main;
+    } catch (error) {
+      console.error('Error generating dynamic hero image:', error);
+      return subProduct.heroImage; // Fallback to static
+    }
+  }
+
+  /**
+   * Generate dynamic gallery images from each variant
+   */
+  private async generateDynamicGalleryImages(
+    subProduct: ISubProduct,
+    maxCount: number = 10
+  ): Promise<string[]> {
+    try {
+      const galleryImages: string[] = [];
+      const variants = subProduct.productVariants.slice(0, maxCount);
+
+      for (const variant of variants) {
+        const defaultAttributes = {
+          diamondShape: 'RD',
+          metal: 'WG',
+          diamondSize: 1.0,
+          tone: '1T',
+          finish: 'BR'
+        };
+
+        const imageUrls = await this.imageService.generateImageUrlsFlexible(
+          variant,
+          defaultAttributes,
+          subProduct.category.toLowerCase()
+        );
+
+        galleryImages.push(imageUrls.main);
+      }
+
+      return galleryImages;
+    } catch (error) {
+      console.error('Error generating dynamic gallery images:', error);
+      return subProduct.galleryImages; // Fallback to static
+    }
+  }
+
   async getSubProducts(
     filters: SubProductFilters = {},
     pagination: { page: number; limit: number } = { page: 1, limit: 20 }
@@ -77,24 +151,31 @@ export class SubProductService {
 
       const totalSubProducts = await SubProduct.countDocuments(query);
       const subProducts = await SubProduct.find(query)
-        .select('subProductId displayName shortDescription slug heroImage productCount priceRange tags category subCategory')
+        .select('subProductId displayName shortDescription slug heroImage productCount priceRange tags category subCategory productVariants')
         .sort({ sortOrder: 1, displayPriority: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit);
 
-      const transformedSubProducts = subProducts.map(subProduct => ({
-        id: subProduct._id.toString(),
-        subProductId: subProduct.subProductId,
-        displayName: subProduct.displayName,
-        shortDescription: subProduct.shortDescription,
-        slug: subProduct.slug,
-        heroImage: subProduct.heroImage,
-        productCount: subProduct.productCount,
-        priceRange: subProduct.priceRange,
-        tags: subProduct.tags,
-        category: subProduct.category,
-        subCategory: subProduct.subCategory
-      }));
+      // Generate dynamic images for each sub-product
+      const transformedSubProducts = await Promise.all(
+        subProducts.map(async (subProduct) => {
+          const dynamicHeroImage = await this.generateDynamicHeroImage(subProduct);
+          
+          return {
+            id: subProduct._id.toString(),
+            subProductId: subProduct.subProductId,
+            displayName: subProduct.displayName,
+            shortDescription: subProduct.shortDescription,
+            slug: subProduct.slug,
+            heroImage: dynamicHeroImage, // ← Dynamic instead of static
+            productCount: subProduct.productCount,
+            priceRange: subProduct.priceRange,
+            tags: subProduct.tags,
+            category: subProduct.category,
+            subCategory: subProduct.subCategory
+          };
+        })
+      );
 
       return {
         subProducts: transformedSubProducts,
@@ -136,6 +217,13 @@ export class SubProductService {
         isActive: true
       }).select('variantId stylingName mainImage basePrice priceRange viewType hasDiamond');
 
+      // Generate dynamic images
+      const [dynamicHeroImage, dynamicBannerImage, dynamicGalleryImages] = await Promise.all([
+        this.generateDynamicHeroImage(subProduct),
+        this.generateDynamicHeroImage(subProduct, 'NBV'), // Banner uses NBV view
+        this.generateDynamicGalleryImages(subProduct, 10)
+      ]);
+
       return {
         id: subProduct._id.toString(),
         subProductId: subProduct.subProductId,
@@ -143,9 +231,9 @@ export class SubProductService {
         description: subProduct.description,
         shortDescription: subProduct.shortDescription,
         slug: subProduct.slug,
-        heroImage: subProduct.heroImage,
-        bannerImage: subProduct.bannerImage,
-        galleryImages: subProduct.galleryImages,
+        heroImage: dynamicHeroImage,        // ← Dynamic
+        bannerImage: dynamicBannerImage,   // ← Dynamic
+        galleryImages: dynamicGalleryImages, // ← Dynamic
         category: subProduct.category,
         subCategory: subProduct.subCategory,
         viewType: subProduct.viewType,
@@ -182,6 +270,12 @@ export class SubProductService {
           diamondSizes: subProduct.availableDiamondSizes,
           metalTypes: subProduct.availableMetalTypes,
           metalColors: subProduct.availableMetalColors
+        },
+        imageGeneration: {
+          isDynamic: true,
+          baseVariant: subProduct.productVariants[0],
+          totalVariants: subProduct.productVariants.length,
+          galleryCount: dynamicGalleryImages.length
         }
       };
     } catch (error) {

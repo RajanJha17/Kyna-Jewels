@@ -40,6 +40,7 @@ import Blogs from "./pages/Blogs";
 import BlogPost from "./pages/BlogPost";
 import ProductDetail from "./pages/ProductDetail";
 import Product3d from "./pages/Product3d";
+import TrackOrderPage from "./pages/TrackOrderPage";
 import JewelleryPage from "./pages/JewelleryPage";
 import BuildYourJewelleryRings from "./pages/Build_yr_own/BuildYourJewelleryRings";
 import GoldPricePage from "./pages/GoldPricePage";
@@ -273,6 +274,7 @@ function App() {
             }
           />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/track-order" element={<TrackOrderPage />} />
           <Route path="/gold-prices" element={<GoldPricePage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />

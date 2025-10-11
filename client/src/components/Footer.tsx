@@ -25,6 +25,7 @@ const columns = [
   {
     title: "CUSTOMER SERVICE",
     links: [
+      { label: "Track Order", href: "/track-order" },
       { label: "FAQs", href: "/customer-service" },
       {
         label: "Jewellery Financing",

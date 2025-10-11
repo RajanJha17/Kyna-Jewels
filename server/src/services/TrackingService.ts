@@ -192,19 +192,21 @@ export class TrackingService {
   /**
    * Build tracking response with progress steps
    */
-  private buildTrackingResponse(order: any): TrackingResponse {
-    const steps = this.buildTrackingSteps(order);
-    const currentStatus = order.status;
-    const progress = this.calculateProgress(currentStatus);
-
+  private buildTrackingResponse(order: any): any {
+    const orderObj = order.toObject();
+    
+    // Return data in the format expected by frontend
     return {
-      order: order.toObject(),
-      tracking: {
-        currentStatus,
-        progress,
-        steps,
-        estimatedDelivery: order.estimatedDelivery
-      }
+      orderNumber: orderObj.orderNumber,
+      customerEmail: orderObj.customerEmail,
+      status: orderObj.status,
+      estimatedDelivery: orderObj.estimatedDelivery ? new Date(orderObj.estimatedDelivery).toISOString() : undefined,
+      docketNumber: orderObj.docketNumber,
+      shippingAddress: orderObj.shippingAddress,
+      trackingHistory: orderObj.trackingHistory || [],
+      items: orderObj.items || [],
+      totalAmount: orderObj.totalAmount,
+      updatedAt: orderObj.updatedAt ? new Date(orderObj.updatedAt).toISOString() : new Date().toISOString()
     };
   }
 

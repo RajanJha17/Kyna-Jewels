@@ -96,17 +96,20 @@ export class ImageViewService {
         this.getThumbnailViews(category)
       ]);
 
+      // Determine file extension
+      const extension = this.getFileExtension(sku, attributes);
+      
       // Generate main image URL (always GP)
-      const main = `${baseUrl}/${categoryPath}/${filename}-GP.jpg`;
+      const main = `${baseUrl}/${categoryPath}/${filename}-GP${extension}`;
 
       // Generate sub view URLs
       const sub = subViews.map(view => 
-        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.jpg`
+        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}${extension}`
       );
 
       // Generate thumbnail URLs
       const thumbnails = thumbnailViews.map(view => 
-        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}.jpg`
+        `${baseUrl}/${categoryPath}/${filename}-${view.viewType}${extension}`
       );
 
       return { main, sub, thumbnails };
@@ -118,6 +121,24 @@ export class ImageViewService {
   }
 
   /**
+   * Get file extension based on product type and attributes
+   */
+  private static getFileExtension(sku: string, attributes: any): string {
+    const skuPrefix = sku.match(/^[A-Z]+/)?.[0] || '';
+    
+    // Check if this is a pendant with specific attributes that use MP4
+    if (skuPrefix === 'PD') {
+      // Some pendants use MP4 format based on specific patterns
+      if (attributes.tone === '2T' || attributes.finish) {
+        return '.mp4';
+      }
+    }
+    
+    // Default to WebP for most cases
+    return '.webp';
+  }
+
+  /**
    * Get default image URLs (fallback)
    */
   private static getDefaultImageUrls(sku: string, attributes: any): { main: string; sub: string[]; thumbnails: string[] } {
@@ -126,16 +147,19 @@ export class ImageViewService {
     const attributeString = this.buildAttributeString(sku, attributes);
     const filename = `${sku}-${attributeString}`;
 
+    const extension = this.getFileExtension(sku, attributes);
+    
     return {
-      main: `${baseUrl}/${categoryPath}/${filename}-GP.jpg`,
+      main: `${baseUrl}/${categoryPath}/${filename}-GP${extension}`,
       sub: [
-        `${baseUrl}/${categoryPath}/${filename}-45.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-BV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-EV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-FV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-TV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-NBV.jpg`,
-        `${baseUrl}/${categoryPath}/${filename}-SV.jpg`,
+        `${baseUrl}/${categoryPath}/${filename}-45${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-BV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-EV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-FV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-TV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-NBV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-SV${extension}`,
+        `${baseUrl}/${categoryPath}/${filename}-NV${extension}`,
         `${baseUrl}/${categoryPath}/${filename}-360.glb`
       ],
       thumbnails: []
@@ -146,18 +170,18 @@ export class ImageViewService {
    * Extract category path from SKU
    */
   private static getCategoryPath(sku: string): string {
-    const skuPrefix = sku.substring(0, 2).toUpperCase();
+    const skuUpper = sku.toUpperCase();
     
-    switch (skuPrefix) {
-      case 'GR': return this.getGentsRingSubfolder(sku);
-      case 'ENG': return this.getEngagementRingSubfolder(sku);
-      case 'SR': return this.getSolitaireRingSubfolder(sku);
-      case 'BR': return 'BRACELETS/ALL BRACELETS';
-      case 'PN': return 'PENDANTS';
-      case 'ER': return this.getEarringSubfolder(sku);
-      case 'FR': return this.getFashionRingSubfolder(sku);
-      default: return 'GENTS RINGS/GR1-10';
-    }
+    // Check for longer prefixes first
+    if (skuUpper.startsWith('ENG')) return this.getEngagementRingSubfolder(sku);
+    if (skuUpper.startsWith('SR')) return this.getSolitaireRingSubfolder(sku);
+    if (skuUpper.startsWith('GR')) return this.getGentsRingSubfolder(sku);
+    if (skuUpper.startsWith('BR')) return 'BRACELETS/ALL BRACELETS';
+    if (skuUpper.startsWith('PD')) return this.getPendantSubfolder(sku);
+    if (skuUpper.startsWith('ER')) return this.getEarringSubfolder(sku);
+    if (skuUpper.startsWith('FR')) return this.getFashionRingSubfolder(sku);
+    
+    return 'GENTS RINGS/GR1-10';
   }
 
   /**
@@ -199,6 +223,9 @@ export class ImageViewService {
     if (num >= 71 && num <= 80) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG71-80';
     if (num >= 81 && num <= 90) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG81-90';
     if (num >= 91 && num <= 100) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG91-100';
+    if (num >= 101 && num <= 150) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG101-150';
+    if (num >= 151 && num <= 200) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG151-200';
+    if (num >= 201 && num <= 250) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG201-250';
     return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10'; // Fallback
   }
 
@@ -211,10 +238,7 @@ export class ImageViewService {
     
     const num = parseInt(match[1], 10);
     if (num >= 1 && num <= 10) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10';
-    if (num >= 11 && num <= 20) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR11-20';
-    if (num >= 21 && num <= 30) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR21-30';
-    if (num >= 31 && num <= 40) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR31-40';
-    if (num >= 41 && num <= 50) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR41-50';
+    if (num >= 11 && num <= 21) return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR11-21';
     return 'SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10'; // Fallback
   }
 
@@ -232,6 +256,7 @@ export class ImageViewService {
     if (num >= 151 && num <= 200) return 'EARINGS/ER151-200';
     if (num >= 201 && num <= 250) return 'EARINGS/ER201-250';
     if (num >= 251 && num <= 300) return 'EARINGS/ER251-300';
+    if (num >= 301 && num <= 400) return 'EARINGS/ER301-400';
     return 'EARINGS/ER1-50'; // Fallback
   }
 
@@ -249,7 +274,25 @@ export class ImageViewService {
     if (num >= 151 && num <= 200) return 'FASHION RINGS/FR151-200';
     if (num >= 201 && num <= 250) return 'FASHION RINGS/FR201-250';
     if (num >= 251 && num <= 300) return 'FASHION RINGS/FR251-300';
+    if (num >= 301 && num <= 350) return 'FASHION RINGS/FR301-350';
     return 'FASHION RINGS/FR1-50'; // Fallback
+  }
+
+  /**
+   * Get pendant subfolder based on SKU
+   */
+  private static getPendantSubfolder(sku: string): string {
+    const match = sku.match(/PD(\d+)/);
+    if (!match) return 'PENDANTS/PD1-40';
+    
+    const num = parseInt(match[1], 10);
+    if (num >= 1 && num <= 40) return 'PENDANTS/PD1-40';
+    if (num >= 41 && num <= 100) return 'PENDANTS/PD41-100';
+    if (num >= 101 && num <= 150) return 'PENDANTS/PD101-150';
+    if (num >= 151 && num <= 200) return 'PENDANTS/PD151-200';
+    if (num >= 201 && num <= 250) return 'PENDANTS/PD201-250';
+    if (num >= 251 && num <= 300) return 'PENDANTS/PD251-300';
+    return 'PENDANTS/PD1-40'; // Fallback
   }
 
   /**

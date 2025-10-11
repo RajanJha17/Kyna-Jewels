@@ -14,15 +14,15 @@ export const subProductSeedData = [
     description: 'Discover our exquisite collection of fashion rings that blend contemporary design with timeless elegance. Perfect for everyday wear and special occasions.',
     shortDescription: 'Contemporary fashion rings for every style and occasion',
     slug: 'fashion-rings',
-    heroImage: 'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-NBV.jpg',
-    bannerImage: 'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/banner.jpg',
+    heroImage: 'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-NBV.webp',
+    bannerImage: 'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/banner.webp',
     galleryImages: [
-      'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-NBV.jpg',
-      'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-TRV.jpg',
-      'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-BV.jpg'
+      'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-NBV.webp',
+      'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-TRV.webp',
+      'https://kynajewels.com/images/RENDERING PHOTOS/FASHION RINGS/FR1-50/FR1-RD-100-WG-BV.webp'
     ],
-    productVariants: ['FR1', 'FR2', 'FR3', 'FR4', 'FR5', 'FR6', 'FR7', 'FR8', 'FR9', 'FR10'],
-    featuredVariants: ['FR1', 'FR2', 'FR3', 'FR4'],
+    productVariants: ['FR1', 'FR2', 'FR3', 'FR4', 'FR5', 'FR6', 'FR7', 'FR8', 'FR9', 'FR10', 'FR11', 'FR12', 'FR13', 'FR14', 'FR15', 'FR16', 'FR17', 'FR18', 'FR19', 'FR20', 'FR21', 'FR22', 'FR23', 'FR24', 'FR25', 'FR26', 'FR27', 'FR28', 'FR29', 'FR30'],
+    featuredVariants: ['FR1', 'FR2', 'FR3', 'FR4', 'FR5', 'FR6', 'FR7', 'FR8', 'FR9', 'FR10'],
     viewType: 'NBV',
     tags: ['fashion', 'rings', 'contemporary', 'elegant', 'everyday'],
     priceRange: { min: 15000, max: 75000 },
@@ -37,7 +37,7 @@ export const subProductSeedData = [
     isFeatured: true,
     sortOrder: 1,
     displayPriority: 'high',
-    productCount: 10,
+    productCount: 30,
     viewCount: 0
   },
 
@@ -50,14 +50,14 @@ export const subProductSeedData = [
     description: 'Sophisticated men\'s rings featuring premium diamonds and precious metals. Designed for the modern gentleman who appreciates quality and style.',
     shortDescription: 'Premium men\'s rings with diamonds for the sophisticated gentleman',
     slug: 'gents-rings-with-diamond',
-    heroImage: 'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/GR1-3-4-5-47-37-46-12-14-22-IMG-GLB/GR1-RD-70-2T-BR-RG-45.jpg',
-    bannerImage: 'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/banner.jpg',
+    heroImage: 'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/GR1-10/GR1-RD-70-2T-BR-RG-GP.webp',
+    bannerImage: 'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/banner.webp',
     galleryImages: [
-      'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/GR1-3-4-5-47-37-46-12-14-22-IMG-GLB/GR1-RD-70-2T-BR-RG-45.jpg',
-      'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/GR1-3-4-5-47-37-46-12-14-22-IMG-GLB/GR1-RD-70-2T-BR-RG-45.jpg'
+      'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/GR1-10/GR1-RD-70-2T-BR-RG-GP.webp',
+      'https://kynajewels.com/images/RENDERING PHOTOS/GENTS RINGS/GR1-10/GR1-RD-70-2T-BR-RG-45.webp'
     ],
-    productVariants: ['GR1', 'GR2', 'GR3', 'GR4', 'GR5', 'GR6', 'GR7', 'GR8', 'GR9', 'GR10'],
-    featuredVariants: ['GR1', 'GR2', 'GR3', 'GR4'],
+    productVariants: ['GR1', 'GR2', 'GR3', 'GR4', 'GR5', 'GR6', 'GR7', 'GR8', 'GR9', 'GR10', 'GR11', 'GR12', 'GR13', 'GR14', 'GR15', 'GR16', 'GR17', 'GR18', 'GR19', 'GR20', 'GR21', 'GR22', 'GR23', 'GR24', 'GR25', 'GR26', 'GR27', 'GR28', 'GR29', 'GR30'],
+    featuredVariants: ['GR1', 'GR2', 'GR3', 'GR4', 'GR5', 'GR6', 'GR7', 'GR8', 'GR9', 'GR10'],
     viewType: 'TRV',
     tags: ['gents', 'men', 'rings', 'diamond', 'sophisticated', 'premium'],
     priceRange: { min: 25000, max: 150000 },
@@ -72,7 +72,7 @@ export const subProductSeedData = [
     isFeatured: true,
     sortOrder: 2,
     displayPriority: 'high',
-    productCount: 10,
+    productCount: 30,
     viewCount: 0
   },
 
@@ -92,8 +92,8 @@ export const subProductSeedData = [
       'https://kynajewels.com/images/RENDERING PHOTOS/SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10/ENG1-RD-100-WG-TRV.jpg',
       'https://kynajewels.com/images/RENDERING PHOTOS/SOLITAIRE RINGS and ENGAGEMENT RINGS/ENG1-10/ENG1-RD-100-WG-BV.jpg'
     ],
-    productVariants: ['ENG1', 'ENG2', 'ENG3', 'ENG4', 'ENG5', 'ENG6', 'ENG7', 'ENG8', 'ENG9', 'ENG10'],
-    featuredVariants: ['ENG1', 'ENG2', 'ENG3', 'ENG4'],
+    productVariants: ['ENG1', 'ENG2', 'ENG3', 'ENG4', 'ENG5', 'ENG6', 'ENG7', 'ENG8', 'ENG9', 'ENG10', 'ENG11', 'ENG12', 'ENG13', 'ENG14', 'ENG15', 'ENG16', 'ENG17', 'ENG18', 'ENG19', 'ENG20', 'ENG21', 'ENG22', 'ENG23', 'ENG24', 'ENG25', 'ENG26', 'ENG27', 'ENG28', 'ENG29', 'ENG30'],
+    featuredVariants: ['ENG1', 'ENG2', 'ENG3', 'ENG4', 'ENG5', 'ENG6', 'ENG7', 'ENG8', 'ENG9', 'ENG10'],
     viewType: 'NBV',
     tags: ['engagement', 'rings', 'love', 'romantic', 'special', 'proposal'],
     priceRange: { min: 50000, max: 500000 },
@@ -108,7 +108,7 @@ export const subProductSeedData = [
     isFeatured: true,
     sortOrder: 3,
     displayPriority: 'high',
-    productCount: 10,
+    productCount: 30,
     viewCount: 0
   },
 
@@ -128,8 +128,8 @@ export const subProductSeedData = [
       'https://kynajewels.com/images/RENDERING PHOTOS/SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10/SR1-RD-100-WG-TRV.jpg',
       'https://kynajewels.com/images/RENDERING PHOTOS/SOLITAIRE RINGS and ENGAGEMENT RINGS/SR1-10/SR1-RD-100-WG-BV.jpg'
     ],
-    productVariants: ['SR1', 'SR2', 'SR3', 'SR4', 'SR5', 'SR6', 'SR7', 'SR8', 'SR9', 'SR10'],
-    featuredVariants: ['SR1', 'SR2', 'SR3', 'SR4'],
+    productVariants: ['SR1', 'SR2', 'SR3', 'SR4', 'SR5', 'SR6', 'SR7', 'SR8', 'SR9', 'SR10', 'SR11', 'SR12', 'SR13', 'SR14', 'SR15', 'SR16', 'SR17', 'SR18', 'SR19', 'SR20', 'SR21', 'SR22', 'SR23', 'SR24', 'SR25', 'SR26', 'SR27', 'SR28', 'SR29', 'SR30'],
+    featuredVariants: ['SR1', 'SR2', 'SR3', 'SR4', 'SR5', 'SR6', 'SR7', 'SR8', 'SR9', 'SR10'],
     viewType: 'NBV',
     tags: ['solitaire', 'rings', 'classic', 'elegant', 'timeless', 'diamond'],
     priceRange: { min: 30000, max: 300000 },
@@ -144,7 +144,7 @@ export const subProductSeedData = [
     isFeatured: true,
     sortOrder: 4,
     displayPriority: 'high',
-    productCount: 10,
+    productCount: 30,
     viewCount: 0
   },
 
@@ -164,8 +164,8 @@ export const subProductSeedData = [
       'https://kynajewels.com/images/RENDERING PHOTOS/BRACELETS/ALL BRACELETS/BR1-RD-025-WG-BV.jpg',
       'https://kynajewels.com/images/RENDERING PHOTOS/BRACELETS/ALL BRACELETS/BR1-RD-025-WG-NBV.jpg'
     ],
-    productVariants: ['BR1', 'BR2', 'BR3', 'BR4', 'BR5', 'BR6', 'BR7', 'BR8', 'BR9', 'BR10'],
-    featuredVariants: ['BR1', 'BR2', 'BR3', 'BR4'],
+    productVariants: ['BR1', 'BR2', 'BR3', 'BR4', 'BR5', 'BR6', 'BR7', 'BR8', 'BR9', 'BR10', 'BR11', 'BR12', 'BR13', 'BR14', 'BR15', 'BR16', 'BR17', 'BR18', 'BR19', 'BR20', 'BR21', 'BR22', 'BR23', 'BR24', 'BR25', 'BR26', 'BR27', 'BR28', 'BR29', 'BR30'],
+    featuredVariants: ['BR1', 'BR2', 'BR3', 'BR4', 'BR5', 'BR6', 'BR7', 'BR8', 'BR9', 'BR10'],
     viewType: 'TRV',
     tags: ['bracelets', 'wrist', 'jewelry', 'elegant', 'delicate', 'statement'],
     priceRange: { min: 10000, max: 100000 },
@@ -180,7 +180,7 @@ export const subProductSeedData = [
     isFeatured: true,
     sortOrder: 5,
     displayPriority: 'high',
-    productCount: 10,
+    productCount: 30,
     viewCount: 0
   },
 
@@ -200,8 +200,8 @@ export const subProductSeedData = [
       'https://kynajewels.com/images/RENDERING PHOTOS/EARINGS/ER1-50/ER66-EM-05-WG-SIDE.jpg',
       'https://kynajewels.com/images/RENDERING PHOTOS/EARINGS/ER1-50/ER66-EM-05-WG-BACK.jpg'
     ],
-    productVariants: ['ER1', 'ER2', 'ER3', 'ER4', 'ER5', 'ER6', 'ER7', 'ER8', 'ER9', 'ER10'],
-    featuredVariants: ['ER1', 'ER2', 'ER3', 'ER4'],
+    productVariants: ['ER1', 'ER2', 'ER3', 'ER4', 'ER5', 'ER6', 'ER7', 'ER8', 'ER9', 'ER10', 'ER11', 'ER12', 'ER13', 'ER14', 'ER15', 'ER16', 'ER17', 'ER18', 'ER19', 'ER20', 'ER21', 'ER22', 'ER23', 'ER24', 'ER25', 'ER26', 'ER27', 'ER28', 'ER29', 'ER30'],
+    featuredVariants: ['ER1', 'ER2', 'ER3', 'ER4', 'ER5', 'ER6', 'ER7', 'ER8', 'ER9', 'ER10'],
     viewType: 'AV',
     tags: ['earrings', 'studs', 'drops', 'hoops', 'elegant', 'face'],
     priceRange: { min: 8000, max: 80000 },
@@ -216,7 +216,7 @@ export const subProductSeedData = [
     isFeatured: true,
     sortOrder: 6,
     displayPriority: 'high',
-    productCount: 10,
+    productCount: 30,
     viewCount: 0
   },
 
@@ -236,8 +236,8 @@ export const subProductSeedData = [
       'https://kynajewels.com/images/RENDERING PHOTOS/PENDANTS/PD1-RD-100-WG-TRV.jpg',
       'https://kynajewels.com/images/RENDERING PHOTOS/PENDANTS/PD1-RD-100-WG-BV.jpg'
     ],
-    productVariants: ['PD1', 'PD2', 'PD3', 'PD4', 'PD5', 'PD6', 'PD7', 'PD8', 'PD9', 'PD10'],
-    featuredVariants: ['PD1', 'PD2', 'PD3', 'PD4'],
+    productVariants: ['PD1', 'PD2', 'PD3', 'PD4', 'PD5', 'PD6', 'PD7', 'PD8', 'PD9', 'PD10', 'PD11', 'PD12', 'PD13', 'PD14', 'PD15', 'PD16', 'PD17', 'PD18', 'PD19', 'PD20', 'PD21', 'PD22', 'PD23', 'PD24', 'PD25', 'PD26', 'PD27', 'PD28', 'PD29', 'PD30'],
+    featuredVariants: ['PD1', 'PD2', 'PD3', 'PD4', 'PD5', 'PD6', 'PD7', 'PD8', 'PD9', 'PD10'],
     viewType: 'NBV',
     tags: ['pendants', 'necklace', 'elegant', 'layering', 'statement', 'sophisticated'],
     priceRange: { min: 12000, max: 120000 },
