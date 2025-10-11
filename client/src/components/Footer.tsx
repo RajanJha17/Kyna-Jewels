@@ -39,12 +39,19 @@ const columns = [
   },
   {
     title: "POLICIES",
+    // links: [
+    //   { label: "Privacy Policy", href: "/privacy-policy" },
+    //   { label: "Shipping", href: "/customer-service/faqs/shipping-and-delivery?category=shipping-and-delivery&section=faqs" },
+    //   { label: "Returns & Exchange", href: "/customer-service/faqs/Refund-&-Payment-Processing?category=Refund-%26-Payment-Processing&section=faqs" },
+    //   { label: "Terms & Conditions", href: "/terms-conditions" },
+    //   { label: "Cancellation & Refund", href: "/customer-service/faqs/Refund-&-Payment-Processing?category=Refund-%26-Payment-Processing&section=faqs" },
+    // ],
     links: [
       { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Shipping", href: "/customer-service/faqs/shipping-and-delivery?category=shipping-and-delivery&section=faqs" },
-      { label: "Returns & Exchange", href: "/customer-service/faqs/Refund-&-Payment-Processing?category=Refund-%26-Payment-Processing&section=faqs" },
+      { label: "Shipping", href: "/shipping-policy" },
+      // { label: "Returns & Exchange", href: "/cancellation-refund" },
       { label: "Terms & Conditions", href: "/terms-conditions" },
-      { label: "Cancellation & Refund", href: "/customer-service/faqs/Refund-&-Payment-Processing?category=Refund-%26-Payment-Processing&section=faqs" },
+      { label: "Cancellation & Refund", href: "/cancellation-refund" },
     ],
   },
 ];
@@ -291,20 +298,20 @@ const Footer: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="/customer-service/faqs/shipping-and-delivery"
+                    href="/shipping-policy"
                     className="text-sm text-gray-700 hover:text-teal-600 hover:underline"
                   >
                     Shipping
                   </a>
                 </li>
-                <li>
+                {/* <li>
                   <a
-                    href="/customer-service/faqs/Refund-&-Payment-Processing"
+                    href="/cancellation-refund"
                     className="text-sm text-gray-700 hover:text-teal-600 hover:underline"
                   >
                     Returns & Exchange
                   </a>
-                </li>
+                </li> */}
                 <li>
                   <a
                     href="/terms-conditions"
@@ -315,7 +322,7 @@ const Footer: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="/customer-service/faqs/Refund-&-Payment-Processing"
+                    href="/cancellation-refund"
                     className="text-sm text-gray-700 hover:text-teal-600 hover:underline"
                   >
                     Cancellation & Refunds
