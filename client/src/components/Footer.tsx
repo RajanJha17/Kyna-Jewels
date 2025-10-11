@@ -41,10 +41,10 @@ const columns = [
     title: "POLICIES",
     links: [
       { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Shipping", href: "/customer-service/faqs/shipping-and-delivery" },
-      { label: "Returns & Exchange", href: "/returns-exchange" },
+      { label: "Shipping", href: "/customer-service/faqs/shipping-and-delivery?category=shipping-and-delivery&section=faqs" },
+      { label: "Returns & Exchange", href: "/customer-service/faqs/Refund-&-Payment-Processing?category=Refund-%26-Payment-Processing&section=faqs" },
       { label: "Terms & Conditions", href: "/terms-conditions" },
-      { label: "Terms Of Service", href: "/terms-of-service" },
+      { label: "Cancellation & Refund", href: "/customer-service/faqs/Refund-&-Payment-Processing?category=Refund-%26-Payment-Processing&section=faqs" },
     ],
   },
 ];
