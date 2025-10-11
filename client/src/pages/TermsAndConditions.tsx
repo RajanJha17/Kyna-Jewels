@@ -128,7 +128,7 @@ export default function TermsAndConditions() {
   return (
     <>
       <SEO
-        title="Terms & Conditions | Kyora Jewellery"
+        title="Terms & Conditions | Kyna Jewellery"
         description="Read our terms and conditions, website usage policies, and product information guidelines."
         canonical="/terms-conditions"
       />

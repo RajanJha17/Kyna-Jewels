@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { HelpCircle, Gift, Users, Phone, MessageCircle } from "lucide-react";
 import SEO from "@/components/SEO";
 import ServiceCard from "@/components/customerservice/ServiceCard";
@@ -11,26 +12,38 @@ type SectionType = "faqs" | "promos" | "referral" | null;
 
 export default function CustomerService() {
   const [activeSection, setActiveSection] = useState<SectionType>(null);
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const toggleSection = (section: SectionType) => {
     setActiveSection(activeSection === section ? null : section);
   };
 
-  const searchParams = useMemo(
-    () => new URLSearchParams(window.location.search),
-    []
-  );
-
   useEffect(() => {
-    const sectionParam = searchParams.get("section");
-    if (
-      sectionParam === "faqs" ||
-      sectionParam === "promos" ||
-      sectionParam === "referral"
-    ) {
-      setActiveSection(sectionParam);
+    // Prefer route params (pretty URLs) over search params
+    const routeSection = params.categorySlug || params.questionSlug ? "faqs" : null;
+    const sectionFromQuery = searchParams.get("section");
+
+    if (routeSection) {
+      setActiveSection("faqs");
+      // map path parameters to search params so FAQSection keeps working
+      const newParams = new URLSearchParams(Array.from(searchParams.entries()));
+      if (params.categorySlug) newParams.set("category", params.categorySlug);
+      if (params.questionSlug) newParams.set("question", decodeURIComponent(params.questionSlug));
+      newParams.set("section", "faqs");
+      setSearchParams(newParams, { replace: true });
+      return;
     }
-  }, [searchParams]);
+
+    if (
+      sectionFromQuery === "faqs" ||
+      sectionFromQuery === "promos" ||
+      sectionFromQuery === "referral"
+    ) {
+      setActiveSection(sectionFromQuery as SectionType);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, searchParams]);
 
   useEffect(() => {
     const url = new URL(window.location.href);

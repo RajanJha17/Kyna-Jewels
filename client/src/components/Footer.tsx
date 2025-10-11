@@ -41,7 +41,7 @@ const columns = [
     title: "POLICIES",
     links: [
       { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Shipping", href: "/shipping" },
+      { label: "Shipping", href: "/customer-service/faqs/shipping-and-delivery" },
       { label: "Returns & Exchange", href: "/returns-exchange" },
       { label: "Terms & Conditions", href: "/terms-conditions" },
       { label: "Terms Of Service", href: "/terms-of-service" },
@@ -92,46 +92,6 @@ const Footer: React.FC = () => {
               </Accordion.Item>
             ))}
           </Accordion.Root>
-
-          {/* Contact Section */}
-          <div className="mt-6">
-            <h3 className="text-xs font-semibold tracking-wide text-gray-600 uppercase mb-3">
-              CONTACT US
-            </h3>
-            <p className="text-sm">+91 8928610682</p>
-            <a
-              href="mailto:enquires@hyunjewellery.com"
-              className="block text-sm text-teal-600 hover:underline"
-            >
-              enquires@hyunjewellery.com
-            </a>
-            <button
-              onClick={openCalendly}
-              className="block text-sm text-teal-600 hover:underline text-left p-0 border-none bg-transparent cursor-pointer"
-            >
-              Book Virtual Appointment
-            </button>
-          </div>
-
-          {/* Email Signup */}
-          <div className="mt-6">
-            <h3 className="text-xs font-semibold tracking-wide text-gray-600 uppercase mb-2">
-              SIGN UP FOR EMAIL
-            </h3>
-            <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-              <Input
-                type="email"
-                placeholder="Your Email Address"
-                className="flex-1"
-              />
-              <Button
-                type="submit"
-                className="px-3 bg-[#68C5C0] hover:bg-[#5ab3ae]"
-              >
-                <ArrowRight className="h-4 w-4 text-white" />
-              </Button>
-            </form>
-          </div>
 
           {/* Socials */}
           <div className="flex items-center gap-4 mt-6 text-gray-600">
@@ -331,7 +291,7 @@ const Footer: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="/shipping"
+                    href="/customer-service/faqs/shipping-and-delivery"
                     className="text-sm text-gray-700 hover:text-teal-600 hover:underline"
                   >
                     Shipping
@@ -339,7 +299,7 @@ const Footer: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="/returns-exchange"
+                    href="/customer-service/faqs/Refund-&-Payment-Processing"
                     className="text-sm text-gray-700 hover:text-teal-600 hover:underline"
                   >
                     Returns & Exchange
@@ -355,10 +315,10 @@ const Footer: React.FC = () => {
                 </li>
                 <li>
                   <a
-                    href="/terms-of-service"
+                    href="/customer-service/faqs/Refund-&-Payment-Processing"
                     className="text-sm text-gray-700 hover:text-teal-600 hover:underline"
                   >
-                    Terms Of Service
+                    Cancellation & Refunds
                   </a>
                 </li>
               </ul>
