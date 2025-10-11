@@ -1,4 +1,4 @@
-import apiService from "./api";
+// Note: no direct apiService used here; using fetch directly for payment endpoints
 
 // Razorpay types
 export interface RazorpayOptions {
@@ -67,6 +67,13 @@ export interface PaymentInitiateRequest {
   userId: string;
   orderNumber: string;
   jewelryId?: string; // Add optional jewelryId
+  images?: Array<{
+    url: string;
+    publicId?: string;
+    uploadedAt?: string | Date;
+    source?: string;
+    alt?: string;
+  }>;
 }
 
 export interface PaymentInitiateResponse {

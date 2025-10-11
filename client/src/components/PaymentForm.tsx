@@ -16,6 +16,13 @@ interface PaymentFormProps {
       quantity: number;
       price: number;
     }>;
+    images?: Array<{
+      url: string;
+      publicId?: string;
+      uploadedAt?: string | Date;
+      source?: string;
+      alt?: string;
+    }>;
   };
   userInfo: {
     userId: string;
@@ -97,6 +104,26 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
     setIsProcessing(true);
 
+    // VERY OBVIOUS DEBUG - Alert to ensure this code is running
+    alert(`IMAGES DEBUG: ${JSON.stringify(orderData.images)}`);
+    console.log("🔍 IMAGES ALERT DONE - orderData.images:", orderData.images);
+
+    // Debug: Check what orderData.images contains
+    console.log(
+      "🔍 PaymentForm - orderData.images JSON:",
+      JSON.stringify(orderData.images)
+    );
+    console.log(
+      "🔍 PaymentForm - orderData.images length:",
+      orderData.images?.length || 0
+    );
+    console.log(
+      "🔍 PaymentForm - orderData.images type:",
+      typeof orderData.images,
+      "Array?",
+      Array.isArray(orderData.images)
+    );
+
     try {
       const paymentData: PaymentInitiateRequest = {
         orderId: orderData.orderId,
@@ -108,9 +135,22 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         userId: userInfo.userId,
         orderNumber: orderData.orderId,
         // jewelryId: orderData.jewelryId, // Include jewelryId if available
+        images: orderData.images || [],
       };
 
-      console.log("💳 Initiating payment:", paymentData);
+      console.log("💳 Initiating payment with images:", paymentData.images);
+      console.log("💳 Full payment data:", paymentData);
+
+      // PROMINENT LOG FOR DEBUGGING
+      if (!paymentData.images || paymentData.images.length === 0) {
+        console.error("❌ IMAGES ARE EMPTY IN PAYMENT DATA!");
+      } else {
+        console.log(
+          "✅ IMAGES FOUND IN PAYMENT DATA:",
+          paymentData.images.length,
+          "images"
+        );
+      }
 
       const response = await paymentService.initiatePayment(paymentData);
 

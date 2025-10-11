@@ -28,7 +28,17 @@ router.post("/initiate", async (req: Request, res: Response) => {
       redirectUrl,
       cancelUrl,
       userId,
+      images,
     } = req.body;
+
+    // Debug: Log received images
+    console.log("🔍 Payment initiate - received images:", images);
+    console.log(
+      "🔍 Payment initiate - images type:",
+      typeof images,
+      "Array?",
+      Array.isArray(images)
+    );
 
     // Validate required fields
     if (
@@ -111,9 +121,12 @@ router.post("/initiate", async (req: Request, res: Response) => {
       redirectUrl,
       cancelUrl,
       razorpayOrderId: razorpayOrder.id,
+      images: Array.isArray(images) ? images : undefined,
     });
 
+    console.log("💾 About to save PaymentOrder with images:", order.images);
     await order.save();
+    console.log("✅ PaymentOrder saved successfully with ID:", order._id);
 
     // Get Razorpay configuration for frontend
     const config = getRazorpayConfig();
@@ -165,6 +178,7 @@ router.post("/verify", async (req: Request, res: Response) => {
       razorpay_payment_id,
       razorpay_signature,
       orderId,
+      images,
     } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -245,6 +259,11 @@ router.post("/verify", async (req: Request, res: Response) => {
     // Update order with payment response
     order.razorpayPaymentId = razorpay_payment_id;
     order.razorpaySignature = razorpay_signature;
+    // If images were sent in the verification request, persist them as well
+    if (images && Array.isArray(images) && images.length > 0) {
+      // Merge or overwrite; here we overwrite with provided images
+      order.images = images;
+    }
     await order.updateStatus(newStatus, paymentResponse);
 
     // Return success response

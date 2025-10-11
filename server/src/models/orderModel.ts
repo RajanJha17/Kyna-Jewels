@@ -77,6 +77,14 @@ export interface IOrder extends Document {
       note?: string;
     }>;
   };
+  // Optional images uploaded to Cloudinary or other storage
+  images?: Array<{
+    url: string;
+    publicId?: string;
+    uploadedAt?: Date;
+    source?: string; // e.g., 'cloudinary', 'local'
+    alt?: string;
+  }>;
   orderedAt: Date;
   shippedAt?: Date;
   deliveredAt?: Date;
@@ -202,6 +210,17 @@ const orderSchema = new Schema<IOrder>(
         },
       ],
     },
+
+    // Optional images uploaded to Cloudinary or other storage
+    images: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String },
+        uploadedAt: { type: Date },
+        source: { type: String },
+        alt: { type: String },
+      },
+    ],
 
     // Important dates
     orderedAt: { type: Date, default: Date.now },

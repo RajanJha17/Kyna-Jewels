@@ -67,7 +67,19 @@ export default function RingBuilder() {
     useState<string>("");
   const [showEngravingPopup, setShowEngravingPopup] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [orderData, setOrderData] = useState<any>(null);
+  // Define a minimal type for payment order data to avoid 'any'
+  type PaymentOrderType = {
+    orderId: string;
+    orderNumber?: string;
+    amount: number;
+    items: Array<{ name: string; quantity: number; price: number }>;
+    jewelryId?: string;
+    userId?: string;
+    images?: Array<{ url: string; publicId?: string; source?: string }>;
+    customData?: Record<string, unknown>;
+  } | null;
+
+  const [orderData, setOrderData] = useState<PaymentOrderType>(null);
   const [createdOrderId, setCreatedOrderId] = useState<string>("");
   const [Loading, setLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({
@@ -236,7 +248,7 @@ export default function RingBuilder() {
     }
   };
 
-  const [same_as_image, setSame_as_image] = useState(false);
+  // removed unused same_as_image state
   const renderStep1 = () => (
     <div className="max-w-6xl mx-auto">
       <StickyTwoColumnLayout
@@ -1375,6 +1387,17 @@ export default function RingBuilder() {
         },
       });
 
+      // Debug: output uploadedFiles and formData images before sending
+      console.log("🔍 Debug pre-upload:", {
+        uploadedFilesCount: uploadedFiles.length,
+        uploadedFilesPreview: uploadedFiles.map((f) => ({
+          name: f.name,
+          size: f.size,
+        })),
+        formDataImages: formData.images,
+        formDataUrl: formData.url,
+      });
+
       //check if user is authenticated
       if (!authUser) {
         alert("Please login to proceed with order creation.");
@@ -1397,9 +1420,28 @@ export default function RingBuilder() {
         data: result.data,
       });
 
+      // Debug: explicitly log returned image list from backend
+      console.log("🔍 Backend returned images:", result.data?.images);
+
       if (result.success) {
-        console.log("✅ Order created successfully!");
+        alert("✅ Order created successfully!");
         console.log("📋 Complete order details:", result.data);
+        alert(result.data.images);
+
+        // Ensure returned image URLs are stored in state for use in payment
+        if (result.data?.images && Array.isArray(result.data.images)) {
+          console.log(
+            "✅ Setting uploadedImages and formData.images from backend response:",
+            result.data.images
+          );
+          setUploadedImages(result.data.images);
+          setFormData((prev) => ({ ...prev, images: result.data.images }));
+        } else {
+          console.warn(
+            "⚠️ No images returned from backend after upload",
+            result.data?.images
+          );
+        }
 
         // Extract jewelry ID from multiple possible response structures
         const jewelryId =
@@ -1442,16 +1484,38 @@ export default function RingBuilder() {
             customizationComplete: true,
             backendJewelryId: jewelryId,
           },
+          // Include uploaded image URLs returned from backend (Cloudinary)
+          images:
+            result.data?.images?.map((url: string) => ({
+              url,
+              source: "cloudinary",
+              uploadedAt: new Date().toISOString(),
+            })) || [],
         };
 
-        console.log("💳 Payment order prepared:", {
-          orderId: paymentOrderData.orderId,
-          amount: paymentOrderData.amount,
-          jewelryId: paymentOrderData.jewelryId,
-          userId: paymentOrderData.userId,
-          itemCount: paymentOrderData.items.length,
-          orderNumber: paymentOrderData.orderId,
-        });
+        console.log(
+          "💳 PAYMENT ORDER DATA IMAGES:",
+          JSON.stringify(paymentOrderData.images)
+        );
+        console.log(
+          "💳 PAYMENT ORDER DATA IMAGES COUNT:",
+          paymentOrderData.images?.length || 0
+        );
+
+        if (!paymentOrderData.images || paymentOrderData.images.length === 0) {
+          console.error("❌ CRITICAL: paymentOrderData.images is empty!");
+          console.log(
+            "� result.data.images was:",
+            JSON.stringify(result.data?.images)
+          );
+        }
+
+        // ALERT TO CONFIRM IMAGES ARE SET
+        alert(
+          `RINGBUILDER: Setting orderData with ${
+            paymentOrderData.images?.length || 0
+          } images`
+        );
 
         setOrderData(paymentOrderData);
         setShowPaymentForm(true);

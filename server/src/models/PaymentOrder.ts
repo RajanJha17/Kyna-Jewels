@@ -70,6 +70,14 @@ export interface IOrder extends Document {
   currency: string;
   status: OrderStatus;
   paymentResponse?: IPaymentResponse;
+  // Optional images uploaded (Cloudinary etc.)
+  images?: Array<{
+    url: string;
+    publicId?: string;
+    uploadedAt?: Date;
+    source?: string;
+    alt?: string;
+  }>;
 
   // Razorpay specific fields
   razorpayOrderId?: string;
@@ -245,6 +253,16 @@ const orderSchema = new Schema<IOrder>(
       required: true,
       trim: true,
     },
+    // Optional images uploaded (Cloudinary or other services)
+    images: [
+      {
+        url: { type: String, required: true },
+        publicId: { type: String },
+        uploadedAt: { type: Date },
+        source: { type: String },
+        alt: { type: String },
+      },
+    ],
   },
   {
     timestamps: true,
