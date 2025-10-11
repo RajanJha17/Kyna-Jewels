@@ -161,15 +161,16 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-                <button
-                  aria-label="Wishlist"
-                  className="p-2 hover:text-foreground  sm:inline-flex"
+                <Link 
+                  to="/wishlist" 
+                  aria-label="Wishlist" 
+                  className="p-2 hover:text-foreground sm:inline-flex"
                 >
                   <Heart className="h-5 w-5 text-white" />
-                </button>
-                <button aria-label="Cart" className="p-2 hover:text-foreground">
+                </Link>
+                <Link to="/cart" aria-label="Cart" className="p-2 hover:text-foreground">
                   <ShoppingCart className="h-5 w-5 text-white" />
-                </button>
+                </Link>
               </div>
             </div>
             <div className="relative md:hidden flex justify-center my-2">
