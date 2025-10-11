@@ -14,6 +14,7 @@ import cartRoutes from "./routes/cart";
 import orderRoutes from "./routes/order";
 import giftCardRoutes from "./routes/giftCard";
 import wishlistRoutes from "./routes/wishlist";
+import wishlistShareRoutes from "./routes/wishlistShare";
 import referralRoutes from "./routes/referral";
 import settingsRoutes from "./routes/settings";
 import reviewRoutes from "./routes/review";
@@ -21,6 +22,8 @@ import giftingRoutes from "./routes/gifting";
 import engravingRoutes from "./routes/engraving";
 import paymentRoutes from "./routes/payment";
 import ringsRoutes from "./routes/rings";
+import promoCodeRoutes from "./routes/promoCode";
+import referralCodeRoutes from "./routes/referralCode";
 import trackingRoutes, { setTrackingController } from "./routes/tracking";
 import adminRoutes from "./routes/admin";
 import buildYourJewelryRoutes from "./routes/buildYourJewelry";
@@ -73,9 +76,9 @@ if (!process.env.JWT_SECRET) {
 if (!process.env.PORT) {
   process.env.PORT = "5000";
 }
-if (!process.env.MONGO_URI) {
-  process.env.MONGO_URI = "mongodb://localhost:27017/kyna-jewels";
-  }
+// if (!process.env.MONGO_URI) {
+//   process.env.MONGO_URI = "mongodb://localhost:27017/kyna-jewels";
+//   }
 }
 
 // Sequel247 configuration - NO DEFAULT VALUES FOR PRODUCTION
@@ -100,27 +103,39 @@ const app: Express = express();
 // Security middleware
 app.use(
   helmet({
+    crossOriginResourcePolicy: false,
+    crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "http://localhost:5000", "http://localhost:5173"],
       },
     },
-    crossOriginEmbedderPolicy: false,
   })
 );
 
-// CORS configuration - Production ready
+// CORS configuration - Development friendly
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow all origins in development
+    if (process.env.NODE_ENV === 'development') {
+      callback(null, true);
+      return;
+    }
+    
+    // Production origins
     const allowedOrigins = [
       'https://kynajewels.com',
       'https://www.kynajewels.com',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
       'http://localhost:3000',
-      'http://127.0.0.1:5173'
+      'http://127.0.0.1:3000'
     ];
+    
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -128,10 +143,13 @@ const corsOptions = {
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
 
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // ✅ Must be before routes
+app.options("*", cors(corsOptions)); // ✅ Handles preflight requests
 
 // Rate limiting
 const limiter = rateLimit({
@@ -345,6 +363,7 @@ app.use("/api/orders", deprecationWarning, orderRoutes);
 app.use("/api/tracking", deprecationWarning, trackingRoutes);
 app.use("/api/gift-cards", deprecationWarning, giftCardRoutes);
 app.use("/api/wishlist", deprecationWarning, wishlistRoutes);
+app.use("/api/wishlist-share", deprecationWarning, wishlistShareRoutes);
 app.use("/api/referrals", deprecationWarning, referralRoutes);
 app.use("/api/settings", deprecationWarning, settingsRoutes);
 app.use("/api/reviews", deprecationWarning, reviewRoutes);
@@ -352,6 +371,8 @@ app.use("/api/gifting", deprecationWarning, giftingRoutes);
 app.use("/api/engraving", deprecationWarning, engravingRoutes);
 app.use("/api/payment", deprecationWarning, paymentRoutes);
 app.use("/api/rings", deprecationWarning, ringsRoutes);
+app.use("/api/promo-code", deprecationWarning, promoCodeRoutes);
+app.use("/api/referral-code", deprecationWarning, referralCodeRoutes);
 app.use("/api/admin", deprecationWarning, adminRoutes);
 app.use("/api/build-your-jewelry", deprecationWarning, buildYourJewelryRoutes);
 app.use("/api/sub-products", deprecationWarning, subProductRoutes);
@@ -500,8 +521,9 @@ process.on('SIGTERM', async () => {
 
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGO_URI || "")
+  .connect(process.env.MONGO_URI || "mongodb://localhost:27017/kyna-jewels")
   .then(async () => {
+    console.log(process.env.Mongo_URI);
     console.log("✅ MongoDB connected");
 
     // Seed sample tracking data in development
