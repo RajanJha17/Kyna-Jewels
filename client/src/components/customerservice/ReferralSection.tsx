@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import axios from "axios";
+// import axios from "axios"; // Removed - using fetch instead
 
 const token = localStorage.getItem("token") || "";
 
@@ -54,41 +54,47 @@ export default function ReferralSection({ isOpen }: ReferralSectionProps) {
         .map((email) => email.trim())
         .filter((email) => email.length > 0);
 
-      const response = await axios.post(
+      const response = await fetch(
         "https://api.kynajewels.com/api/referrals",
         {
-          toEmails,
-          note: referralForm.note,
-          sendReminder: referralForm.sendReminder,
-        },
-        {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({
+            toEmails,
+            note: referralForm.note,
+            sendReminder: referralForm.sendReminder,
+          }),
         }
       );
 
-      setMessage(response.data.message || "Referral sent successfully!");
-      setReferralForm({
-        yourEmail: yourEmail,
-        friendsEmails: "",
-        note: "",
-        sendReminder: false,
-      });
+      const data = await response.json();
 
-      // Set the referral link dynamically
-      const baseUrl = "http://localhost:5173";
-      const shareableLink = `${baseUrl}/referral/${response.data.data?.referralCode}`;
-      setReferralLink(shareableLink);
+      if (response.ok) {
+        setMessage(data.message || "Referral sent successfully!");
+        setReferralForm({
+          yourEmail: yourEmail,
+          friendsEmails: "",
+          note: "",
+          sendReminder: false,
+        });
+
+        // Set the referral link dynamically
+        const baseUrl = "http://localhost:5173";
+        const shareableLink = `${baseUrl}/referral/${data.data?.referralCode}`;
+        setReferralLink(shareableLink);
+      } else {
+        throw new Error(data.message || "Failed to send referral");
+      }
     } catch (error: unknown) {
       console.error("Error sending referral:", error);
 
       let errMsg = "Failed to send referral.";
 
-      // Check if error is an AxiosError
-      if (axios.isAxiosError(error)) {
-        errMsg = error.response?.data?.message || errMsg;
+      if (error instanceof Error) {
+        errMsg = error.message || errMsg;
       }
 
       setMessage(errMsg);

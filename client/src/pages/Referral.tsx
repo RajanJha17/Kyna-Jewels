@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import axios from "axios";
+// import axios from "axios"; // Removed - using fetch instead
 import { toast } from "sonner";
 import { Gift, Sparkles, Heart, Crown } from "lucide-react";
 import referralJewelry from "/engravings/image.png";
@@ -42,35 +42,42 @@ const Referral = () => {
     setReferralCode("");
 
     try {
-      const response = await axios.post(
+      const response = await fetch(
         "https://api.kynajewels.com/api/referrals/promos/redeem",
-        { referFrdId: referralCode },
         {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ referFrdId: referralCode }),
         }
       );
 
-      const successMsg =
-        response.data.message ||
-        "Referral code redeemed successfully! Your reward will be processed shortly.";
+      const data = await response.json();
 
-      toast.success(successMsg);
-      setMessage(successMsg);
+      if (response.ok) {
+        const successMsg =
+          data.message ||
+          "Referral code redeemed successfully! Your reward will be processed shortly.";
 
-      // ✅ Trigger celebration animation
-      setShowAnimation(true);
-      setTimeout(() => setShowAnimation(false), 3000);
+        toast.success(successMsg);
+        setMessage(successMsg);
 
-      setReferralCode("");
+        // ✅ Trigger celebration animation
+        setShowAnimation(true);
+        setTimeout(() => setShowAnimation(false), 3000);
+
+        setReferralCode("");
+      } else {
+        throw new Error(data.message || "Failed to redeem referral code");
+      }
     } catch (error: unknown) {
       console.error("Error redeeming referral:", error);
 
       let errMsg = "Failed to redeem referral code.";
-      if (axios.isAxiosError(error)) {
-        errMsg = error.response?.data?.message || errMsg;
+      if (error instanceof Error) {
+        errMsg = error.message || errMsg;
       }
 
       toast.error(errMsg);

@@ -40,6 +40,7 @@ import Blogs from "./pages/Blogs";
 import BlogPost from "./pages/BlogPost";
 import ProductDetail from "./pages/ProductDetail";
 import Product3d from "./pages/Product3d";
+import TrackOrderPage from "./pages/TrackOrderPage";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const isAuthenticated = useSelector(
@@ -249,6 +250,7 @@ function App() {
             }
           />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/track-order" element={<TrackOrderPage />} />
         </Routes>
 
         <Footer />

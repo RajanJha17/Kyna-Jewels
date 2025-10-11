@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://api.kynajewels.com/api";
+const API_BASE_URL = "http://localhost:5000/api";
 import { getAccessToken } from "@/lib/authToken";
 
 interface ApiResponse<T = unknown> {
@@ -153,5 +153,65 @@ class ApiService {
   }
 }
 
+
+// Order Tracking API Service
+class TrackingApiService {
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    try {
+      const url = `${API_BASE_URL}${endpoint}`;
+      const response = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+        ...options,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          data: data.data,
+          message: data.message,
+        };
+      } else {
+        return {
+          success: false,
+          error: data.message || data.error || "Request failed",
+        };
+      }
+    } catch {
+      return {
+        success: false,
+        error: "Network error. Please check your connection.",
+      };
+    }
+  }
+
+  async trackOrder(orderNumber: string, email: string) {
+    return this.makeRequest("/tracking/track", {
+      method: "POST",
+      body: JSON.stringify({ orderNumber, email }),
+    });
+  }
+
+  async getOrderHistory(email: string, limit: number = 10) {
+    return this.makeRequest(`/tracking/history/${email}?limit=${limit}`, {
+      method: "GET",
+    });
+  }
+
+  async healthCheck() {
+    return this.makeRequest("/tracking/health", {
+      method: "GET",
+    });
+  }
+}
+
 export const apiService = new ApiService();
+export const trackingApi = new TrackingApiService();
 export default apiService;

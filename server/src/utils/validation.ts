@@ -231,7 +231,7 @@ export class DataValidator {
     const sanitized: any = {};
 
     // Validate order number
-    const orderNumberResult = this.validateOrderNumber(data.orderNumber);
+    const orderNumberResult = DataValidator.validateOrderNumber(data.orderNumber);
     if (!orderNumberResult.isValid) {
       errors.push(...orderNumberResult.errors);
     } else {
@@ -239,7 +239,7 @@ export class DataValidator {
     }
 
     // Validate email
-    const emailResult = this.validateEmail(data.email);
+    const emailResult = DataValidator.validateEmail(data.email);
     if (!emailResult.isValid) {
       errors.push(...emailResult.errors);
     } else {
