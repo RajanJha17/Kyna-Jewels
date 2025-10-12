@@ -9,6 +9,23 @@ interface User {
   displayName?: string;
   role?: string;
   isVerified?: boolean;
+  availableOffers?: number;
+  referralCode?: string;
+  referralCount?: number;
+  totalReferralEarnings?: number;
+  usedPromoCodes?: string[];
+  usedReferralCodes?: string[];
+  addresses?: Array<{
+    _id?: string;
+    id?: string;
+    label?: string;
+    street?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+    isDefault?: boolean;
+  }>;
   // Add other relevant user properties here
 }
 

@@ -10,6 +10,7 @@ import PromotionalBanner from "./components/PromotionalBanner";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import AboutPage from "./pages/AboutPage";
@@ -40,6 +41,14 @@ import Blogs from "./pages/Blogs";
 import BlogPost from "./pages/BlogPost";
 import ProductDetail from "./pages/ProductDetail";
 import Product3d from "./pages/Product3d";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import PaymentProcessingPage from "./pages/PaymentProcessingPage";
+import ShippingInformationPage from "./pages/ShippingInformationPage";
+import OrderSuccessPage from "./pages/OrderSuccessPage";
+import WishlistPage from "./pages/WishlistPage";
+import SharedWishlistPage from "./pages/SharedWishlistPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PrivacyPolicy from "./components/terms&conditions/PrivacyPolicy";
 import ShippingPolicy from "./components/terms&conditions/Shipping";
 import CancellationRefund from './components/terms&conditions/Cancellation&Refund'
@@ -91,6 +100,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-white">
         <PromotionalBanner />
         <Header />
@@ -100,6 +110,23 @@ function App() {
           <Route path="/product-3d" element={<Product3d />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/product" element={<ProductDetail />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment-processing" element={<PaymentProcessingPage />} />
+          <Route path="/shipping" element={<ShippingInformationPage />} />
+          <Route path="/order-success" element={<OrderSuccessPage />} />
+          <Route
+            path="/wishlist"
+            element={
+              <PrivateRoute>
+                <WishlistPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/shared-wishlist/:shareId"
+            element={<SharedWishlistPage />}
+          />
           <Route
             path="/login"
             element={

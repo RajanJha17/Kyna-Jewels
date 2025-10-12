@@ -85,7 +85,22 @@ const userSchema = new Schema<IUserInternal>({
   resetPasswordExpiresAt: Date, // For compatibility with new auth system
 
   // Rewards and offers
-  availableOffers: { type: Number, default: 0 }
+  availableOffers: { type: Number, default: 0 },
+  
+  // Referral system
+  referralCode: { 
+    type: String, 
+    unique: true, 
+    sparse: true,
+    uppercase: true,
+    trim: true
+  },
+  referralCount: { type: Number, default: 0 },
+  totalReferralEarnings: { type: Number, default: 0 },
+  
+  // Promo code tracking
+  usedPromoCodes: [{ type: Schema.Types.ObjectId, ref: "PromoCode" }],
+  usedReferralCodes: [{ type: String }]
 
 }, {
   timestamps: true
@@ -108,6 +123,30 @@ userSchema.pre('save', async function(this: IUserInternal, next) {
   } catch (err) {
     next(err as Error);
   }
+});
+
+// Pre-save: generate referral code for new users
+userSchema.pre('save', async function(this: IUserInternal, next) {
+  if (this.isNew && !this.referralCode) {
+    try {
+      // Generate unique referral code based on user's name and random string
+      const namePart = this.firstName?.substring(0, 3).toUpperCase() || 'USR';
+      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+      let referralCode = `${namePart}${randomPart}`;
+      
+      // Ensure uniqueness
+      let counter = 1;
+      while (await mongoose.model('User').findOne({ referralCode })) {
+        referralCode = `${namePart}${randomPart}${counter}`;
+        counter++;
+      }
+      
+      this.referralCode = referralCode;
+    } catch (err) {
+      console.error('Error generating referral code:', err);
+    }
+  }
+  next();
 });
 
 // Method: check password validity
