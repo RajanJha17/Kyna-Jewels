@@ -48,6 +48,9 @@ import ShippingInformationPage from "./pages/ShippingInformationPage";
 import OrderSuccessPage from "./pages/OrderSuccessPage";
 import WishlistPage from "./pages/WishlistPage";
 import SharedWishlistPage from "./pages/SharedWishlistPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ShippingPolicy from "./components/terms&conditions/Shipping";
+import CancellationRefund from './components/terms&conditions/Cancellation&Refund'
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const isAuthenticated = useSelector(
@@ -177,6 +180,13 @@ function App() {
           />
           <Route path="/terms-conditions" element={<TermsAndConditions />} />
           <Route path="/customer-service" element={<CustomerService />} />
+          {/* Pretty path-based FAQ routes */}
+          <Route path="/customer-service/faqs" element={<CustomerService />} />
+          <Route path="/customer-service/faqs/:categorySlug" element={<CustomerService />} />
+          <Route path="/customer-service/faqs/:categorySlug/:questionSlug" element={<CustomerService />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/cancellation-refund" element={<CancellationRefund />} />
           <Route
             path="/engrave-your-ring"
             element={<EngravingPage onClose={() => {}} />}
