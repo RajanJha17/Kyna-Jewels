@@ -5,7 +5,7 @@ import { ChevronRight, Menu, X } from "lucide-react";
 const sections = [
   {
     id: "ordering-cancellation-payment",
-    title: "03. ORDERING, CANCELLATION AND PAYMENT PROCESS",
+    title: "01. ORDERING, CANCELLATION AND PAYMENT PROCESS",
     subsections: [
       { id: "how-to-order", title: "How to Order" },
       { id: "purchase-payment", title: "Pricing & Payment" },
@@ -13,6 +13,15 @@ const sections = [
       { id: "cancellation-policy", title: "Cancellation Policy" },
     ],
   },
+  {
+    id: "return-exchange-lifetime-buy-back-policies",
+    title: "02. RETURN, EXCHANGE AND LIFETIME BUY BACK POLICIES",
+    subsections: [
+      { id: "return-policy", title: "Return Policy" },
+      { id: "exchange-policy", title: "Exchange Policy" },
+      { id: "lifetime-buy-back-policy", title: "Lifetime Buy Back Policy" },
+    ],
+  }
 ];
 
 export default function TermsAndConditions() {
@@ -190,7 +199,7 @@ export default function TermsAndConditions() {
               {/* Product Information Section */}
               <section id="ordering-cancellation-payment" className="mb-12">
                 <h2 className="text-2xl font-bold mb-6 text-[#328F94] ">
-                  03. ORDERING, CANCELLATION AND PAYMENT PROCESS
+                  01. ORDERING, CANCELLATION AND PAYMENT PROCESS
                 </h2>
 
                 <div id="how-to-order" className="mb-8">
@@ -266,6 +275,129 @@ We won’t entertain any cancellation request after specified timeframe. Upon ca
                 </div>
 
                </section>
+               {/* 02.	RETURN, EXCHANGE AND LIFETIME BUY BACK POLICIES */}
+              <section id="return-exchange-lifetime-buy-back-policies" className="mb-12">
+                <h1 className="text-2xl text-[#328F94] font-bold mb-6">
+                  02. RETURN, EXCHANGE AND LIFETIME BUY BACK POLICIES
+                </h1>
+
+                <div id="return-policy" className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">
+                    1.	Return Policy: 
+                  </h3>
+                  <ul>
+                    <li><p className="font-bold">•	Eligibility for Returns: </p>If you are not entirely satisfied with your purchase or if a defective product has been delivered, you may return the item within 15 working days of receiving the product. The product must be unused, in its original condition, with its original tags, invoices, certificates and packaging.</li>
+                    <li><p className="font-bold">•	Return Process: </p>
+                    <ul>
+                      <li>Contact our customer service team at enquiries@kynajewels.com  to request a Return.</li>
+                      <li>To process returns, customers must provide Kyna Jewellery with a valid reason for return and send pictures via WhatsApp or mail within 24 hours of receiving the product.</li>
+                      <li>Our courier partner will collect the order from the provided address within India.</li>
+                      <li>A charge of Rs. 1800 will be borne by the customer to process the return from within India.</li>
+                      <li>No charges will be applied if the delivered product is damaged as mentioned in Shipping and Delivery Policies.</li>
+                    </ul>
+                    <li><p className="font-bold">•	Quality Check & Approval: </p>Eligibility for returns is determined upon receipt and quality check conducted by our Quality Department. If the product does not meet the merchantable condition as dispatched by the company, the return will be rejected, and the product will be returned within 5 - 10 working days. Once approved by the Quality Department, the refund process will be initiated.</li>
+                    <li><p className="font-bold">•	Refund Process: </p>Once received, we will inspect the item and process your refund using electronic transfer methods such as RTGS, NEFT, or other appropriate means. The refunded amount will be credited to the same account used for the transaction. It may take approximately 21 - 30 working days from the date we receive the returned product(s) at our warehouse for the refund process and amount to reflect in your bank account. Original shipping fees are non-refundable.</li>
+                    <li><p className="font-bold">•	Defect Reporting: </p>The return of a defective product must be reported within 24 Hours of receipt of the product. You can report defects by calling us at +91 8928610682 or writing to us at enquiries@kynajewels.com
+                    </li>
+                    <li><p className="font-bold">•	Exclusions: </p>Design your own jewellery, custom-made jewellery, personalized jewellery, custom jewellery parts, or any alterations made to the jewellery is where the return policy is not applicable.</li>
+                    </li>
+                  </ul>
+                </div>
+
+                <div id="exchange-policy" className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">
+                    2. Exchange Policy:
+                  </h3>
+                  <ul>
+                    <li>
+                      <p className="font-bold">•	Exchange Eligibility: </p>The exchange is applicable for jewellery within 15 working days from the date of purchase.
+Exchange is permitted if the jewellery is in its original condition with its original tags, invoices, certificates and packaging. The product must be unused, in its original condition, with its original tags, invoices, certificates and packaging. If you wish to exchange an item for a different size, colour, or style, please contact our Customer Service team for assistance. 
+
+                    </li>
+                    <li><p className="font-bold">•	Exchange Process: </p>
+                   
+<ul>
+  <li>Contact our customer service team at enquiries@kynajewels.com  to request an Exchange.</li>
+  <li>To process exchanges, customers must provide Kyna Jewellery with a valid reason for exchange and send pictures via WhatsApp or mail within 24 hours of receiving the product.</li>
+  <li>A processing fee of Rs. 1800 will be borne by the customer to process the exchange within India.</li>
+  <li>Processes & Charges of exchange for international orders will be communicated during the request for exchange process.</li>
+</ul>
+</li>
+<li><p className="font-bold">•	Exclusions: </p>Design your own jewellery – Custom made jewellery, personalized jewellery, jewellery part or any type of alteration done to the jewellery such jewellery is where exchange policy is not applicable. The Company does not cover any consequential loss or damage of jewellery or precious stone in studded jewellery in exchange policy. </li>
+                  </ul>
+If the product does not meet the merchantable condition as dispatched by the company, the exchange will be rejected, and the product will be returned within 5 - 10 working days. Once approved by the Quality Department, the exchange process will be processed further.
+                </div>
+
+                <div id="lifetime-buy-back-policy" className="mb-8">
+                  <h3 className="text-xl font-semibold mb-4">
+                    3.	Lifetime Buy Back Policy: 
+                  </h3>
+                  <ul>
+                      <li>
+                        <p className="font-bold">•	Eligibility Criteria:</p>Jewellery must be in its original condition without significant alterations or damages include all original certificates and documentation.
+                      </li>
+                       <li>
+                      <p className="font-bold">•	Valuation Process:</p>Contact our customer service team at enquiries@kynajewels.com to request for Buy Back.
+Final valuation will be determined based on prevailing market prices, condition of the item, and other relevant considerations. The valuation process includes an inspection and quality check by our Quality Department.
+
+                    </li>
+                     <li>
+                      <p className="font-bold">•	Approx. Buy Back Rates:</p>
+<ul>
+  <li>Get approximately 98% value of metal weight (Gold, Silver, and Platinum) at the prevailing metal rate (subject to change).</li>
+  <li>Get approximately 80% value of Natural diamonds at prevailing market price (subject to change).</li>
+  <li>Get approximately 80% value of LGD (Lab Grown Diamonds) at prevailing market price (subject to change).</li>
+</ul>
+                    </li>
+                     <li>
+                      <p className="font-bold">•	Valuation Process:</p>Contact our customer service team at enquiries@kynajewels.com to request for Buy Back.
+Final valuation will be determined based on prevailing market prices, condition of the item, and other relevant considerations. The valuation process includes an inspection and quality check by our Quality Department.
+
+                    </li>
+                     <li>
+                      <p className="font-bold">•	Approx. Buy Back Rates:</p>
+<ul>
+  <li>Get approximately 98% value of metal weight (Gold, Silver, and Platinum) at the prevailing metal rate (subject to change).</li>
+  <li>Get approximately 80% value of Natural diamonds at prevailing market price (subject to change).</li>
+  <li>Get approximately 80% value of LGD (Lab Grown Diamonds) at prevailing market price (subject to change).</li>
+</ul>
+                    </li>
+                    <li>
+                      <p className="font-bold">•	Documentation Required:</p>
+<ul>
+  <li>Original Product</li>
+  <li>Original/Copy of Invoice</li>
+  <li>Product Certificate (if any)</li>
+  <li>Payment Receipt Invoice/Images</li>
+
+  <li>Any additional documents if required</li>
+</ul>
+                    </li>
+                    
+
+<li>
+  <p className="font-bold">• Policy Limitations:</p>
+  <ul>
+    <li>Buyback policy applies only if the invoice value is less than Rs. 2.00 Lacs.</li>
+    <li>Lifetime Buy Back Value doesn't cover manufacturing charges, taxes, or labour charges.</li>
+    <li>The policy is non-transferable and applies only to the original purchaser of the jewellery.</li>
+  </ul>
+</li>
+
+<li>
+  <p className="font-bold">• Payment Process:</p>
+  <ul>
+    <li>Refunds will be processed using electronic transfer methods such as RTGS, NEFT, or other appropriate means.</li>
+    <li>It will take approximately 21 – 30 working days from the date of receiving the returned product(s) at our warehouse for the refund amount to reflect in your bank account.</li>
+    <li>Any discounts given at the time of the original purchase will be deducted from the exchange amount.</li>
+  </ul>
+</li>
+
+    
+                  </ul>
+                </div>
+
+              </section>
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
 import ProfilePage from "./pages/ProfilePage";
-import TermsAndConditions from "./pages/TermsAndConditions";
+import TermsAndConditions from "./components/terms&conditions/TermsAndConditions";
 import EngravingPage from "./pages/Engrave";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -49,6 +49,7 @@ import OrderSuccessPage from "./pages/OrderSuccessPage";
 import WishlistPage from "./pages/WishlistPage";
 import SharedWishlistPage from "./pages/SharedWishlistPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import PrivacyPolicy from "./components/terms&conditions/PrivacyPolicy";
 import ShippingPolicy from "./components/terms&conditions/Shipping";
 import CancellationRefund from './components/terms&conditions/Cancellation&Refund'
 
