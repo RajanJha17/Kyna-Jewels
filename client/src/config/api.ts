@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  BASE_URL:'https://api.kynajewels.com',
   TIMEOUT: 10000, // 10 seconds
 };
 
