@@ -83,7 +83,7 @@ export const seedTrackingData = async (): Promise<void> => {
         customerEmail: 'jane@example.com',
         customerName: 'Jane Smith',
         totalAmount: 15000,
-        orderType: 'build-your-own', // Customized product - cannot be cancelled
+        orderType: 'customized', // Customized product - cannot be cancelled
         status: OrderStatus.DELIVERED,
         items: [
           {

@@ -146,13 +146,13 @@ async function seedTrackingData() {
       ]
     },
 
-    // 2. Build Your Own - Processing (CANNOT BE CANCELLED)
+    // 2. Customized Product - Processing (CANNOT BE CANCELLED)
     {
       orderNumber: 'ORD789012',
       customerEmail: 'test@example.com',
       customerName: 'Priya Sharma',
       totalAmount: 45000,
-      orderType: 'build-your-own', // ❌ Cannot be cancelled
+      orderType: 'customized', // ❌ Cannot be cancelled
       status: OrderStatus.PROCESSING,
       items: [{
         productId: 'BYO001',
@@ -197,13 +197,13 @@ async function seedTrackingData() {
       ]
     },
 
-    // 3. Upload Your Own - On The Road (CANNOT BE CANCELLED)
+    // 3. Customized Product - On The Road (CANNOT BE CANCELLED)
     {
       orderNumber: 'ORD345678',
       customerEmail: 'demo@example.com',
       customerName: 'Amit Patel',
       totalAmount: 35000,
-      orderType: 'upload-your-own', // ❌ Cannot be cancelled
+      orderType: 'customized', // ❌ Cannot be cancelled
       status: OrderStatus.ON_THE_ROAD,
       items: [{
         productId: 'UYO001',
@@ -261,13 +261,13 @@ async function seedTrackingData() {
       ]
     },
 
-    // 4. Engraved Product - Packaging (CANNOT BE CANCELLED)
+    // 4. Customized Product - Packaging (CANNOT BE CANCELLED)
     {
       orderNumber: 'ORD999888',
       customerEmail: 'customer@example.com',
       customerName: 'Sneha Reddy',
       totalAmount: 18000,
-      orderType: 'engraved', // ❌ Cannot be cancelled
+      orderType: 'customized', // ❌ Cannot be cancelled
       status: OrderStatus.PACKAGING,
       items: [{
         productId: 'ENG001',
@@ -447,9 +447,7 @@ async function seedTrackingData() {
     
     const orderTypeLabel = {
       'normal': 'Normal Product',
-      'build-your-own': 'Build Your Own',
-      'upload-your-own': 'Upload Your Own',
-      'engraved': 'Engraved'
+      'customized': 'Customized Product'
     }[order.orderType] || order.orderType;
     
     console.log(`✅ ${order.orderNumber} | ${order.customerEmail}`);
@@ -466,9 +464,9 @@ async function seedTrackingData() {
   console.log('   • ORD111222 - Order Placed');
   console.log('');
   console.log('❌ Non-Cancellable Orders:');
-  console.log('   • ORD789012 - Build Your Own');
-  console.log('   • ORD345678 - Upload Your Own');
-  console.log('   • ORD999888 - Engraved');
+  console.log('   • ORD789012 - Customized Product');
+  console.log('   • ORD345678 - Customized Product');
+  console.log('   • ORD999888 - Customized Product');
   console.log('   • ORD555666 - Normal (Already Delivered)');
   console.log('─────────────────────────────────────────────────────────');
   console.log('');

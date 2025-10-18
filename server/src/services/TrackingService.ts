@@ -195,11 +195,15 @@ export class TrackingService {
   private buildTrackingResponse(order: any): any {
     const orderObj = order.toObject();
     
+    console.log('🔍 Building Tracking Response for Order:', orderObj.orderNumber);
+    console.log('  Order Type in DB:', orderObj.orderType);
+    
     // Return data in the format expected by frontend
-    return {
+    const response = {
       orderNumber: orderObj.orderNumber,
       customerEmail: orderObj.customerEmail,
       status: orderObj.status,
+      orderType: orderObj.orderType || 'normal', // Include orderType for cancellation policy
       estimatedDelivery: orderObj.estimatedDelivery ? new Date(orderObj.estimatedDelivery).toISOString() : undefined,
       docketNumber: orderObj.docketNumber,
       shippingAddress: orderObj.shippingAddress,
@@ -208,6 +212,10 @@ export class TrackingService {
       totalAmount: orderObj.totalAmount,
       updatedAt: orderObj.updatedAt ? new Date(orderObj.updatedAt).toISOString() : new Date().toISOString()
     };
+    
+    console.log('  📤 Sending Order Type to Frontend:', response.orderType);
+    
+    return response;
   }
 
   /**

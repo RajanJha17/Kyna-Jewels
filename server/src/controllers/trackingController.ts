@@ -355,17 +355,9 @@ export class TrackingController {
       const { TrackingOrder } = await import('../models/TrackingOrder');
       const trackingOrder = await TrackingOrder.findOne({ docketNumber });
       
-      if (trackingOrder && trackingOrder.orderType !== 'normal') {
-        const orderTypeLabel = trackingOrder.orderType === 'build-your-own' 
-          ? 'Build Your Own'
-          : trackingOrder.orderType === 'upload-your-own'
-          ? 'Upload Your Own'
-          : trackingOrder.orderType === 'engraved'
-          ? 'Engraved'
-          : trackingOrder.orderType;
-
+      if (trackingOrder && trackingOrder.orderType === 'customized') {
         const response: ApiResponse = createErrorResponse(
-          `Cannot cancel ${orderTypeLabel} orders. Customized orders cannot be cancelled once placed.`
+          'Cannot cancel customized orders. Customized orders cannot be cancelled once placed.'
         );
         res.status(HTTP_STATUS.FORBIDDEN).json(response);
         return;

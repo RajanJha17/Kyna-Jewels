@@ -10,7 +10,7 @@ interface TrackingData {
   orderNumber: string;
   customerEmail: string;
   status: string;
-  orderType?: 'normal' | 'build-your-own' | 'upload-your-own' | 'engraved';
+  orderType?: 'normal' | 'customized';
   estimatedDelivery?: string;
   docketNumber?: string;
   shippingAddress?: {
@@ -85,6 +85,8 @@ export default function TrackOrderPage() {
       const response = await trackingApi.trackOrder(orderNumber, email);
       
       if (response.success && response.data) {
+        console.log('🔍 Tracking Data Received:', response.data);
+        console.log('📦 Order Type:', response.data.orderType);
         setTrackingData(response.data as TrackingData);
         
         // Cache the data
@@ -169,14 +171,26 @@ export default function TrackOrderPage() {
     const status = trackingData.status.toUpperCase();
     const orderType = trackingData.orderType || 'normal';
     
+    console.log('🔍 Can Cancel Order Check:');
+    console.log('  Order Type:', orderType);
+    console.log('  Status:', status);
+    console.log('  Docket Number:', trackingData.docketNumber);
+    console.log('  Is Normal?:', orderType === 'normal');
+    console.log('  Not Delivered?:', status !== "DELIVERED");
+    console.log('  Not Cancelled?:', status !== "CANCELLED");
+    
     // Only normal products can be cancelled
-    // Customized products (build-your-own, upload-your-own, engraved) cannot be cancelled
-    return (
+    // Customized products cannot be cancelled
+    const canCancel = (
       trackingData.docketNumber &&
       status !== "DELIVERED" &&
       status !== "CANCELLED" &&
       orderType === 'normal'
     );
+    
+    console.log('  ✅ Final Result:', canCancel);
+    
+    return canCancel;
   };
 
   return (
