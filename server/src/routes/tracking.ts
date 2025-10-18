@@ -188,6 +188,19 @@ router.post('/cancel-shipment', trackingRateLimit, (req, res) => {
   }
 });
 
+// Get all test orders endpoint
+router.get('/test-orders', generalRateLimit, (req, res) => {
+  try {
+    const controller = getController();
+    controller.getAllTestOrders(req, res, () => {});
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      error: 'Tracking service not initialized'
+    });
+  }
+});
+
 // Development only endpoints
 if (process.env.NODE_ENV !== 'production') {
   router.post('/test/create-order', (req, res) => {

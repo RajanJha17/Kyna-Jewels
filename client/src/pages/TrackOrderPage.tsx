@@ -40,12 +40,24 @@ interface TrackingData {
 }
 
 
+interface TestOrder {
+  orderNumber: string;
+  email: string;
+  customerName: string;
+  status: string;
+  orderType: 'normal' | 'customized';
+  amount: number;
+  productName: string;
+  docketNumber?: string;
+}
+
 const AUTO_REFRESH_INTERVAL = 180000; // 3 minutes
 
 export default function TrackOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
   const [email, setEmail] = useState("");
   const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
+  const [testOrders, setTestOrders] = useState<TestOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -53,7 +65,7 @@ export default function TrackOrderPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
 
-  // Load cached data on mount
+  // Load cached data and test orders on mount
   useEffect(() => {
     const cachedData = localStorage.getItem("lastTrackedOrder");
     if (cachedData) {
@@ -66,6 +78,19 @@ export default function TrackOrderPage() {
         console.error("Failed to load cached data", e);
       }
     }
+
+    // Fetch test orders from database
+    const fetchTestOrders = async () => {
+      try {
+        const response = await trackingApi.getAllTestOrders();
+        if (response.success && response.data) {
+          setTestOrders(response.data as TestOrder[]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch test orders:", err);
+      }
+    };
+    fetchTestOrders();
   }, []);
 
   const fetchTrackingData = useCallback(async (showLoader = true) => {
@@ -213,131 +238,54 @@ export default function TrackOrderPage() {
           </div>
 
           {/* Test Orders Cards */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Orders from Database</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Order 1 - Normal, In Transit */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                   onClick={() => { setOrderNumber('ORD123456'); setEmail('customer@example.com'); }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">ORD123456</h4>
-                    <p className="text-xs text-gray-500 mt-1">customer@example.com</p>
-                  </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Normal</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Package className="w-4 h-4 mr-2 text-blue-600" />
-                    <span className="text-gray-700">In Transit</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Diamond Solitaire Ring</p>
-                  <p className="text-sm font-semibold text-gray-900">₹25,000</p>
-                </div>
-              </div>
+          {testOrders.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Orders from Database</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {testOrders.map((order) => {
+                  const statusColors: Record<string, string> = {
+                    'DELIVERED': 'text-green-600',
+                    'ON_THE_ROAD': 'text-blue-600',
+                    'IN_TRANSIT': 'text-blue-600',
+                    'PACKAGING': 'text-orange-600',
+                    'PROCESSING': 'text-yellow-600',
+                    'ORDER_PLACED': 'text-gray-600',
+                    'CANCELLED': 'text-red-600'
+                  };
 
-              {/* Order 2 - Customized, Processing */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                   onClick={() => { setOrderNumber('ORD789012'); setEmail('test@example.com'); }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">ORD789012</h4>
-                    <p className="text-xs text-gray-500 mt-1">test@example.com</p>
-                  </div>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">Customized</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Package className="w-4 h-4 mr-2 text-yellow-600" />
-                    <span className="text-gray-700">Processing</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Custom Build Your Own Ring</p>
-                  <p className="text-sm font-semibold text-gray-900">₹45,000</p>
-                </div>
-              </div>
+                  const statusText = order.status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+                  const statusColor = statusColors[order.status] || 'text-gray-600';
 
-              {/* Order 3 - Customized, On The Road */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                   onClick={() => { setOrderNumber('ORD345678'); setEmail('demo@example.com'); }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">ORD345678</h4>
-                    <p className="text-xs text-gray-500 mt-1">demo@example.com</p>
-                  </div>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">Customized</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Package className="w-4 h-4 mr-2 text-blue-600" />
-                    <span className="text-gray-700">On The Road</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Custom Design Pendant</p>
-                  <p className="text-sm font-semibold text-gray-900">₹35,000</p>
-                </div>
+                  return (
+                    <div 
+                      key={order.orderNumber}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => { setOrderNumber(order.orderNumber); setEmail(order.email); }}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{order.orderNumber}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{order.email}</p>
+                        </div>
+                        <span className={`px-2 py-1 ${order.orderType === 'normal' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'} text-xs font-medium rounded`}>
+                          {order.orderType === 'normal' ? 'Normal' : 'Customized'}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-sm">
+                          <Package className={`w-4 h-4 mr-2 ${statusColor}`} />
+                          <span className="text-gray-700">{statusText}</span>
+                        </div>
+                        <p className="text-xs text-gray-600">{order.productName}</p>
+                        <p className="text-sm font-semibold text-gray-900">₹{order.amount.toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              {/* Order 4 - Customized, Packaging */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                   onClick={() => { setOrderNumber('ORD999888'); setEmail('customer@example.com'); }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">ORD999888</h4>
-                    <p className="text-xs text-gray-500 mt-1">customer@example.com</p>
-                  </div>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">Customized</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Package className="w-4 h-4 mr-2 text-orange-600" />
-                    <span className="text-gray-700">Packaging</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Engraved Gold Bracelet</p>
-                  <p className="text-sm font-semibold text-gray-900">₹18,000</p>
-                </div>
-              </div>
-
-              {/* Order 5 - Normal, Order Placed */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                   onClick={() => { setOrderNumber('ORD111222'); setEmail('test@example.com'); }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">ORD111222</h4>
-                    <p className="text-xs text-gray-500 mt-1">test@example.com</p>
-                  </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Normal</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Package className="w-4 h-4 mr-2 text-gray-600" />
-                    <span className="text-gray-700">Order Placed</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Gold Hoop Earrings</p>
-                  <p className="text-sm font-semibold text-gray-900">₹12,000</p>
-                </div>
-              </div>
-
-              {/* Order 6 - Normal, Delivered */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                   onClick={() => { setOrderNumber('ORD555666'); setEmail('demo@example.com'); }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-900">ORD555666</h4>
-                    <p className="text-xs text-gray-500 mt-1">demo@example.com</p>
-                  </div>
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Normal</span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center text-sm">
-                    <Package className="w-4 h-4 mr-2 text-green-600" />
-                    <span className="text-gray-700">Delivered</span>
-                  </div>
-                  <p className="text-xs text-gray-600">Pearl Necklace</p>
-                  <p className="text-sm font-semibold text-gray-900">₹22,000</p>
-                </div>
-              </div>
+              <p className="text-xs text-gray-500 mt-4 text-center">Click on any card to auto-fill the tracking form</p>
             </div>
-            <p className="text-xs text-gray-500 mt-4 text-center">Click on any card to auto-fill the tracking form</p>
-          </div>
+          )}
 
           {/* Tracking Form */}
           {!trackingData && (

@@ -404,6 +404,46 @@ export class TrackingController {
       next(error);
     }
   };
+
+  /**
+   * Get all test orders for display on tracking page
+   */
+  getAllTestOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { TrackingOrder } = await import('../models/TrackingOrder');
+      
+      // Fetch all orders, limiting to 20 most recent
+      const orders = await TrackingOrder.find()
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .select('orderNumber customerEmail customerName status orderType totalAmount items docketNumber createdAt updatedAt')
+        .lean();
+
+      // Format the response
+      const formattedOrders = orders.map((order: any) => ({
+        orderNumber: order.orderNumber,
+        email: order.customerEmail,
+        customerName: order.customerName,
+        status: order.status,
+        orderType: order.orderType || 'normal',
+        amount: order.totalAmount,
+        productName: order.items && order.items.length > 0 ? order.items[0].productName : 'Product',
+        docketNumber: order.docketNumber,
+        createdAt: order.createdAt,
+        updatedAt: order.updatedAt
+      }));
+
+      const response: ApiResponse = createSuccessResponse(
+        formattedOrders,
+        'Test orders fetched successfully'
+      );
+      res.status(HTTP_STATUS.OK).json(response);
+
+    } catch (error) {
+      logError(error as Error, 'getAllTestOrders');
+      next(error);
+    }
+  };
 }
 
 // Error handling middleware

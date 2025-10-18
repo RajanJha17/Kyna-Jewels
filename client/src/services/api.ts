@@ -222,6 +222,12 @@ class TrackingApiService {
       body: JSON.stringify(data),
     });
   }
+
+  async getAllTestOrders() {
+    return this.makeRequest("/tracking/test-orders", {
+      method: "GET",
+    });
+  }
 }
 
 export const apiService = new ApiService();
