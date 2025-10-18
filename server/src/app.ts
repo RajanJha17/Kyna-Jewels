@@ -21,7 +21,7 @@ import giftingRoutes from "./routes/gifting";
 import engravingRoutes from "./routes/engraving";
 import paymentRoutes from "./routes/payment";
 import ringsRoutes from "./routes/rings";
-import trackingRoutes, { setTrackingController } from "./routes/tracking";
+import * as trackingModule from "./routes/tracking";
 import adminRoutes from "./routes/admin";
 import buildYourJewelryRoutes from "./routes/buildYourJewelry";
 import subProductRoutes from "./routes/subProduct";
@@ -232,8 +232,14 @@ const initializeTrackingServices = () => {
     const trackingService = new TrackingService(sequelService);
     const trackingController = new TrackingController(trackingService);
 
-    // Set controller in routes
-    setTrackingController(trackingController);
+    // Set controller in routes (supports both named and default export shapes)
+    const setController =
+      (trackingModule as any).setTrackingController ||
+      (trackingModule as any).setController ||
+      (trackingModule as any).default;
+    if (typeof setController === "function") {
+      setController(trackingController);
+    }
 
     // Start automatic tracking updates cron job
     startTrackingCronJob(trackingService);
@@ -378,13 +384,19 @@ app.get(
     res.json({ success: true, trends });
   })
 );
-
-// Routes with deprecation warnings
+// Resolve router from possible export shapes (named export, default export, or module itself)
+const trackingRouter =
+  (trackingModule as any).trackingRoutes ||
+  (trackingModule as any).router ||
+  (trackingModule as any).default ||
+  (trackingModule as any);
+app.use("/api/tracking", deprecationWarning, trackingRouter);
+app.use("/api/gift-cards", deprecationWarning, giftCardRoutes);
 app.use("/api/auth", deprecationWarning, authRoutes);
 app.use("/api/products", deprecationWarning, productRoutes);
 app.use("/api/cart", deprecationWarning, cartRoutes);
 app.use("/api/orders", deprecationWarning, orderRoutes);
-app.use("/api/tracking", deprecationWarning, trackingRoutes);
+app.use("/api/tracking", deprecationWarning, trackingRouter);
 app.use("/api/gift-cards", deprecationWarning, giftCardRoutes);
 app.use("/api/wishlist", deprecationWarning, wishlistRoutes);
 app.use("/api/referrals", deprecationWarning, referralRoutes);

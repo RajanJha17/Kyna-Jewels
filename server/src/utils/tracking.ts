@@ -1,32 +1,44 @@
-import { ApiResponse, ValidationError } from '../types/tracking';
-import { VALIDATION_RULES, ERROR_MESSAGES } from '../constants/tracking';
+import { ApiResponse, ValidationError } from "../types/tracking";
+import { VALIDATION_RULES, ERROR_MESSAGES } from "../constants/tracking";
 
 // Create success response
 export const createSuccessResponse = <T>(
-  data: T, 
+  data: T,
   message?: string
 ): ApiResponse<T> => ({
   success: true,
   data,
-  message
+  message,
 });
 
 // Create error response
 export const createErrorResponse = (
-  message: string, 
+  message: string,
   errors?: Record<string, string>
 ): ApiResponse => ({
   success: false,
   error: message,
-  errors
+  errors,
 });
 
 // Validation functions
 export const validateOrderNumber = (orderNumber: string): boolean => {
   const { minLength, maxLength, pattern } = VALIDATION_RULES.ORDER_NUMBER;
-  return orderNumber.length >= minLength && 
-         orderNumber.length <= maxLength && 
-         pattern.test(orderNumber);
+  // Allow either the existing alphanumeric orderNumber (6-20 chars)
+  // OR a MongoDB ObjectId (24 hex characters) so callers can pass orderId
+  // OR String example (e.g. "KYNA1760721116496jj2u0oia6")
+  const isStringExample = /^KYNA\d{15}[a-z0-9]{6}$/.test(orderNumber);
+  const isStandardOrderNumber =
+    orderNumber.length >= minLength &&
+    orderNumber.length <= maxLength &&
+    pattern.test(orderNumber);
+
+  const isBroaderOrderId = /^[A-Za-z0-9\-_]{6,64}$/.test(orderNumber);
+  const isObjectId = /^[a-fA-F0-9]{24}$/.test(orderNumber);
+
+  return (
+    isStandardOrderNumber || isBroaderOrderId || isObjectId || isStringExample
+  );
 };
 
 export const validateEmail = (email: string): boolean => {
@@ -39,7 +51,10 @@ export const validateDocketNumber = (docketNumber: string): boolean => {
 };
 
 // Create validation error
-export const createValidationError = (field: string, message: string): ValidationError => {
+export const createValidationError = (
+  field: string,
+  message: string
+): ValidationError => {
   return new ValidationError(message, { [field]: message });
 };
 
@@ -50,46 +65,49 @@ export const retry = async <T>(
   delayMs: number = 1000
 ): Promise<T> => {
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxAttempts) {
         throw lastError;
       }
-      
+
       // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, delayMs * attempt));
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
     }
   }
-  
+
   throw lastError!;
 };
 
 // Logging utilities
-export const logInfo = (message: string, context: string = 'App'): void => {
+export const logInfo = (message: string, context: string = "App"): void => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] [INFO] [${context}] ${message}`);
 };
 
-export const logError = (error: Error, context: string = 'App'): void => {
+export const logError = (error: Error, context: string = "App"): void => {
   const timestamp = new Date().toISOString();
-  console.error(`[${timestamp}] [ERROR] [${context}] ${error.message}`, error.stack);
+  console.error(
+    `[${timestamp}] [ERROR] [${context}] ${error.message}`,
+    error.stack
+  );
 };
 
-export const logWarn = (message: string, context: string = 'App'): void => {
+export const logWarn = (message: string, context: string = "App"): void => {
   const timestamp = new Date().toISOString();
   console.warn(`[${timestamp}] [WARN] [${context}] ${message}`);
 };
 
 // Environment check
 export const isDevelopment = (): boolean => {
-  return process.env.NODE_ENV === 'development';
+  return process.env.NODE_ENV === "development";
 };
 
 export const isProduction = (): boolean => {
-  return process.env.NODE_ENV === 'production';
+  return process.env.NODE_ENV === "production";
 };

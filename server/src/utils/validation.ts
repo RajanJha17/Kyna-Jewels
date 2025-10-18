@@ -20,11 +20,28 @@ export class DataValidator {
     }
 
     // Sanitize order number
-    const sanitized = orderNumber.trim().toUpperCase();
+    const trimmed = orderNumber.trim();
 
-    // Validate format (alphanumeric, 6-20 characters)
-    if (!/^[A-Z0-9]{6,20}$/.test(sanitized)) {
-      errors.push("Order number must be 6-20 characters, alphanumeric only");
+    // Accept:
+    // - standard orderNumber (alphanumeric, 6-20 chars),
+    // - broader order-id format (6-64 chars, letters, numbers, - and _),
+    // - OR a MongoDB ObjectId (24 hex chars).
+    const isObjectId = /^[a-fA-F0-9]{24}$/.test(trimmed);
+    const isBroaderOrderId = /^[A-Za-z0-9\-_]{6,64}$/.test(trimmed);
+    const isStandardOrderNumber = /^[A-Z0-9]{6,20}$/.test(
+      trimmed.toUpperCase()
+    );
+
+    const sanitized = isObjectId
+      ? trimmed
+      : isStandardOrderNumber
+      ? trimmed.toUpperCase()
+      : trimmed;
+
+    if (!(isObjectId || isBroaderOrderId || isStandardOrderNumber)) {
+      errors.push(
+        "Order number must be 6-64 characters (alphanumeric, '-' or '_') or a 24-char ObjectId"
+      );
     }
 
     return {
@@ -91,7 +108,6 @@ export class DataValidator {
       sanitizedData: sanitized,
     };
   }
-
   /**
    * Validate and sanitize tracking status
    */
@@ -233,7 +249,9 @@ export class DataValidator {
     const sanitized: any = {};
 
     // Validate order number
-    const orderNumberResult = DataValidator.validateOrderNumber(data.orderNumber);
+    const orderNumberResult = DataValidator.validateOrderNumber(
+      data.orderNumber
+    );
     if (!orderNumberResult.isValid) {
       errors.push(...orderNumberResult.errors);
     } else {

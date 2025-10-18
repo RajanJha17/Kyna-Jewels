@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,8 +83,8 @@ export default function RingBuilder() {
   const [createdOrderId, setCreatedOrderId] = useState<string>("");
   const [Loading, setLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState({
-    // API matching fields
-    userId: authUser?.id || "",
+    // API matching fields - Use getUserId for consistent userId
+    userId: "",
     jewelryType: "ring",
 
     // Image data
@@ -121,6 +121,44 @@ export default function RingBuilder() {
     email: authUser?.email || "",
     phoneNumber: authUser?.phoneNumber || authUser?.phone || "",
   });
+
+  // Get userId reliably from multiple sources
+  const getUserId = useCallback(() => {
+    // 1. Try Redux store first
+    if (authUser?.id) {
+      return String(authUser.id);
+    }
+
+    // 2. Try localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        return String(
+          parsedUser.id || parsedUser._id || parsedUser.userId || ""
+        );
+      } catch (e) {
+        console.error("Error parsing stored user:", e);
+      }
+    }
+
+    // 3. Try direct userId
+    const directUserId = localStorage.getItem("userId");
+    if (directUserId) {
+      return String(directUserId);
+    }
+
+    return "";
+  }, [authUser]);
+
+  // Update userId when authUser changes
+  useEffect(() => {
+    const currentUserId = getUserId();
+    if (currentUserId && currentUserId !== formData.userId) {
+      setFormData((prev) => ({ ...prev, userId: currentUserId }));
+      console.log("🔄 Updated userId in formData:", currentUserId);
+    }
+  }, [authUser, getUserId, formData.userId]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -1320,12 +1358,23 @@ export default function RingBuilder() {
       setLoading(true);
       console.log("🚀 Starting order creation process...");
 
+      // Ensure we have the latest userId
+      const currentUserId = getUserId();
+      if (!currentUserId) {
+        alert("Please login to proceed with order creation.");
+        navigate("/login");
+        return;
+      }
+
+      // Update formData with current userId
+      const updatedFormData = { ...formData, userId: currentUserId };
+
       // Prepare the complete payload for upload-you-own API
       const formDataPayload = new FormData();
 
-      // Add basic information
-      formDataPayload.append("userId", formData.userId);
-      formDataPayload.append("jewelryType", formData.jewelryType);
+      // Add basic information with ensured userId
+      formDataPayload.append("userId", currentUserId);
+      formDataPayload.append("jewelryType", updatedFormData.jewelryType);
 
       // Add uploaded files
       if (uploadedFiles.length > 0) {
@@ -1368,8 +1417,8 @@ export default function RingBuilder() {
       );
 
       console.log("📦 Complete order payload prepared:", {
-        userId: formData.userId,
-        jewelryType: formData.jewelryType,
+        userId: currentUserId,
+        jewelryType: updatedFormData.jewelryType,
         filesCount: uploadedFiles.length,
         hasUrl: !!formData.url,
         sameAsImage: formData.sameAsImage,
@@ -1470,17 +1519,17 @@ export default function RingBuilder() {
           amount: totalAmount,
           items: [
             {
-              name: `Custom ${formData.jewelryType} Design${
+              name: `Custom ${updatedFormData.jewelryType} Design${
                 jewelryId ? ` - ${jewelryId}` : ""
               }`,
               quantity: 1,
               price: totalAmount,
             },
           ],
-          jewelryId: jewelryId || `custom_${timestamp}`, // Ensure we always have an ID
-          userId: formData.userId, // Use the actual user ID from formData
+          jewelryId: jewelryId || `custom_${timestamp}`,
+          userId: currentUserId, // Use the reliably obtained userId
           customData: {
-            jewelryType: formData.jewelryType,
+            jewelryType: updatedFormData.jewelryType,
             customizationComplete: true,
             backendJewelryId: jewelryId,
           },
@@ -1544,10 +1593,9 @@ export default function RingBuilder() {
   };
 
   // Add the missing payment handler functions
-  const handlePaymentInitiated = (orderId: string) => {
-    // PaymentForm expects a single-arg callback; if an orderNumber is provided by the caller
-    // it can be optionally accessed via arguments[1], but we primarily support the required orderId.
-    const orderNumber = arguments[1] as string | undefined;
+  const handlePaymentInitiated = (orderId: string, ...rest: unknown[]) => {
+    // PaymentForm may call with an optional second argument (orderNumber); capture it via rest params
+    const orderNumber = rest[0] as string | undefined;
     console.log("✅ Payment initiated for order:", orderId, orderNumber);
     // Could save order info locally or send to backend
   };
@@ -1556,6 +1604,49 @@ export default function RingBuilder() {
     console.error("❌ Payment error:", error);
     alert(`Payment Error: ${error}`);
     setShowPaymentForm(false);
+  };
+
+  const handlePaymentSuccess = async (
+    orderId: string,
+    orderNumber?: string
+  ) => {
+    console.log("🎉 Payment successful!", { orderId, orderNumber });
+
+    try {
+      // Optionally refresh user profile to get updated orders
+      if (authUser?.id) {
+        console.log("🔄 Refreshing user profile to update orders...");
+
+        // You can dispatch an action to refresh user data here
+        // dispatch(refreshUserProfile());
+
+        // Or make a direct API call to get updated user orders
+        const response = await fetch(
+          `http://localhost:5000/api/users/${authUser.id}/orders`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("✅ User orders updated:", userData.data);
+        }
+      }
+
+      // Navigate to success page or show success message
+      alert(`🎉 Payment successful! Order ID: ${orderId}`);
+
+      // Reset form or navigate away
+      setShowPaymentForm(false);
+      setCurrentStep(1); // Reset to first step for new order
+    } catch (error) {
+      console.error("Error refreshing user data after payment:", error);
+      // Still show success message even if refresh fails
+      alert(`🎉 Payment successful! Order ID: ${orderId}`);
+    }
   };
 
   return (

@@ -189,15 +189,25 @@ class TrackingApiService {
     }
   }
 
-  async trackOrder(orderNumber: string, email: string) {
+  async trackOrder(orderNumber: string, userId: string) {
+    console.log("🔍 TrackingApiService.trackOrder called with:", {
+      orderNumber,
+      userId,
+    });
+
     return this.makeRequest("/tracking/track", {
       method: "POST",
-      body: JSON.stringify({ orderNumber, email }),
+      body: JSON.stringify({ orderNumber, userId }),
     });
   }
 
-  async getOrderHistory(email: string, limit: number = 10) {
-    return this.makeRequest(`/tracking/history/${email}?limit=${limit}`, {
+  async getOrderHistory(userId: string, limit: number = 10) {
+    console.log("📋 TrackingApiService.getOrderHistory called with:", {
+      userId,
+      limit,
+    });
+
+    return this.makeRequest(`/tracking/history/${userId}?limit=${limit}`, {
       method: "GET",
     });
   }

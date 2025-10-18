@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Package, Search, Mail, AlertCircle, Clock, RefreshCw } from "lucide-react";
+import { Package, Search, AlertCircle, Clock, RefreshCw } from "lucide-react";
 import { trackingApi } from "@/services/api";
 import TrackingProgress from "@/components/tracking/TrackingProgress";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
 import TrackingCard from "@/components/tracking/TrackingCard";
 import SEO from "@/components/SEO";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 interface TrackingData {
   orderNumber: string;
@@ -38,73 +40,152 @@ interface TrackingData {
   updatedAt: string;
 }
 
-
 const AUTO_REFRESH_INTERVAL = 180000; // 3 minutes
 
 export default function TrackOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState("");
   const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Load cached data on mount
+  // Get user from Redux store
+  const authUser = useSelector((state: RootState) => state.auth.user);
+
+  // Get userId from multiple sources on component mount
   useEffect(() => {
+    const getUserId = () => {
+      // Try multiple sources for userId
+      let userIdFromStorage = "";
+
+      // 1. Try Redux store first
+      if (authUser?.id) {
+        userIdFromStorage = String(authUser.id);
+        console.log("📍 Got userId from Redux store:", userIdFromStorage);
+      }
+
+      // 2. Try localStorage if Redux doesn't have it
+      if (!userIdFromStorage) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            userIdFromStorage = String(
+              parsedUser.id || parsedUser._id || parsedUser.userId || ""
+            );
+            console.log(
+              "📍 Got userId from localStorage user object:",
+              userIdFromStorage
+            );
+          } catch (e) {
+            console.error("Error parsing stored user:", e);
+          }
+        }
+      }
+
+      // 3. Try direct userId from localStorage
+      if (!userIdFromStorage) {
+        const directUserId = localStorage.getItem("userId");
+        if (directUserId) {
+          userIdFromStorage = String(directUserId);
+          console.log(
+            "📍 Got userId from direct localStorage:",
+            userIdFromStorage
+          );
+        }
+      }
+
+      // 4. Try auth token payload
+      if (!userIdFromStorage) {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            userIdFromStorage = String(
+              payload.id || payload.userId || payload.sub || ""
+            );
+            console.log("📍 Got userId from token payload:", userIdFromStorage);
+          } catch (e) {
+            console.error("Error parsing token:", e);
+          }
+        }
+      }
+
+      return userIdFromStorage;
+    };
+
+    const detectedUserId = getUserId();
+    if (detectedUserId) {
+      setUserId(detectedUserId);
+      console.log("✅ Auto-detected userId:", detectedUserId);
+    } else {
+      console.warn("⚠️ No userId found in any storage location");
+    }
+
+    // Load cached tracking data
     const cachedData = localStorage.getItem("lastTrackedOrder");
     if (cachedData) {
       try {
         const parsed = JSON.parse(cachedData);
         setTrackingData(parsed.data);
         setOrderNumber(parsed.orderNumber);
-        setEmail(parsed.email);
+        // Only override userId if we didn't auto-detect one
+        if (!detectedUserId && parsed.userId) {
+          setUserId(String(parsed.userId));
+        }
       } catch (e) {
         console.error("Failed to load cached data", e);
       }
     }
-  }, []);
+  }, [authUser]);
 
-  const fetchTrackingData = useCallback(async (showLoader = true) => {
-    if (!orderNumber || !email) {
-      setError("Please enter both order number and email");
-      return;
-    }
-
-    if (showLoader) {
-      setLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
-    setError("");
-
-    try {
-      const response = await trackingApi.trackOrder(orderNumber, email);
-      
-      if (response.success && response.data) {
-        setTrackingData(response.data as TrackingData);
-        
-        // Cache the data
-        localStorage.setItem(
-          "lastTrackedOrder",
-          JSON.stringify({
-            data: response.data,
-            orderNumber,
-            email,
-            timestamp: new Date().toISOString(),
-          })
-        );
-      } else {
-        setError(response.error || "Order not found. Please check your details.");
-        setTrackingData(null);
+  const fetchTrackingData = useCallback(
+    async (showLoader = true) => {
+      if (!orderNumber || !userId) {
+        setError("Please enter both order number and user ID");
+        return;
       }
-    } catch (err) {
-      setError("Failed to fetch tracking data. Please try again.");
-      console.error("Tracking error:", err);
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [orderNumber, email]);
+
+      if (showLoader) {
+        setLoading(true);
+      } else {
+        setIsRefreshing(true);
+      }
+      setError("");
+
+      try {
+        const response = await trackingApi.trackOrder(orderNumber, userId);
+
+        if (response.success && response.data) {
+          setTrackingData(response.data as TrackingData);
+
+          // Cache the data
+          localStorage.setItem(
+            "lastTrackedOrder",
+            JSON.stringify({
+              data: response.data,
+              orderNumber,
+              userId,
+              timestamp: new Date().toISOString(),
+            })
+          );
+        } else {
+          setError(
+            response.error || "Order not found. Please check your details."
+          );
+          setTrackingData(null);
+        }
+      } catch (err) {
+        setError("Failed to fetch tracking data. Please try again.");
+        console.error("Tracking error:", err);
+      } finally {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [orderNumber, userId]
+  );
 
   // Auto-refresh tracking data
   useEffect(() => {
@@ -141,19 +222,39 @@ export default function TrackOrderPage() {
               Track Your Order Details
             </h1>
             <p className="text-gray-600 text-sm">
-              Enter your order details to get real-time tracking updates
+              Enter your order number to get real-time tracking updates
+              {userId && (
+                <span className="block text-green-600 mt-1">
+                  ✅ Logged in as User ID: {userId}
+                </span>
+              )}
             </p>
           </div>
 
-          {/* Demo Orders Info */}
+          {/* Demo Orders Info - Updated */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Test Orders from Database:</h3>
+            <h3 className="text-sm font-medium text-blue-900 mb-2">
+              {userId
+                ? "Ready to Track Your Orders:"
+                : "Test with Sample Data:"}
+            </h3>
             <div className="text-xs text-blue-800 space-y-1">
-              <p><strong>ORD123456</strong> - customer@example.com (Delivered)</p>
-              <p><strong>ORD789012</strong> - test@example.com (Packaging)</p>
-              <p><strong>ORD345678</strong> - demo@example.com (On The Road)</p>
-              <p><strong>ORD999888</strong> - customer@example.com (Processing)</p>
-              <p><strong>ORD111222</strong> - test@example.com (Order Placed)</p>
+              {userId ? (
+                <p>
+                  Your User ID has been automatically detected. Just enter your
+                  order number below.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    <strong>Order Number:</strong> KYNA1760721116496jj2u0oia6
+                  </p>
+                  <p>
+                    <strong>User ID:</strong> 68c85306d7202412be3bb05a
+                  </p>
+                  <p>Please log in for automatic user detection</p>
+                </>
+              )}
             </div>
           </div>
 
@@ -176,8 +277,8 @@ export default function TrackOrderPage() {
                       type="text"
                       id="orderNumber"
                       value={orderNumber}
-                      onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
-                      placeholder="e.g., ORD123456"
+                      onChange={(e) => setOrderNumber(e.target.value.trim())}
+                      placeholder="e.g., KYNA1760721116496jj2u0oia6"
                       className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#126180] focus:border-transparent transition-all"
                       required
                     />
@@ -186,25 +287,37 @@ export default function TrackOrderPage() {
 
                 <div>
                   <label
-                    htmlFor="email"
+                    htmlFor="userId"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Email Address
+                    User ID
+                    {userId && (
+                      <span className="text-green-600 ml-2">
+                        ✅ Auto-detected
+                      </span>
+                    )}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Package className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
-                      type="email"
-                      id="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value.toLowerCase())}
-                      placeholder="your.email@example.com"
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#126180] focus:border-transparent transition-all"
+                      type="text"
+                      id="userId"
+                      value={userId}
+                      onChange={(e) => setUserId(String(e.target.value.trim()))}
+                      placeholder="e.g., 68c85306d7202412be3bb05a"
+                      className={`block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#126180] focus:border-transparent transition-all ${
+                        userId ? "bg-green-50 border-green-300" : ""
+                      }`}
                       required
                     />
                   </div>
+                  {!userId && !authUser && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      💡 Log in to auto-detect your User ID
+                    </p>
+                  )}
                 </div>
 
                 {error && (
@@ -216,7 +329,7 @@ export default function TrackOrderPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !orderNumber || !userId}
                   className="w-full bg-[#126180] hover:bg-[#0f4f6b] text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
@@ -260,7 +373,8 @@ export default function TrackOrderPage() {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center text-gray-600">
                     <Clock className="w-4 h-4 mr-2" />
-                    Last updated: {new Date(trackingData.updatedAt).toLocaleString()}
+                    Last updated:{" "}
+                    {new Date(trackingData.updatedAt).toLocaleString()}
                   </div>
                   <button
                     onClick={handleRefresh}
@@ -301,7 +415,9 @@ export default function TrackOrderPage() {
                 No tracking data yet
               </h3>
               <p className="text-gray-600">
-                Enter your order details above to track your package
+                {userId
+                  ? "Enter your order number above to track your package"
+                  : "Please log in or enter your details above to track your package"}
               </p>
             </div>
           )}

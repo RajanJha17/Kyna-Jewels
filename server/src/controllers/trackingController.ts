@@ -1,22 +1,22 @@
-import { Request, Response, NextFunction } from 'express';
-import { TrackingService } from '../services/TrackingService';
-import { 
-  ApiResponse, 
-  TrackingRequest, 
-  AppError, 
+import { Request, Response, NextFunction } from "express";
+import { TrackingService } from "../services/TrackingService";
+import {
+  ApiResponse,
+  TrackingRequest,
+  AppError,
   ValidationError,
-  NotFoundError 
-} from '../types/tracking';
-import { 
-  ERROR_MESSAGES, 
-  SUCCESS_MESSAGES, 
-  HTTP_STATUS 
-} from '../constants/tracking';
-import { 
-  createSuccessResponse, 
-  createErrorResponse, 
-  logError 
-} from '../utils/tracking';
+  NotFoundError,
+} from "../types/tracking";
+import {
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  HTTP_STATUS,
+} from "../constants/tracking";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  logError,
+} from "../utils/tracking";
 
 export class TrackingController {
   private trackingService: TrackingService;
@@ -26,61 +26,75 @@ export class TrackingController {
   }
 
   /**
-   * Track an order by order number and email
+   * Track an order by order number and userId
    */
-  trackOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  trackOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      const { orderNumber, email } = req.body as TrackingRequest;
+      const { orderNumber, userId } = req.body as {
+        orderNumber: string;
+        userId: string;
+      };
 
-      if (!orderNumber || !email) {
+      if (!orderNumber || !userId) {
         const errors: Record<string, string> = {};
-        if (!orderNumber) errors.orderNumber = 'Order number is required';
-        if (!email) errors.email = 'Email is required';
-        
+        if (!orderNumber) errors.orderNumber = "Order number is required";
+        if (!userId) errors.userId = "User ID is required";
+
         const response: ApiResponse = createErrorResponse(
-          'Order number and email are required',
+          "Order number and user ID are required",
           errors
         );
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
         return;
       }
 
-      const result = await this.trackingService.trackOrder({ orderNumber, email });
-      
+      const result = await this.trackingService.trackOrder({
+        orderNumber,
+        userId,
+      });
+
       const response: ApiResponse = createSuccessResponse(
-        result, 
+        result,
         SUCCESS_MESSAGES.ORDER_FOUND
       );
-      
-      res.status(HTTP_STATUS.OK).json(response);
 
+      res.status(HTTP_STATUS.OK).json(response);
     } catch (error) {
       next(error);
     }
   };
 
   /**
-   * Get order history for a customer
+   * Get order history for a user by userId
    */
-  getOrderHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getOrderHistory = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      const { email } = req.params;
+      const { userId } = req.params;
       const { limit = 10 } = req.query;
 
-      if (!email) {
-        const response: ApiResponse = createErrorResponse('Email is required');
+      if (!userId) {
+        const response: ApiResponse = createErrorResponse(
+          "User ID is required"
+        );
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
         return;
       }
 
       const orders = await this.trackingService.getOrderHistory(
-        email, 
+        userId,
         parseInt(limit as string)
       );
-      
+
       const response: ApiResponse = createSuccessResponse(orders);
       res.status(HTTP_STATUS.OK).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -89,13 +103,16 @@ export class TrackingController {
   /**
    * Get tracking statistics (admin only)
    */
-  getTrackingStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getTrackingStats = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const stats = await this.trackingService.getTrackingStats();
-      
+
       const response: ApiResponse = createSuccessResponse(stats);
       res.status(HTTP_STATUS.OK).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -104,33 +121,36 @@ export class TrackingController {
   /**
    * Update order status (admin only)
    */
-  updateOrderStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  updateOrderStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { orderNumber } = req.params;
       const { status, description, location } = req.body;
 
       if (!orderNumber || !status) {
         const response: ApiResponse = createErrorResponse(
-          'Order number and status are required'
+          "Order number and status are required"
         );
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
         return;
       }
 
       const order = await this.trackingService.updateOrderStatus(
-        orderNumber, 
-        status, 
-        description, 
+        orderNumber,
+        status,
+        description,
         location
       );
-      
-      const response: ApiResponse = createSuccessResponse(
-        order, 
-        'Order status updated successfully'
-      );
-      
-      res.status(HTTP_STATUS.OK).json(response);
 
+      const response: ApiResponse = createSuccessResponse(
+        order,
+        "Order status updated successfully"
+      );
+
+      res.status(HTTP_STATUS.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -139,11 +159,15 @@ export class TrackingController {
   /**
    * Create a test order (development only)
    */
-  createTestOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  createTestOrder = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         const response: ApiResponse = createErrorResponse(
-          'This endpoint is not available in production'
+          "This endpoint is not available in production"
         );
         res.status(HTTP_STATUS.FORBIDDEN).json(response);
         return;
@@ -151,14 +175,13 @@ export class TrackingController {
 
       const orderData = req.body;
       const order = await this.trackingService.createOrder(orderData);
-      
-      const response: ApiResponse = createSuccessResponse(
-        order, 
-        'Test order created successfully'
-      );
-      
-      res.status(HTTP_STATUS.CREATED).json(response);
 
+      const response: ApiResponse = createSuccessResponse(
+        order,
+        "Test order created successfully"
+      );
+
+      res.status(HTTP_STATUS.CREATED).json(response);
     } catch (error) {
       next(error);
     }
@@ -167,17 +190,20 @@ export class TrackingController {
   /**
    * Health check endpoint
    */
-  healthCheck = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  healthCheck = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const response: ApiResponse = createSuccessResponse({
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
-        service: 'KynaJewels Tracking API',
-        version: '1.0.0'
+        service: "KynaJewels Tracking API",
+        version: "1.0.0",
       });
-      
-      res.status(HTTP_STATUS.OK).json(response);
 
+      res.status(HTTP_STATUS.OK).json(response);
     } catch (error) {
       next(error);
     }
@@ -186,16 +212,25 @@ export class TrackingController {
   /**
    * Test webhook configuration
    */
-  testWebhook = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  testWebhook = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      const webhookModule = await import('../services/WebhookService');
-      
+      const webhookModule = await import("../services/WebhookService");
+
       const webhookConfig: any = {
-        url: process.env.WEBHOOK_URL || '',
-        secret: process.env.WEBHOOK_SECRET || '',
-        events: ['tracking.status_change', 'order.shipped', 'order.delivered', 'order.cancelled'],
+        url: process.env.WEBHOOK_URL || "",
+        secret: process.env.WEBHOOK_SECRET || "",
+        events: [
+          "tracking.status_change",
+          "order.shipped",
+          "order.delivered",
+          "order.cancelled",
+        ],
         retryAttempts: 3,
-        timeout: 10000
+        timeout: 10000,
       };
 
       const webhookService = new webhookModule.WebhookService(webhookConfig);
@@ -203,11 +238,12 @@ export class TrackingController {
 
       const response: ApiResponse = createSuccessResponse(
         { success, config: webhookConfig },
-        success ? 'Webhook test successful' : 'Webhook test failed'
+        success ? "Webhook test successful" : "Webhook test failed"
       );
-      
-      res.status(success ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST).json(response);
 
+      res
+        .status(success ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST)
+        .json(response);
     } catch (error) {
       next(error);
     }
@@ -216,19 +252,27 @@ export class TrackingController {
   /**
    * Get webhook configuration
    */
-  getWebhookConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getWebhookConfig = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const config = {
-        url: process.env.WEBHOOK_URL || '',
-        events: ['tracking.status_change', 'order.shipped', 'order.delivered', 'order.cancelled'],
+        url: process.env.WEBHOOK_URL || "",
+        events: [
+          "tracking.status_change",
+          "order.shipped",
+          "order.delivered",
+          "order.cancelled",
+        ],
         retryAttempts: 3,
         timeout: 10000,
-        enabled: !!(process.env.WEBHOOK_URL && process.env.WEBHOOK_SECRET)
+        enabled: !!(process.env.WEBHOOK_URL && process.env.WEBHOOK_SECRET),
       };
 
       const response: ApiResponse = createSuccessResponse(config);
       res.status(HTTP_STATUS.OK).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -237,24 +281,32 @@ export class TrackingController {
   /**
    * Get audit trail for an order
    */
-  getOrderAuditTrail = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getOrderAuditTrail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { orderNumber } = req.params;
       const { limit = 50 } = req.query;
 
       if (!orderNumber) {
-        const response: ApiResponse = createErrorResponse('Order number is required');
+        const response: ApiResponse = createErrorResponse(
+          "Order number is required"
+        );
         res.status(HTTP_STATUS.BAD_REQUEST).json(response);
         return;
       }
 
-      const { AuditService } = await import('../services/AuditService');
+      const { AuditService } = await import("../services/AuditService");
       const auditService = new AuditService();
-      const auditTrail = await auditService.getOrderAuditTrail(orderNumber, parseInt(limit as string));
+      const auditTrail = await auditService.getOrderAuditTrail(
+        orderNumber,
+        parseInt(limit as string)
+      );
 
       const response: ApiResponse = createSuccessResponse(auditTrail);
       res.status(HTTP_STATUS.OK).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -263,22 +315,26 @@ export class TrackingController {
   /**
    * Search audit logs
    */
-  searchAuditLogs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  searchAuditLogs = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      const { 
-        entityType, 
-        action, 
-        userId, 
-        orderNumber, 
-        docketNumber, 
-        startDate, 
-        endDate, 
-        limit = 100 
+      const {
+        entityType,
+        action,
+        userId,
+        orderNumber,
+        docketNumber,
+        startDate,
+        endDate,
+        limit = 100,
       } = req.query;
 
-      const { AuditService } = await import('../services/AuditService');
+      const { AuditService } = await import("../services/AuditService");
       const auditService = new AuditService();
-      
+
       const filters = {
         entityType: entityType as string,
         action: action as string,
@@ -287,14 +343,13 @@ export class TrackingController {
         docketNumber: docketNumber as string,
         startDate: startDate ? new Date(startDate as string) : undefined,
         endDate: endDate ? new Date(endDate as string) : undefined,
-        limit: parseInt(limit as string)
+        limit: parseInt(limit as string),
       };
 
       const auditLogs = await auditService.searchAuditLogs(filters);
 
       const response: ApiResponse = createSuccessResponse(auditLogs);
       res.status(HTTP_STATUS.OK).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -303,15 +358,18 @@ export class TrackingController {
   /**
    * Get audit statistics
    */
-  getAuditStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getAuditStats = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
-      const { AuditService } = await import('../services/AuditService');
+      const { AuditService } = await import("../services/AuditService");
       const auditService = new AuditService();
       const stats = await auditService.getAuditStats();
 
       const response: ApiResponse = createSuccessResponse(stats);
       res.status(HTTP_STATUS.OK).json(response);
-
     } catch (error) {
       next(error);
     }
@@ -320,12 +378,12 @@ export class TrackingController {
 
 // Error handling middleware
 export const handleError = (
-  error: Error, 
-  req: Request, 
-  res: Response, 
+  error: Error,
+  req: Request,
+  res: Response,
   next: NextFunction
 ): void => {
-  logError(error, 'TrackingController');
+  logError(error, "TrackingController");
 
   let statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let message: string = ERROR_MESSAGES.INTERNAL_ERROR;
@@ -348,6 +406,6 @@ export const handleError = (
 
 // 404 handler
 export const handleNotFound = (req: Request, res: Response): void => {
-  const response: ApiResponse = createErrorResponse('Endpoint not found');
+  const response: ApiResponse = createErrorResponse("Endpoint not found");
   res.status(HTTP_STATUS.NOT_FOUND).json(response);
 };

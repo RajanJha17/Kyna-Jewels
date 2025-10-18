@@ -268,6 +268,24 @@ router.post("/verify", async (req: Request, res: Response) => {
     }
     await order.updateStatus(newStatus, paymentResponse);
 
+    // Auto-create TrackingOrder if payment is successful
+    if (newStatus === OrderStatus.SUCCESS) {
+      try {
+        await createTrackingOrderFromPayment(order);
+      } catch (trackingError) {
+        console.error("Failed to create tracking order:", trackingError);
+        // Don't fail the payment verification if tracking creation fails
+      }
+
+      // Add order to user's orders array if payment is successful
+      try {
+        await addOrderToUser(order.userId, order.orderId);
+      } catch (userUpdateError) {
+        console.error("Failed to add order to user:", userUpdateError);
+        // Don't fail the payment verification if user update fails
+      }
+    }
+
     // Return success response
     res.json({
       success: true,
@@ -501,5 +519,131 @@ router.get("/orders/:userId", async (req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * Create TrackingOrder from successful PaymentOrder
+ */
+async function createTrackingOrderFromPayment(paymentOrder: any) {
+  try {
+    const { TrackingOrder } = require("../models/TrackingOrder");
+    const { UserModel } = require("../models/userModel");
+    const { OrderStatus } = require("../types/tracking");
+
+    // Check if TrackingOrder already exists
+    const existingTracking = await TrackingOrder.findOne({
+      orderNumber: paymentOrder.orderNumber || paymentOrder.orderId,
+    });
+
+    if (existingTracking) {
+      console.log(`TrackingOrder already exists for ${paymentOrder.orderId}`);
+      return existingTracking;
+    }
+
+    // Get user details
+    const user = await UserModel.findById(paymentOrder.userId);
+    if (!user) {
+      console.error(`User not found for userId: ${paymentOrder.userId}`);
+      return null;
+    }
+
+    // Create TrackingOrder
+    const trackingOrderData = {
+      orderNumber: paymentOrder.orderNumber || paymentOrder.orderId,
+      customerEmail: user.email,
+      customerName:
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+        user.name ||
+        "Customer",
+      totalAmount: paymentOrder.amount,
+      status: OrderStatus.ORDER_PLACED,
+      items: [
+        {
+          productId: paymentOrder.orderId,
+          productName: "Custom Jewelry Order",
+          quantity: 1,
+          price: paymentOrder.amount,
+          image: paymentOrder.images?.[0]?.url || "",
+        },
+      ],
+      shippingAddress: {
+        name: paymentOrder.billingInfo.name,
+        line1: paymentOrder.billingInfo.address,
+        line2: "",
+        city: paymentOrder.billingInfo.city,
+        state: paymentOrder.billingInfo.state,
+        pincode: paymentOrder.billingInfo.zip,
+        phone: paymentOrder.billingInfo.phone,
+        email: paymentOrder.billingInfo.email,
+      },
+      billingAddress: {
+        name: paymentOrder.billingInfo.name,
+        line1: paymentOrder.billingInfo.address,
+        line2: "",
+        city: paymentOrder.billingInfo.city,
+        state: paymentOrder.billingInfo.state,
+        pincode: paymentOrder.billingInfo.zip,
+        phone: paymentOrder.billingInfo.phone,
+        email: paymentOrder.billingInfo.email,
+      },
+      trackingHistory: [
+        {
+          status: OrderStatus.ORDER_PLACED,
+          description: "Order placed and payment confirmed",
+          timestamp: new Date(),
+          code: "ORDER_PLACED",
+        },
+      ],
+    };
+
+    const trackingOrder = new TrackingOrder(trackingOrderData);
+    await trackingOrder.save();
+
+    console.log(
+      `Created TrackingOrder for payment order ${paymentOrder.orderId}`
+    );
+    return trackingOrder;
+  } catch (error) {
+    console.error("Error creating TrackingOrder from payment:", error);
+    throw error;
+  }
+}
+
+/**
+ * Add order to user's orders array
+ */
+async function addOrderToUser(userId: string, orderId: string) {
+  try {
+    const { UserModel } = require("../models/userModel");
+
+    console.log(`📝 Adding order ${orderId} to user ${userId}`);
+
+    // Find the user and add the order to their orders array
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      console.error(`❌ User not found: ${userId}`);
+      return;
+    }
+
+    // Check if order already exists in user's orders array
+    if (user.orders && user.orders.includes(orderId)) {
+      console.log(`ℹ️ Order ${orderId} already exists in user's orders array`);
+      return;
+    }
+
+    // Add order to user's orders array
+    if (!user.orders) {
+      user.orders = [];
+    }
+
+    user.orders.push(orderId);
+    await user.save();
+
+    console.log(`✅ Successfully added order ${orderId} to user ${userId}`);
+    console.log(`📊 User now has ${user.orders.length} orders`);
+  } catch (error) {
+    console.error("Error adding order to user:", error);
+    throw error;
+  }
+}
 
 export default router;
