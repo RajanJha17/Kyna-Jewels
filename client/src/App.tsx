@@ -10,6 +10,7 @@ import PromotionalBanner from "./components/PromotionalBanner";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import AboutPage from "./pages/AboutPage";
@@ -18,7 +19,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
 import ProfilePage from "./pages/ProfilePage";
-import TermsAndConditions from "./pages/TermsAndConditions";
+import TermsAndConditions from "./components/terms&conditions/TermsAndConditions";
 import EngravingPage from "./pages/Engrave";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -40,16 +41,16 @@ import Blogs from "./pages/Blogs";
 import BlogPost from "./pages/BlogPost";
 import ProductDetail from "./pages/ProductDetail";
 import Product3d from "./pages/Product3d";
-import TrackOrderPage from "./pages/TrackOrderPage";
-import JewelleryPage from "./pages/JewelleryPage";
-import BuildYourJewelleryRings from "./pages/Build_yr_own/BuildYourJewelleryRings";
-import GoldPricePage from "./pages/GoldPricePage";
-import BuildYourJewelleryPendants from "./pages/Build_yr_own/BuildYourJewelleryPendants";
-import BuildYourJewelleryBracelets from "./pages/Build_yr_own/BuildYourJewelleryBracelet";
-import BuildYourJewelleryBands from "./pages/Build_yr_own/BuildYourJewelleryBands";
-import BuildYourJewelleryEarrings from "./pages/Build_yr_own/BuildYourJewelleryEarings";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCancel from "./pages/PaymentCancel";
+import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import PaymentProcessingPage from "./pages/PaymentProcessingPage";
+import ShippingInformationPage from "./pages/ShippingInformationPage";
+import OrderSuccessPage from "./pages/OrderSuccessPage";
+import WishlistPage from "./pages/WishlistPage";
+import SharedWishlistPage from "./pages/SharedWishlistPage";
+import PrivacyPolicy from "./components/terms&conditions/PrivacyPolicy";
+import ShippingPolicy from "./components/terms&conditions/Shipping";
+import CancellationRefund from './components/terms&conditions/Cancellation&Refund';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const isAuthenticated = useSelector(
@@ -98,6 +99,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-white">
         <PromotionalBanner />
         <Header />
@@ -107,7 +109,23 @@ function App() {
           <Route path="/product-3d" element={<Product3d />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/product" element={<ProductDetail />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/payment-processing" element={<PaymentProcessingPage />} />
+          <Route path="/shipping" element={<ShippingInformationPage />} />
+          <Route path="/order-success" element={<OrderSuccessPage />} />
+          <Route
+            path="/wishlist"
+            element={
+              <PrivateRoute>
+                <WishlistPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/shared-wishlist/:shareId"
+            element={<SharedWishlistPage />}
+          />
           <Route
             path="/login"
             element={
@@ -170,6 +188,19 @@ function App() {
           />
           <Route path="/terms-conditions" element={<TermsAndConditions />} />
           <Route path="/customer-service" element={<CustomerService />} />
+          {/* Pretty path-based FAQ routes */}
+          <Route path="/customer-service/faqs" element={<CustomerService />} />
+          <Route
+            path="/customer-service/faqs/:categorySlug"
+            element={<CustomerService />}
+          />
+          <Route
+            path="/customer-service/faqs/:categorySlug/:questionSlug"
+            element={<CustomerService />}
+          />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/cancellation-refund" element={<CancellationRefund />} />
           <Route
             path="/engrave-your-ring"
             element={<EngravingPage onClose={() => {}} />}

@@ -20,26 +20,48 @@ const sections = [
       },
       { id: "reviews-feedback", title: "Submission of Reviews and Feedback" },
     ],
-  },
-  {
-    id: "product-information",
-    title: "PRODUCT INFORMATION AND DESCRIPTIONS",
-    subsections: [
-      { id: "accuracy-information", title: "Accuracy of Information" },
-      { id: "pricing-policy", title: "Pricing Policy" },
-      { id: "product-availability", title: "Availability of Products" },
-      { id: "product-policy", title: "Product Policy" },
-      { id: "product-care", title: "Product Care and Maintenance Guidelines" },
-      {
-        id: "health-safety",
-        title: "Health and Safety Precautions for Product Use",
-      },
-      {
-        id: "product-safety",
-        title: "Product Safety Information and Compliance with Regulations",
-      },
-    ],
-  },
+  },{
+  id: "loyalty-programs-promotions",
+  title: "LOYALTY PROGRAMS AND PROMOTIONS",
+  subsections: [
+    {
+      id: "extension-privileges-promos",
+      title: "Extension of Privileges / Promos",
+    },
+    {
+      id: "gift-cards",
+      title: "Gift Cards",
+    },
+    {
+      id: "loyalty-points",
+      title: "Loyalty Points",
+    },
+    {
+      id: "friends-family-discount",
+      title: "Friends & Family Discount",
+    },
+    {
+      id: "referral-discount",
+      title: "Referral Discount",
+    },
+    {
+      id: "design-your-own-jewellery",
+      title: "Design Your Own Jewellery",
+    },
+  ],
+},
+{
+  id: "customer-service-support",
+  title: "CUSTOMER SERVICE AND SUPPORT",
+  subsections: [
+    { id: "contact-information", title: "Contact Information" },
+    { id: "hours-of-operation", title: "Hours of Operation for Customer Service" },
+    {
+      id: "resolving-customer-inquiries",
+      title: "Process for Resolving Customer Inquiries and Complaints",
+    },
+  ],
+},
 ];
 
 export default function TermsAndConditions() {
@@ -128,7 +150,7 @@ export default function TermsAndConditions() {
   return (
     <>
       <SEO
-        title="Terms & Conditions | Kyora Jewellery"
+        title="Terms & Conditions | Kyna Jewellery"
         description="Read our terms and conditions, website usage policies, and product information guidelines."
         canonical="/terms-conditions"
       />
@@ -581,211 +603,143 @@ export default function TermsAndConditions() {
                   </p>
                 </div>
               </section>
+              
+              {/* 02.	LOYALTY PROGRAMS AND PROMOTIONS */}
+              {/* <section id="loyalty-programs-and-promotions" className="mb-12">
+                <h2 className="text-2xl font-bold mb-4">Loyalty Programs and Promotions</h2>
+                <p className="text-sm text-muted-foreground">
+                  Kyna Jewellery may offer loyalty programs and promotions to
+                  reward our customers for their continued support. These programs
+                  may include discounts, special offers, and exclusive access to
+                  new products or events. Participation in these programs may be
+                  subject to additional terms and conditions, which will be
+                  provided at the time of enrollment or participation.
+                </p>
+              </section> */}
+              <section id="loyalty-programs-promotions" className="mb-12">
+  <h2 className="text-2xl font-bold mb-6 text-[#328F94]">
+    06. LOYALTY PROGRAMS AND PROMOTIONS
+  </h2>
 
-              {/* Product Information Section */}
-              <section id="product-information" className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 text-[#328F94] ">
-                  02. PRODUCT INFORMATION AND DESCRIPTIONS
-                </h2>
+  <div id="extension-privileges-promos" className="mb-8">
+    <h3 className="text-xl font-semibold mb-4">
+      Extension of Privileges / Promos
+    </h3>
 
-                <div id="accuracy-information" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    1.Accuracy of Information
-                  </h3>
-                  <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
-                    <li>
-                      <span className="font-bold">
-                        Product Colors and Sizes:
-                      </span>{" "}
-                      We strive to accurately display the colors and sizes of
-                      our products on our website. However, actual colors may
-                      vary depending on your monitor or display device. We
-                      cannot guarantee that your monitor's display will
-                      perfectly reflect the color of the product you receive.
-                      Additionally, the packaging of the product may differ from
-                      what is shown online.
-                    </li>
-                    <li>
-                      <span className="font-bold">Weight Variations:</span>{" "}
-                      During the crafting process of jewellery items such as
-                      rings and bracelets, slight variations in metal weight may
-                      naturally occur. These differences may lead to the final
-                      product weighing slightly more or less than initially
-                      estimated, reflecting the unique nature of handcrafted
-                      jewellery. For example, if you purchase a gold ring
-                      initially estimated to weigh 10 grams, the final weight
-                      may be slightly different, such as 9.9 grams or 10.1
-                      grams. Similarly, the total weight of diamonds or
-                      gemstones may also vary. For instance, if the total weight
-                      is estimated to be 2 carats, it could range from 1.99
-                      carats to 2.1 carats.
-                    </li>
-                    <li>
-                      <span className="font-bold">
-                        Fixed Pricing Assurance:
-                      </span>{" "}
-                      Please rest assured that the price agreed upon at the time
-                      of purchase remains fixed and unchanged. Our rates are
-                      determined by considering various factors to ensure smooth
-                      operations and fair pricing, regardless of any minor
-                      fluctuations in weight due to production process.
-                    </li>
-                    <li>
-                      <span className="font-bold">Consistent Pricing:</span> The
-                      metal, diamond, or gemstone weights of jewellery items may
-                      vary slightly after crafting (either go higher or lower),
-                      but the price will remain unchanged from the amount agreed
-                      upon at the time of purchase.{" "}
-                      <span className="italic">(DISCLAIMER POP UP)</span>
-                    </li>
-                  </ul>
-                </div>
+    <div id="gift-cards" className="mb-6">
+      <h4 className="text-lg font-semibold mb-3">1. Gift Cards</h4>
+      <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+        <li>Gift Card(s) can be redeemed across the Website and Mobile site, or mobile apps.</li>
+        <li>Gift Card(s) can be redeemed on the purchase of any jewellery products.</li>
+        <li>On the payment page, click on the tab "Gift Card" and enter your Gift Card number and pin for redemption.</li>
+        <li>Multiple Gift Cards can be used to make a payment in a single transaction.</li>
+        <li>Gift Card(s) can be combined with any other payment type.</li>
+        <li>Gift Card(s) once bought online, shall be considered as sold and cannot be Cancelled, Exchanged or Refunded.</li>
+        <li>Gift card(s) can also be redeemed partially, as many times as a user wishes to, till its balance is consumed or it expires.</li>
+        <li>Gift cards are valid for a period of one year from the date of issuance to the recipient.</li>
+        <li>Gift cards cannot be used to purchase another Gift Card.</li>
+        <li>If lost or misused, the Gift Card(s) cannot be replaced.</li>
+        <li>Gift cards are void if resold and cannot be exchanged for credit(s) or cash and cannot be re-validated once past the expiry date.</li>
+      </ul>
+    </div>
 
-                <div id="pricing-policy" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    2.Pricing Policy
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    Prices are quoted in INR and does not include applicable
-                    taxes unless otherwise stated. We reserve the right to
-                    change prices at any time without prior notice, although
-                    such changes will not affect orders that have already been
-                    placed and confirmed. Prices may change due to market
-                    fluctuations, changes in supply, promotional offers, or
-                    other factors. We periodically review and adjust our pricing
-                    to remain competitive. Discounts and promotional offers
-                    apply only during the specified promotional period and
-                    cannot be applied retrospectively or combined with other
-                    offers unless explicitly stated. While we strive for
-                    accuracy, occasionally errors may occur in the prices listed
-                    on our website. We reserve the right to correct any errors
-                    and update information without prior notice. If a pricing
-                    error is discovered after you have placed an order, we will
-                    contact you promptly to reconfirm your order at the correct
-                    price or cancel it for a full refund. The prices listed
-                    include the cost of the product itself. Additional charges
-                    such as shipping fees, taxes, and duties will be calculated
-                    and displayed during the checkout process. Depending on the
-                    destination of the shipment, your order may be subject to
-                    taxes, customs duties, and fees levied by the destination
-                    state/country. The recipient of the shipment is responsible
-                    for all import-related fees.
-                  </p>
-                </div>
+    <div id="loyalty-points" className="mb-6">
+      <h4 className="text-lg font-semibold mb-3">2. Loyalty Points</h4>
+      <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+        <li>For every purchase made on the website, the customer is entitled to get loyalty points.</li>
+        <li>1% of value before GST will be added as points.</li>
+        <li>1 point will be equivalent to 1 rupee at the time of redemption.</li>
+        <li>Loyalty Points cannot be clubbed with any other offer.</li>
+        <li>Loyalty points are applicable on all products and will be valid for 3 years only.</li>
+      </ul>
+    </div>
 
-                <div id="product-availability" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    3.Availability of Products
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    We strive to maintain accurate and up-to-date information
-                    regarding the availability of our products. However, due to
-                    the nature of our business, product availability is subject
-                    to change without notice. We cannot guarantee that all
-                    products will be in stock at all times.
-                  </p>
-                </div>
+    <div id="friends-family-discount" className="mb-6">
+      <h4 className="text-lg font-semibold mb-3">3. Friends & Family Discount</h4>
+      <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+        <li>15% discount on the total jewellery value.</li>
+        <li>The discount value will be added to the customer account under credits and can be availed at the time of purchasing any product.</li>
+        <li>Valid until one year from the date of receipt of advance on order confirmation.</li>
+        <li>This offer can't be combined and redeemed with any other ongoing offer or discount.</li>
+        <li>This offer is non-transferable to any other individual and can be availed by the person making the purchase.</li>
+      </ul>
+    </div>
 
-                <div id="product-policy" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    4.Product Policy
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    We strive for precision, commitment to providing accurate
-                    and detailed descriptions of our jewellery items please note
-                    that slight variations in color, size, weight, and design
-                    may occur due to the handcrafted nature of our products.{" "}
-                    <br />
-                    <br />
-                    The colors of our items as displayed on our website may
-                    differ from the actual products you receive. This can be
-                    attributed to various factors, including natural variations
-                    in metals and gemstones, the lighting conditions during
-                    viewing (such as artificial and indoor lighting). While we
-                    make every effort to accurately represent our products
-                    online, the colors you see on your monitor may not perfectly
-                    match the actual items upon delivery. Therefore, some minor
-                    distinctions in texture and color should be expected.
-                  </p>
-                </div>
+    <div id="referral-discount" className="mb-6">
+      <h4 className="text-lg font-semibold mb-3">4. Referral Discount</h4>
+      <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+        <li>5% discount on the total jewellery value in case another customer purchases on the website through a reference/referral code.</li>
+        <li>The discount value will be added to the customer account under credits and can be availed at the time of purchasing any product.</li>
+        <li>Valid until one year from the date of receipt of advance on order confirmation.</li>
+        <li>This offer can't be combined and redeemed with any other ongoing offer or discount.</li>
+        <li>This offer is non-transferable to any other individual and can be availed by the person making the purchase.</li>
+      </ul>
+    </div>
 
-                <div id="product-care" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    5.Product Care and Maintenance Guidelines
-                  </h3>
-                  <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
-                    <li>
-                      Avoid contact with chemicals such as chlorine bleach or
-                      harsh cleaning agents.
-                    </li>
-                    <li>
-                      Clean your jewellery regularly with a soft brush and mild
-                      soap solution, and have them inspected and professionally
-                      cleaned annually if further required.
-                    </li>
-                    <li>
-                      These precious metals can tarnish over time due to
-                      exposure to air and moisture — store jewellery in a dry
-                      place, or in a jewellery box or pouch.
-                    </li>
-                    <li>
-                      Remove jewellery before engaging in activities that could
-                      damage it, such as swimming, gardening, or exercising etc.
-                    </li>
-                    <li>
-                      We cannot be held responsible for any damage resulting
-                      from failure to follow our care and maintenance
-                      guidelines.
-                    </li>
-                  </ul>
-                </div>
+    <div id="design-your-own-jewellery" className="mb-6">
+      <h4 className="text-lg font-semibold mb-3">5. Design Your Own Jewellery</h4>
+      <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+        <li>If a customer cancels a “Design your own jewellery” order before production starts (within 2 days), the whole amount will be refunded to the customer.</li>
+        <li>Cancellation request after 2 days will not be accepted or entertained.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
-                <div id="health-safety" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    6.Health and Safety Precautions for Product Use
-                  </h3>
-                  <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
-                    <li>
-                      <span className="font-bold">Allergies:</span> Some
-                      individuals may be sensitive or allergic to certain
-                      metals. Customers are advised to review product
-                      descriptions for metal compositions and consult with a
-                      healthcare professional if they have known metal
-                      allergies.
-                    </li>
-                    <li>
-                      <span className="font-bold">Choking Hazard:</span> Small
-                      parts such as clasps or charms may pose a choking hazard,
-                      especially to young children. Keep jewellery out of reach
-                      of children and supervise them while wearing or handling
-                      jewellery.
-                    </li>
-                    <li>
-                      <span className="font-bold">
-                        Health and Safety Disclaimer:
-                      </span>{" "}
-                      We cannot be held responsible for any damage resulting
-                      from failure to follow Health and Safety Precautions for
-                      Product Use.
-                    </li>
-                  </ul>
-                </div>
+<section id="customer-service-support" className="mb-12">
+  <h2 className="text-2xl font-bold mb-6 text-[#328F94]">
+    03. CUSTOMER SERVICE AND SUPPORT
+  </h2>
 
-                <div id="product-safety" className="mb-8">
-                  <h3 className="text-xl font-semibold mb-4">
-                    7.Product Safety Information and Compliance with Regulations
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    Our jewellery complies with industry standards and
-                    regulations for safety and quality. We source materials from
-                    reputable suppliers and adhere to ethical and sustainable
-                    practices. Certifications and guarantees of authenticity are
-                    provided for natural diamonds and precious metals. Customers
-                    can shop with confidence knowing that our products meet
-                    stringent safety and compliance standards.
-                  </p>
-                </div>
-              </section>
+  <div id="contact-information" className="mb-8">
+    <h3 className="text-xl font-semibold mb-4">1. Contact Information:</h3>
+    <p className="text-muted-foreground leading-relaxed mb-4">
+      For any assistance, our dedicated customer support team is available via:
+    </p>
+    <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+      <li>Phone: +91 8928610682</li>
+      <li>Email: enquiries@kynajewels.com</li>
+      <li>Live Chat: Accessible through our website during operational hours.</li>
+    </ul>
+  </div>
+
+  <div id="hours-of-operation" className="mb-8">
+    <h3 className="text-xl font-semibold mb-4">
+      2. Hours of Operation for Customer Service:
+    </h3>
+    <p className="text-muted-foreground leading-relaxed mb-4">
+      Our customer service operates during the following hours:
+    </p>
+    <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+      <li>Monday to Friday: 9 a.m. to 6 p.m. IST</li>
+      <li>Please note that timings may vary on holidays and special occasions.</li>
+    </ul>
+  </div>
+
+  <div id="resolving-customer-inquiries" className="mb-8">
+    <h3 className="text-xl font-semibold mb-4">
+      3. Process for Resolving Customer Inquiries and Complaints:
+    </h3>
+    <ul className="text-muted-foreground leading-relaxed mb-4 list-disc pl-6">
+      <li>Upon receipt, the inquiry/complaint is logged into our system.</li>
+      <li>A member of our customer support team promptly acknowledges receipt of the inquiry/complaint.</li>
+      <li>Our dedicated team thoroughly investigates the matter to understand the root cause of the issue.</li>
+      <li>This may involve gathering additional information from the customer, reviewing relevant records, or consulting with other departments.</li>
+      <li>Based on the investigation, a resolution plan is formulated.</li>
+      <li>The plan may include corrective actions, refunds, replacements, or other appropriate measures to address the customer's concerns.</li>
+      <li>We keep the customer informed throughout the process, providing regular updates on the status of their inquiry/complaint.</li>
+      <li>Once the resolution plan is finalized, it is implemented promptly.</li>
+      <li>After the resolution has been implemented, we follow up with the customer to ensure their satisfaction.</li>
+      <li>We encourage feedback on the resolution process, allowing us to continually improve our services and prevent similar issues in the future.</li>
+      <li>The entire resolution process is documented for future reference and analysis.</li>
+      <li>Once the inquiry/complaint has been satisfactorily resolved and the customer is content, the case is marked as closed in our system.</li>
+      <li>Any claim for non-receipt of a product or empty box will be entertained only if submitted within 24 hours of receipt along with an unboxing video which includes the original outer seal. Send the video via WhatsApp within 24 hours of receiving the product.</li>
+      <li>We provide resolution within 7 - 10 working days.</li>
+    </ul>
+  </div>
+</section>
+
+
             </div>
           </div>
         </div>

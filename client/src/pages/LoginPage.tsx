@@ -4,6 +4,7 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { loginSucceeded } from "../store/slices/authSlice";
 import { setAccessToken } from "@/lib/authToken";
+import apiService from "@/services/api";
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -30,49 +31,40 @@ const LoginPage: React.FC = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          useCookie: true,
-        }),
+      const response = await apiService.login({
+        email: formData.email,
+        password: formData.password,
+        useCookie: true,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Login response:", data);
+      if (response.success) {
+        console.log("Login response:", response);
 
         // Save access token if backend returns it
-        if (data?.token) {
-          setAccessToken(data.token);
+        if (response.data?.token) {
+          setAccessToken(response.data.token);
         }
 
         // Dispatch login success action with token and user data
         dispatch(
           loginSucceeded({
-            token: data.token,
-            user: data.user,
+            token: response.data.token,
+            user: response.data.user,
           })
         );
 
-        console.log("Login successful. User payload:", data?.user || null);
+        console.log("Login successful. User payload:", response.data?.user || null);
         console.log("Redux auth state should be updated now");
 
         // Navigate to profile page
         navigate("/profile", {
           state: {
-            userData: data?.user,
-            name: data?.user?.firstName,
+            userData: response.data?.user,
+            name: response.data?.user?.firstName,
           },
         });
       } else {
-        setError(data.message || "Login failed");
+        setError(response.error || "Login failed");
       }
     } catch (error) {
       console.error("Login error:", error);

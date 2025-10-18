@@ -41,6 +41,11 @@ export interface IUser extends Document {
   otp?: string;
   otpExpires?: Date;
   availableOffers: number;
+  referralCode?: string;
+  referralCount: number;
+  totalReferralEarnings: number;
+  usedPromoCodes: string[];
+  usedReferralCodes: string[];
   comparePassword(candidatePassword: string): Promise<boolean>;
   createdAt: Date;
   updatedAt: Date;

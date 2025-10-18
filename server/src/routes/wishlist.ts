@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import { 
+  getWishlist, 
   addToWishlist, 
   removeFromWishlist, 
-  getWishlist, 
-  clearWishlist 
+  checkWishlistStatus 
 } from '../controllers/wishlistController';
-import { verifyToken } from '../middleware/auth';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
 // All wishlist routes require authentication
-router.use(verifyToken);
+router.use(authenticateToken);
 
 // GET /api/wishlist - Get user's wishlist
 router.get('/', getWishlist);
@@ -18,10 +18,10 @@ router.get('/', getWishlist);
 // POST /api/wishlist - Add product to wishlist
 router.post('/', addToWishlist);
 
-// DELETE /api/wishlist/:productId - Remove specific product from wishlist
+// DELETE /api/wishlist/:productId - Remove product from wishlist
 router.delete('/:productId', removeFromWishlist);
 
-// DELETE /api/wishlist - Clear entire wishlist
-router.delete('/', clearWishlist);
+// GET /api/wishlist/check/:productId - Check if product is in wishlist
+router.get('/check/:productId', checkWishlistStatus);
 
 export default router;
