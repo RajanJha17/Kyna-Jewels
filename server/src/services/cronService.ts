@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { sendReminderEmails } from '../controllers/referralController';
 import { TrackingOrder } from '../models/TrackingOrder';
 import { TrackingService } from './TrackingService';
+import { Sequel247Service } from './Sequel247Service';
 
 // Schedule reminder emails to run daily at 10:00 AM
 export const startCronJobs = () => {
@@ -23,8 +24,8 @@ export const startCronJobs = () => {
   console.log('Cron jobs started successfully');
 };
 
-// Start tracking updates cron job
-export const startTrackingCronJob = (trackingService: TrackingService) => {
+// Start tracking updates cron job (optimized with batch tracking)
+export const startTrackingCronJob = (trackingService: TrackingService, sequelService: Sequel247Service) => {
   console.log('Starting tracking updates cron job...');
   
   // Update tracking every 30 minutes
@@ -45,34 +46,99 @@ export const startTrackingCronJob = (trackingService: TrackingService) => {
       
       console.log(`📦 Found ${orders.length} orders to check for updates`);
       
+      // Extract all docket numbers for batch tracking
+      const docketNumbers = orders.map(order => order.docketNumber).filter(Boolean);
+      
+      if (docketNumbers.length === 0) {
+        console.log('⚠️ No valid docket numbers found');
+        return;
+      }
+      
       let updatedCount = 0;
       let errorCount = 0;
       
-      // Update each order
-      for (const order of orders) {
-        try {
-          const previousStatus = order.status;
-          await trackingService.updateTrackingFromSequel(order);
+      try {
+        console.log(`🚀 Fetching tracking data for ${docketNumbers.length} shipments in batch...`);
+        
+        // Use batch tracking API (much more efficient!)
+        const batchResponse = await sequelService.trackMultipleShipments(docketNumbers);
+        
+        // Process successful shipments
+        if (batchResponse.successShipments) {
+          const successShipments = batchResponse.successShipments as Record<string, any>;
           
-          // Check if status actually changed
-          await order.save();
-          const newStatus = order.status;
-          
-          if (previousStatus !== newStatus) {
-            console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+          for (const order of orders) {
+            if (!order.docketNumber) continue;
             
-            // Sync status back to original order with previous status for notifications
-            await trackingService.syncOrderStatus(order, previousStatus);
+            const trackingData = successShipments[order.docketNumber];
             
-            updatedCount++;
+            if (trackingData) {
+              try {
+                const previousStatus = order.status;
+                
+                // Update order with tracking data
+                order.updateFromSequelTracking(trackingData);
+                await order.save();
+                
+                const newStatus = order.status;
+                
+                if (previousStatus !== newStatus) {
+                  console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+                  
+                  // Sync status back to original order with previous status for notifications
+                  await trackingService.syncOrderStatus(order, previousStatus);
+                  
+                  updatedCount++;
+                }
+              } catch (error) {
+                console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+                errorCount++;
+              }
+            }
           }
-        } catch (error) {
-          console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
-          errorCount++;
         }
+        
+        // Log error shipments if any
+        if (batchResponse.errorShipments) {
+          const errorShipments = batchResponse.errorShipments as Record<string, any>;
+          const errorDockets = Object.keys(errorShipments);
+          
+          if (errorDockets.length > 0) {
+            console.log(`⚠️ ${errorDockets.length} shipments had errors:`);
+            errorDockets.forEach(docket => {
+              console.log(`  ❌ ${docket}: ${JSON.stringify(errorShipments[docket])}`);
+              errorCount++;
+            });
+          }
+        }
+        
+        console.log(`🎉 Batch tracking completed: ${updatedCount} orders updated, ${errorCount} errors`);
+        
+      } catch (batchError) {
+        console.error('❌ Batch tracking failed, falling back to individual tracking:', (batchError as Error).message);
+        
+        // Fallback to individual tracking if batch fails
+        for (const order of orders) {
+          try {
+            const previousStatus = order.status;
+            await trackingService.updateTrackingFromSequel(order);
+            
+            await order.save();
+            const newStatus = order.status;
+            
+            if (previousStatus !== newStatus) {
+              console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+              await trackingService.syncOrderStatus(order, previousStatus);
+              updatedCount++;
+            }
+          } catch (error) {
+            console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+            errorCount++;
+          }
+        }
+        
+        console.log(`🎉 Fallback tracking completed: ${updatedCount} orders updated, ${errorCount} errors`);
       }
-      
-      console.log(`🎉 Tracking update completed: ${updatedCount} orders updated, ${errorCount} errors`);
       
     } catch (error) {
       console.error('❌ Tracking cron job error:', error);
@@ -81,11 +147,11 @@ export const startTrackingCronJob = (trackingService: TrackingService) => {
     timezone: 'UTC'
   });
   
-  console.log('✅ Tracking updates cron job started (every 30 minutes)');
+  console.log('✅ Tracking updates cron job started (every 30 minutes) - Using batch API');
 };
 
-// Manual function to run tracking updates (for testing)
-export const runTrackingUpdateJob = async (trackingService: TrackingService) => {
+// Manual function to run tracking updates (for testing) - optimized with batch tracking
+export const runTrackingUpdateJob = async (trackingService: TrackingService, sequelService?: Sequel247Service) => {
   console.log('🔄 Manually running tracking update job...');
   
   try {
@@ -104,24 +170,75 @@ export const runTrackingUpdateJob = async (trackingService: TrackingService) => 
     let updatedCount = 0;
     let errorCount = 0;
     
-    for (const order of orders) {
-      try {
-        const previousStatus = order.status;
-        await trackingService.updateTrackingFromSequel(order);
-        await order.save();
-        
-        const newStatus = order.status;
-        if (previousStatus !== newStatus) {
-          console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+    // Use batch tracking if sequelService is provided
+    if (sequelService) {
+      const docketNumbers = orders.map(order => order.docketNumber).filter(Boolean);
+      
+      if (docketNumbers.length > 0) {
+        try {
+          console.log(`🚀 Using batch tracking for ${docketNumbers.length} shipments...`);
           
-          // Sync status back to original order with previous status for notifications
-          await trackingService.syncOrderStatus(order, previousStatus);
+          const batchResponse = await sequelService.trackMultipleShipments(docketNumbers);
           
-          updatedCount++;
+          // Process successful shipments
+          if (batchResponse.successShipments) {
+            const successShipments = batchResponse.successShipments as Record<string, any>;
+            
+            for (const order of orders) {
+              if (!order.docketNumber) continue;
+              
+              const trackingData = successShipments[order.docketNumber];
+              
+              if (trackingData) {
+                try {
+                  const previousStatus = order.status;
+                  order.updateFromSequelTracking(trackingData);
+                  await order.save();
+                  
+                  const newStatus = order.status;
+                  if (previousStatus !== newStatus) {
+                    console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+                    await trackingService.syncOrderStatus(order, previousStatus);
+                    updatedCount++;
+                  }
+                } catch (error) {
+                  console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+                  errorCount++;
+                }
+              }
+            }
+          }
+          
+          // Count error shipments
+          if (batchResponse.errorShipments) {
+            const errorShipments = batchResponse.errorShipments as Record<string, any>;
+            errorCount += Object.keys(errorShipments).length;
+          }
+        } catch (batchError) {
+          console.error('❌ Batch tracking failed, falling back to individual:', (batchError as Error).message);
+          // Fall through to individual tracking below
         }
-      } catch (error) {
-        console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
-        errorCount++;
+      }
+    } else {
+      // Fallback to individual tracking
+      console.log('⚠️ Using individual tracking (batch not available)...');
+      
+      for (const order of orders) {
+        try {
+          const previousStatus = order.status;
+          await trackingService.updateTrackingFromSequel(order);
+          await order.save();
+          
+          const newStatus = order.status;
+          if (previousStatus !== newStatus) {
+            console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+            await trackingService.syncOrderStatus(order, previousStatus);
+            updatedCount++;
+          }
+        } catch (error) {
+          console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+          errorCount++;
+        }
       }
     }
     

@@ -226,10 +226,11 @@ const initializeTrackingServices = () => {
     // Set controller in routes
     setTrackingController(trackingController);
 
-    // Start automatic tracking updates cron job
-    startTrackingCronJob(trackingService);
+    // Start automatic tracking updates cron job (with batch tracking support)
+    startTrackingCronJob(trackingService, sequelService);
 
     console.log("✅ Tracking services initialized successfully");
+    console.log("🚀 Batch tracking enabled for efficient API calls");
   } catch (error) {
     console.error("❌ Failed to initialize tracking services:", error);
   }
@@ -428,7 +429,7 @@ app.get('/api/system/health', async (req: Request, res: Response) => {
   }
 });
 
-// Manual tracking update endpoint (for testing)
+// Manual tracking update endpoint (for testing) - with batch tracking support
 app.post('/api/tracking/manual-update', async (req: Request, res: Response) => {
   try {
     // Get tracking service from the global scope
@@ -448,11 +449,12 @@ app.post('/api/tracking/manual-update', async (req: Request, res: Response) => {
     const sequelService = createSequel247Service(sequelConfig);
     const trackingService = new TrackingService(sequelService);
     
-    const result = await runTrackingUpdateJob(trackingService);
+    // Pass sequelService for batch tracking support
+    const result = await runTrackingUpdateJob(trackingService, sequelService);
     
     res.json({
       success: true,
-      message: 'Manual tracking update completed',
+      message: 'Manual tracking update completed (using batch API)',
       data: result
     });
   } catch (error) {
