@@ -1545,7 +1545,10 @@ export default function RingBuilder() {
 
   // Add the missing payment handler functions
   const handlePaymentInitiated = (orderId: string) => {
-    console.log("✅ Payment initiated for order:", orderId);
+    // PaymentForm expects a single-arg callback; if an orderNumber is provided by the caller
+    // it can be optionally accessed via arguments[1], but we primarily support the required orderId.
+    const orderNumber = arguments[1] as string | undefined;
+    console.log("✅ Payment initiated for order:", orderId, orderNumber);
     // Could save order info locally or send to backend
   };
 

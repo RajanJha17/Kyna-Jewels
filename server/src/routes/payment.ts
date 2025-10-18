@@ -122,6 +122,8 @@ router.post("/initiate", async (req: Request, res: Response) => {
       cancelUrl,
       razorpayOrderId: razorpayOrder.id,
       images: Array.isArray(images) ? images : undefined,
+      // Mirror orderId into orderNumber for tracking and uniqueness
+      orderNumber: orderId,
     });
 
     console.log("💾 About to save PaymentOrder with images:", order.images);

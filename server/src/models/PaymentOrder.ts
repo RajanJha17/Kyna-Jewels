@@ -66,6 +66,7 @@ export interface IPaymentResponse {
 export interface IOrder extends Document {
   orderId: string;
   userId: string;
+  orderNumber?: string;
   amount: number;
   currency: string;
   status: OrderStatus;
@@ -253,6 +254,14 @@ const orderSchema = new Schema<IOrder>(
       required: true,
       trim: true,
     },
+    // Mirror of the Mongo _id / orderId for easier tracking lookup
+    orderNumber: {
+      type: String,
+      trim: true,
+      index: true,
+      unique: true,
+      sparse: true,
+    },
     // Optional images uploaded (Cloudinary or other services)
     images: [
       {
@@ -281,6 +290,21 @@ orderSchema.pre("save", function (next) {
     this.orderId = `ORD_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
+  }
+  next();
+});
+
+// Pre-save middleware to set orderNumber equal to orderId if not provided
+orderSchema.pre("save", function (next) {
+  try {
+    if (!this.orderNumber) {
+      // Mirror orderId to orderNumber for tracking and to satisfy unique index
+      this.orderNumber =
+        this.orderId ||
+        `ORD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+  } catch (e) {
+    // ignore and continue
   }
   next();
 });
