@@ -212,16 +212,131 @@ export default function TrackOrderPage() {
             </p>
           </div>
 
-          {/* Demo Orders Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Test Orders from Database:</h3>
-            <div className="text-xs text-blue-800 space-y-1">
-              <p><strong>ORD123456</strong> - customer@example.com (Delivered)</p>
-              <p><strong>ORD789012</strong> - test@example.com (Packaging)</p>
-              <p><strong>ORD345678</strong> - demo@example.com (On The Road)</p>
-              <p><strong>ORD999888</strong> - customer@example.com (Processing)</p>
-              <p><strong>ORD111222</strong> - test@example.com (Order Placed)</p>
+          {/* Test Orders Cards */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Orders from Database</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Order 1 - Normal, In Transit */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => { setOrderNumber('ORD123456'); setEmail('customer@example.com'); }}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">ORD123456</h4>
+                    <p className="text-xs text-gray-500 mt-1">customer@example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Normal</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Package className="w-4 h-4 mr-2 text-blue-600" />
+                    <span className="text-gray-700">In Transit</span>
+                  </div>
+                  <p className="text-xs text-gray-600">Diamond Solitaire Ring</p>
+                  <p className="text-sm font-semibold text-gray-900">₹25,000</p>
+                </div>
+              </div>
+
+              {/* Order 2 - Customized, Processing */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => { setOrderNumber('ORD789012'); setEmail('test@example.com'); }}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">ORD789012</h4>
+                    <p className="text-xs text-gray-500 mt-1">test@example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">Customized</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Package className="w-4 h-4 mr-2 text-yellow-600" />
+                    <span className="text-gray-700">Processing</span>
+                  </div>
+                  <p className="text-xs text-gray-600">Custom Build Your Own Ring</p>
+                  <p className="text-sm font-semibold text-gray-900">₹45,000</p>
+                </div>
+              </div>
+
+              {/* Order 3 - Customized, On The Road */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => { setOrderNumber('ORD345678'); setEmail('demo@example.com'); }}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">ORD345678</h4>
+                    <p className="text-xs text-gray-500 mt-1">demo@example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">Customized</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Package className="w-4 h-4 mr-2 text-blue-600" />
+                    <span className="text-gray-700">On The Road</span>
+                  </div>
+                  <p className="text-xs text-gray-600">Custom Design Pendant</p>
+                  <p className="text-sm font-semibold text-gray-900">₹35,000</p>
+                </div>
+              </div>
+
+              {/* Order 4 - Customized, Packaging */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => { setOrderNumber('ORD999888'); setEmail('customer@example.com'); }}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">ORD999888</h4>
+                    <p className="text-xs text-gray-500 mt-1">customer@example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded">Customized</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Package className="w-4 h-4 mr-2 text-orange-600" />
+                    <span className="text-gray-700">Packaging</span>
+                  </div>
+                  <p className="text-xs text-gray-600">Engraved Gold Bracelet</p>
+                  <p className="text-sm font-semibold text-gray-900">₹18,000</p>
+                </div>
+              </div>
+
+              {/* Order 5 - Normal, Order Placed */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => { setOrderNumber('ORD111222'); setEmail('test@example.com'); }}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">ORD111222</h4>
+                    <p className="text-xs text-gray-500 mt-1">test@example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Normal</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Package className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="text-gray-700">Order Placed</span>
+                  </div>
+                  <p className="text-xs text-gray-600">Gold Hoop Earrings</p>
+                  <p className="text-sm font-semibold text-gray-900">₹12,000</p>
+                </div>
+              </div>
+
+              {/* Order 6 - Normal, Delivered */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                   onClick={() => { setOrderNumber('ORD555666'); setEmail('demo@example.com'); }}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900">ORD555666</h4>
+                    <p className="text-xs text-gray-500 mt-1">demo@example.com</p>
+                  </div>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">Normal</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm">
+                    <Package className="w-4 h-4 mr-2 text-green-600" />
+                    <span className="text-gray-700">Delivered</span>
+                  </div>
+                  <p className="text-xs text-gray-600">Pearl Necklace</p>
+                  <p className="text-sm font-semibold text-gray-900">₹22,000</p>
+                </div>
+              </div>
             </div>
+            <p className="text-xs text-gray-500 mt-4 text-center">Click on any card to auto-fill the tracking form</p>
           </div>
 
           {/* Tracking Form */}
