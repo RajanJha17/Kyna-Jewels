@@ -48,7 +48,32 @@ import { initializeRedis, closeRedisConnection } from './services/sessionService
 // Load environment variables FIRST
 dotenv.config();
 
-// Environment variable validation
+// Set default environment variables for development only
+if (process.env.NODE_ENV !== 'production') {
+if (!process.env.NODE_ENV) {
+  process.env.NODE_ENV = "development";
+}
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = "dev-secret-key-change-in-production";
+}
+if (!process.env.PORT) {
+  process.env.PORT = "5000";
+}
+if (!process.env.MONGO_URI) {
+  process.env.MONGO_URI = "mongodb://localhost:27017/kyna-jewels";
+}
+if (!process.env.CCAVENUE_MERCHANT_ID) {
+  process.env.CCAVENUE_MERCHANT_ID = "dev-merchant-id";
+}
+if (!process.env.CCAVENUE_ACCESS_CODE) {
+  process.env.CCAVENUE_ACCESS_CODE = "dev-access-code";
+}
+if (!process.env.CCAVENUE_WORKING_KEY) {
+  process.env.CCAVENUE_WORKING_KEY = "dev-working-key";
+  }
+}
+
+// Environment variable validation (after defaults are set)
 const requiredEnvVars = [
   'JWT_SECRET',
   'MONGO_URI',
@@ -63,22 +88,6 @@ if (missingVars.length > 0) {
   console.error('Please set these variables in your .env file');
   console.error('Current .env file location:', process.cwd() + '/.env');
   process.exit(1);
-}
-
-// Set default environment variables for development only
-if (process.env.NODE_ENV !== 'production') {
-if (!process.env.NODE_ENV) {
-  process.env.NODE_ENV = "development";
-}
-if (!process.env.JWT_SECRET) {
-  process.env.JWT_SECRET = "dev-secret-key-change-in-production";
-}
-if (!process.env.PORT) {
-  process.env.PORT = "5000";
-}
-if (!process.env.MONGO_URI) {
-  process.env.MONGO_URI = "mongodb://localhost:27017/kyna-jewels";
-  }
 }
 
 // Sequel247 configuration - NO DEFAULT VALUES FOR PRODUCTION

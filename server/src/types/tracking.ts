@@ -128,6 +128,9 @@ export interface Sequel247TrackingResponse {
       code: string;
     }>;
   };
+  // For batch tracking API (trackMultiple)
+  successShipments?: Record<string, any>;
+  errorShipments?: Record<string, any>;
   errorInfo?: any[];
   message?: string;
 }
