@@ -17,6 +17,7 @@ export const seedTrackingData = async (): Promise<void> => {
         customerEmail: 'test@example.com',
         customerName: 'John Doe',
         totalAmount: 25000,
+        orderType: 'normal', // Normal product - can be cancelled
         status: OrderStatus.ON_THE_ROAD,
         items: [
           {
@@ -82,6 +83,7 @@ export const seedTrackingData = async (): Promise<void> => {
         customerEmail: 'jane@example.com',
         customerName: 'Jane Smith',
         totalAmount: 15000,
+        orderType: 'build-your-own', // Customized product - cannot be cancelled
         status: OrderStatus.DELIVERED,
         items: [
           {

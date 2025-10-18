@@ -58,6 +58,12 @@ const TrackingOrderSchema = new Schema<TrackingOrderDocument>({
     required: true, 
     min: 0 
   },
+  orderType: {
+    type: String,
+    enum: ['normal', 'build-your-own', 'upload-your-own', 'engraved'],
+    default: 'normal',
+    required: true
+  },
   status: { 
     type: String, 
     enum: Object.values(OrderStatus), 

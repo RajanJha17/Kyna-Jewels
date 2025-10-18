@@ -210,6 +210,18 @@ class TrackingApiService {
       method: "GET",
     });
   }
+
+  async cancelShipment(data: {
+    docketNumber: string;
+    reason: string;
+    orderNumber?: string;
+    email?: string;
+  }) {
+    return this.makeRequest("/tracking/cancel-shipment", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiService = new ApiService();

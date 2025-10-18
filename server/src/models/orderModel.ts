@@ -6,6 +6,7 @@ export interface IOrder extends Document {
   user: Schema.Types.ObjectId | IUser;
     orderNumber: string;  // ✅ Added
      estimatedDeliveryDate?: Date; // ✅ Added
+  orderType: 'normal' | 'build-your-own' | 'upload-your-own' | 'engraved'; // ✅ Order type for cancellation policy
   statusHistory?: {
     status: string;
     date: Date;
@@ -66,6 +67,12 @@ const orderSchema = new Schema<IOrder>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     orderNumber: { type: String, required: true, unique: true }, // ✅ Added
     estimatedDeliveryDate: { type: Date }, // ✅ Added
+  orderType: { 
+    type: String, 
+    enum: ['normal', 'build-your-own', 'upload-your-own', 'engraved'],
+    default: 'normal',
+    required: true
+  }, // ✅ Order type for cancellation policy
   statusHistory: [{
     status: { type: String, required: true },
     date: { type: Date, required: true },

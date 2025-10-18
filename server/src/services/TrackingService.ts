@@ -582,4 +582,28 @@ export class TrackingService {
       throw error;
     }
   }
+
+  /**
+   * Cancel a shipment with Sequel247
+   */
+  async cancelShipment(docketNumber: string, reason: string): Promise<boolean> {
+    try {
+      logInfo(`Cancelling shipment ${docketNumber}: ${reason}`);
+      
+      // Call Sequel247 API to cancel the shipment
+      const success = await this.sequelService.cancelShipment(docketNumber, reason);
+      
+      if (success) {
+        logInfo(`Shipment ${docketNumber} cancelled successfully`);
+      } else {
+        logError(new Error(`Failed to cancel shipment ${docketNumber}`), 'cancelShipment');
+      }
+      
+      return success;
+
+    } catch (error) {
+      logError(error as Error, 'cancelShipment');
+      throw error;
+    }
+  }
 }

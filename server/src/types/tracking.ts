@@ -31,6 +31,7 @@ export interface TrackingOrder {
   customerEmail: string;
   customerName: string;
   totalAmount: number;
+  orderType: 'normal' | 'build-your-own' | 'upload-your-own' | 'engraved';
   status: OrderStatus;
   items: OrderItem[];
   shippingAddress: Address;

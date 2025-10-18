@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Package, Search, Mail, AlertCircle, Clock, RefreshCw } from "lucide-react";
+import { Package, Search, Mail, AlertCircle, Clock, RefreshCw, XCircle } from "lucide-react";
 import { trackingApi } from "@/services/api";
 import TrackingProgress from "@/components/tracking/TrackingProgress";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
@@ -10,6 +10,7 @@ interface TrackingData {
   orderNumber: string;
   customerEmail: string;
   status: string;
+  orderType?: 'normal' | 'build-your-own' | 'upload-your-own' | 'engraved';
   estimatedDelivery?: string;
   docketNumber?: string;
   shippingAddress?: {
@@ -48,6 +49,9 @@ export default function TrackOrderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   // Load cached data on mount
   useEffect(() => {
@@ -124,6 +128,55 @@ export default function TrackOrderPage() {
 
   const handleRefresh = () => {
     fetchTrackingData(false);
+  };
+
+  const handleCancelShipment = async () => {
+    if (!trackingData?.docketNumber || !cancelReason.trim()) {
+      setError("Please provide a cancellation reason");
+      return;
+    }
+
+    setIsCancelling(true);
+    setError("");
+
+    try {
+      const response = await trackingApi.cancelShipment({
+        docketNumber: trackingData.docketNumber,
+        reason: cancelReason,
+        orderNumber: trackingData.orderNumber,
+        email: trackingData.customerEmail,
+      });
+
+      if (response.success) {
+        // Refresh tracking data to show cancelled status
+        await fetchTrackingData(false);
+        setShowCancelDialog(false);
+        setCancelReason("");
+        alert("Shipment cancelled successfully!");
+      } else {
+        setError(response.error || "Failed to cancel shipment");
+      }
+    } catch (err) {
+      setError("Failed to cancel shipment. Please try again.");
+      console.error("Cancel shipment error:", err);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const canCancelOrder = () => {
+    if (!trackingData) return false;
+    const status = trackingData.status.toUpperCase();
+    const orderType = trackingData.orderType || 'normal';
+    
+    // Only normal products can be cancelled
+    // Customized products (build-your-own, upload-your-own, engraved) cannot be cancelled
+    return (
+      trackingData.docketNumber &&
+      status !== "DELIVERED" &&
+      status !== "CANCELLED" &&
+      orderType === 'normal'
+    );
   };
 
   return (
@@ -262,18 +315,29 @@ export default function TrackOrderPage() {
                     <Clock className="w-4 h-4 mr-2" />
                     Last updated: {new Date(trackingData.updatedAt).toLocaleString()}
                   </div>
-                  <button
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    className="flex items-center text-[#126180] hover:text-[#0f4f6b] font-medium disabled:opacity-50"
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 mr-1 ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
-                    />
-                    Refresh
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleRefresh}
+                      disabled={isRefreshing}
+                      className="flex items-center text-[#126180] hover:text-[#0f4f6b] font-medium disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 mr-1 ${
+                          isRefreshing ? "animate-spin" : ""
+                        }`}
+                      />
+                      Refresh
+                    </button>
+                    {canCancelOrder() && (
+                      <button
+                        onClick={() => setShowCancelDialog(true)}
+                        className="flex items-center text-red-600 hover:text-red-700 font-medium"
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Cancel Order
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -303,6 +367,98 @@ export default function TrackOrderPage() {
               <p className="text-gray-600">
                 Enter your order details above to track your package
               </p>
+            </div>
+          )}
+
+          {/* Cancel Order Dialog */}
+          {showCancelDialog && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Cancel Order
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setShowCancelDialog(false);
+                      setCancelReason("");
+                      setError("");
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-gray-600 mb-4">
+                    Are you sure you want to cancel this shipment? This action
+                    will notify the courier to stop delivery.
+                  </p>
+
+                  {trackingData && (
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm">
+                      <p className="font-medium text-gray-900">
+                        Order: {trackingData.orderNumber}
+                      </p>
+                      <p className="text-gray-600">
+                        Tracking: {trackingData.docketNumber}
+                      </p>
+                    </div>
+                  )}
+
+                  <label
+                    htmlFor="cancelReason"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Reason for Cancellation *
+                  </label>
+                  <textarea
+                    id="cancelReason"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Please provide a reason (e.g., Changed my mind, Ordered by mistake, etc.)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowCancelDialog(false);
+                      setCancelReason("");
+                      setError("");
+                    }}
+                    disabled={isCancelling}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    Keep Order
+                  </button>
+                  <button
+                    onClick={handleCancelShipment}
+                    disabled={isCancelling || !cancelReason.trim()}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCancelling ? (
+                      <span className="flex items-center justify-center">
+                        <RefreshCw className="animate-spin h-4 w-4 mr-2" />
+                        Cancelling...
+                      </span>
+                    ) : (
+                      "Cancel Order"
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

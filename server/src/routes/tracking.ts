@@ -175,6 +175,19 @@ router.get('/audit/stats', (req, res) => {
   }
 });
 
+// Cancel shipment endpoint
+router.post('/cancel-shipment', trackingRateLimit, (req, res) => {
+  try {
+    const controller = getController();
+    controller.cancelShipment(req, res, () => {});
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      error: 'Tracking service not initialized'
+    });
+  }
+});
+
 // Development only endpoints
 if (process.env.NODE_ENV !== 'production') {
   router.post('/test/create-order', (req, res) => {

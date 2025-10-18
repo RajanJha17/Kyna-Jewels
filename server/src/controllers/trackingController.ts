@@ -316,6 +316,102 @@ export class TrackingController {
       next(error);
     }
   };
+
+  /**
+   * Cancel a shipment
+   */
+  cancelShipment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { docketNumber, reason, orderNumber, email } = req.body;
+
+      // Validation
+      if (!docketNumber || !reason) {
+        const errors: Record<string, string> = {};
+        if (!docketNumber) errors.docketNumber = 'Docket number is required';
+        if (!reason) errors.reason = 'Cancellation reason is required';
+        
+        const response: ApiResponse = createErrorResponse(
+          'Docket number and reason are required',
+          errors
+        );
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
+        return;
+      }
+
+      // Optional: Verify order ownership if orderNumber and email provided
+      let orderData: any = null;
+      if (orderNumber && email) {
+        orderData = await this.trackingService.trackOrder({ orderNumber, email });
+        if (!orderData || orderData.docketNumber !== docketNumber) {
+          const response: ApiResponse = createErrorResponse(
+            'Order verification failed. Docket number does not match this order.'
+          );
+          res.status(HTTP_STATUS.FORBIDDEN).json(response);
+          return;
+        }
+      }
+
+      // Check order type - only 'normal' orders can be cancelled
+      const { TrackingOrder } = await import('../models/TrackingOrder');
+      const trackingOrder = await TrackingOrder.findOne({ docketNumber });
+      
+      if (trackingOrder && trackingOrder.orderType !== 'normal') {
+        const orderTypeLabel = trackingOrder.orderType === 'build-your-own' 
+          ? 'Build Your Own'
+          : trackingOrder.orderType === 'upload-your-own'
+          ? 'Upload Your Own'
+          : trackingOrder.orderType === 'engraved'
+          ? 'Engraved'
+          : trackingOrder.orderType;
+
+        const response: ApiResponse = createErrorResponse(
+          `Cannot cancel ${orderTypeLabel} orders. Customized orders cannot be cancelled once placed.`
+        );
+        res.status(HTTP_STATUS.FORBIDDEN).json(response);
+        return;
+      }
+
+      // Cancel the shipment with Sequel247
+      const success = await this.trackingService.cancelShipment(docketNumber, reason);
+
+      if (success) {
+        // Update the tracking order status in database
+        try {
+          const { OrderStatus } = await import('../types/tracking');
+          
+          if (trackingOrder) {
+            trackingOrder.status = OrderStatus.CANCELLED;
+            trackingOrder.addTrackingEvent(
+              OrderStatus.CANCELLED,
+              `Shipment cancelled: ${reason}`
+            );
+            await trackingOrder.save();
+
+            // Sync with main order model
+            await this.trackingService.syncOrderStatus(trackingOrder, trackingOrder.status);
+          }
+        } catch (dbError) {
+          console.error('Failed to update tracking status in database:', dbError);
+          // Continue even if DB update fails - shipment is already cancelled with courier
+        }
+
+        const response: ApiResponse = createSuccessResponse(
+          { cancelled: true, docketNumber },
+          'Shipment cancelled successfully'
+        );
+        res.status(HTTP_STATUS.OK).json(response);
+      } else {
+        const response: ApiResponse = createErrorResponse(
+          'Failed to cancel shipment. Please try again or contact support.'
+        );
+        res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+      }
+
+    } catch (error) {
+      logError(error as Error, 'cancelShipment');
+      next(error);
+    }
+  };
 }
 
 // Error handling middleware
