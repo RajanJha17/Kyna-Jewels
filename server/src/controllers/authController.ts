@@ -40,7 +40,6 @@ export const signup = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
 
-    const hashedPassword = await bcryptjs.hash(password, 10);
     const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Split name into firstName and lastName
@@ -50,7 +49,7 @@ export const signup = async (req: Request, res: Response) => {
 
     const user = new User({
       email,
-      password: hashedPassword,
+      password, // Will be hashed by pre-save hook
       name,
       firstName,
       lastName,
@@ -106,93 +105,115 @@ export const signup = async (req: Request, res: Response) => {
 export const verifyEmail = async (req: Request, res: Response) => {
   const { code } = req.body;
   
-  console.log('🔍 Verification attempt:');
-  console.log('  Code received:', code);
-  console.log('  Code type:', typeof code);
-  console.log('  Current timestamp:', Date.now());
+  console.log('\n🔍 =============== EMAIL VERIFICATION ===============');
+  console.log('📥 Code received:', code);
+  console.log('📊 Code type:', typeof code);
+  console.log('📏 Code length:', code?.length);
+  console.log('⏰ Current timestamp:', Date.now());
+  console.log('⏰ Current time:', new Date().toLocaleString());
   
   try {
     if (!code) {
+      console.log('❌ No code provided');
       return res.status(400).json({ success: false, message: "Verification code is required" });
     }
 
-    // First check if user exists with this code (for debugging)
-    const userWithCode = await User.findOne({ verificationToken: code });
-    console.log('  User with this code exists:', userWithCode ? 'YES' : 'NO');
+    // STEP 1: Check if user exists with this code
+    const userWithCode = await User.findOne({ verificationToken: String(code).trim() });
     
-    if (userWithCode) {
-      console.log('  User email:', userWithCode.email);
-      console.log('  Token expiry:', userWithCode.verificationTokenExpiresAt);
-      console.log('  Is already verified:', userWithCode.isVerified);
-      console.log('  Time until expiry (ms):', userWithCode.verificationTokenExpiresAt ? (userWithCode.verificationTokenExpiresAt.getTime() - Date.now()) : 'N/A');
-    }
-
-    // Find user with valid (non-expired) code
-    const user = await User.findOne({
-      verificationToken: code,
-      verificationTokenExpiresAt: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      console.log('  ❌ No valid user found with this code');
-      
-      // Check if code exists but is expired
-      const expiredUser = await User.findOne({ verificationToken: code });
-      if (expiredUser && expiredUser.verificationTokenExpiresAt && expiredUser.verificationTokenExpiresAt.getTime() <= Date.now()) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Verification code has expired. Please request a new one." 
-        });
-      }
-      
+    console.log('\n📋 STEP 1: User lookup');
+    console.log('  User found:', userWithCode ? '✅ YES' : '❌ NO');
+    
+    if (!userWithCode) {
+      console.log('❌ Invalid verification code - no matching user');
+      console.log('=============== VERIFICATION FAILED ===============\n');
       return res.status(400).json({ 
         success: false, 
         message: "Invalid verification code. Please check and try again." 
       });
     }
 
-    console.log('  ✅ Valid user found, proceeding with verification');
+    console.log('  📧 User email:', userWithCode.email);
+    console.log('  🔑 Token in DB:', userWithCode.verificationToken);
+    console.log('  ⏰ Token expiry:', new Date(userWithCode.verificationTokenExpiresAt).toLocaleString());
+    console.log('  ✓ Already verified:', userWithCode.isVerified);
 
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpiresAt = undefined;
-    await user.save();
+    // STEP 2: Check if already verified
+    if (userWithCode.isVerified) {
+      console.log('\n⚠️ STEP 2: User already verified');
+      console.log('=============== VERIFICATION SKIPPED ===============\n');
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email is already verified. You can login now." 
+      });
+    }
 
-    console.log('  ✅ User verified successfully');
+    // STEP 3: Check if token is expired
+    const now = Date.now();
+    const expiryTime = userWithCode.verificationTokenExpiresAt.getTime();
+    const timeRemaining = expiryTime - now;
+    
+    console.log('\n⏱️ STEP 3: Expiry check');
+    console.log('  Current time (ms):', now);
+    console.log('  Expiry time (ms):', expiryTime);
+    console.log('  Time remaining (ms):', timeRemaining);
+    console.log('  Time remaining (min):', Math.floor(timeRemaining / 60000));
+    
+    if (timeRemaining <= 0) {
+      console.log('❌ Token has expired!');
+      console.log('=============== VERIFICATION FAILED ===============\n');
+      return res.status(400).json({ 
+        success: false, 
+        message: "Verification code has expired. Please request a new one." 
+      });
+    }
+
+    // STEP 4: All checks passed - verify the user
+    console.log('\n✅ STEP 4: All checks passed - Verifying user');
+    
+    userWithCode.isVerified = true;
+    userWithCode.verificationToken = undefined;
+    userWithCode.verificationTokenExpiresAt = undefined;
+    await userWithCode.save();
+
+    console.log('✅ User verified successfully!');
 
     // Send welcome email (don't fail verification if this fails)
     try {
-      await sendWelcomeEmail(user.email, user.name);
-      console.log('  ✅ Welcome email sent');
+      await sendWelcomeEmail(userWithCode.email, userWithCode.name);
+      console.log('✅ Welcome email sent');
     } catch (emailError) {
-      console.log('  ⚠️ Welcome email failed (non-critical):', emailError);
+      console.log('⚠️ Welcome email failed (non-critical):', emailError);
     }
 
     // Generate JWT and set cookie for verified user
-    const token = generateTokenAndSetCookie(res, user._id);
+    const token = generateTokenAndSetCookie(res, userWithCode._id);
+
+    console.log('=============== VERIFICATION SUCCESS ===============\n');
 
     res.status(200).json({
       success: true,
-      message: "Email verified successfully",
+      message: "Email verified successfully! You can now login.",
       token: token,
       user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        isVerified: user.isVerified,
-        role: user.role,
-        lastLogin: user.lastLogin,
-        addresses: user.addresses,
-        isActive: user.isActive,
-        availableOffers: user.availableOffers,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        id: userWithCode._id,
+        firstName: userWithCode.firstName,
+        lastName: userWithCode.lastName,
+        email: userWithCode.email,
+        phone: userWithCode.phone,
+        isVerified: userWithCode.isVerified,
+        role: userWithCode.role,
+        lastLogin: userWithCode.lastLogin,
+        addresses: userWithCode.addresses,
+        isActive: userWithCode.isActive,
+        availableOffers: userWithCode.availableOffers,
+        createdAt: userWithCode.createdAt,
+        updatedAt: userWithCode.updatedAt
       },
     });
   } catch (error) {
-    console.log("❌ Error in verifyEmail:", error);
+    console.log("\n❌ Error in verifyEmail:", error);
+    console.log('=============== VERIFICATION ERROR ===============\n');
     res.status(500).json({ success: false, message: "Server error during verification" });
   }
 };
@@ -201,15 +222,21 @@ export const verifyEmail = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
     
-    // Check password using either password or passwordHash field
-    const isPasswordValid = user.password 
-      ? await bcryptjs.compare(password, user.password)
-      : await user.comparePassword(password);
+    // Check if user is verified
+    if (!user.isVerified) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Please verify your email before logging in. Check your inbox for the verification code." 
+      });
+    }
+    
+    // Check password
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
       
     if (!isPasswordValid) {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
