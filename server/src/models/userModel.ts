@@ -32,20 +32,14 @@ const userSchema = new Schema<IUserInternal>({
     trim: true, 
     match: [/^\+?[0-9]{7,15}$/, 'Please enter a valid phone number']
   },
-  phoneNumber: { 
-    type: String, 
-    trim: true, 
-    match: [/^\+?[0-9]{7,15}$/, 'Please enter a valid phone number']
-  },
   country: { type: String, trim: true },
   state: { type: String, trim: true },
   zipCode: { type: String, trim: true },
   profileImage: { type: String, trim: true },
 
   // Authentication
-  passwordHash: { type: String, required: true },
-  password: { type: String, required: true }, // For compatibility with new auth system
-  name: { type: String, required: true }, // For compatibility with new auth system
+  password: { type: String, required: true, select: false }, // Hashed password (select: false hides it by default)
+  name: { type: String, required: true },
   isVerified: { type: Boolean, default: false },
   role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
   otp: { type: String },
@@ -99,11 +93,11 @@ userSchema.pre('save', async function(this: IUserInternal, next) {
     return next();
   }
   
-  if (!this.isModified('passwordHash')) return next();
+  if (!this.isModified('password')) return next();
   
   try {
     const salt = await bcrypt.genSalt(10);
-    this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (err) {
     next(err as Error);
@@ -112,13 +106,13 @@ userSchema.pre('save', async function(this: IUserInternal, next) {
 
 // Method: check password validity
 userSchema.methods.comparePassword = async function(this: IUser, candidatePassword: string): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.passwordHash);
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Add a static method to set password correctly
 userSchema.statics.setPassword = async function(userId: string, password: string) {
   const hashedPassword = await bcrypt.hash(password, 10);
-  return this.findByIdAndUpdate(userId, { passwordHash: hashedPassword });
+  return this.findByIdAndUpdate(userId, { password: hashedPassword });
 };
 
 // Index for faster email search

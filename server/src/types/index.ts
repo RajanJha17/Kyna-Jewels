@@ -9,14 +9,12 @@ export interface IUser extends Document {
   email: string;
   secondaryEmail?: string;
   phone?: string;
-  phoneNumber?: string;
   country?: string;
   state?: string;
   zipCode?: string;
   profileImage?: string;
-  passwordHash: string;
-  password: string; // For compatibility with new auth system
-  name: string; // For compatibility with new auth system
+  password: string; // Hashed password
+  name: string;
   isVerified: boolean;
   role: 'customer' | 'admin';
   lastLogin?: Date;
