@@ -103,23 +103,28 @@ export const signup = async (req: Request, res: Response) => {
 
 // Email verification
 export const verifyEmail = async (req: Request, res: Response) => {
-  const { code } = req.body;
+  // Accept both "code" and "otp" from frontend
+  const { code, otp } = req.body;
+  const verificationCode = code || otp;
   
   console.log('\n🔍 =============== EMAIL VERIFICATION ===============');
-  console.log('📥 Code received:', code);
-  console.log('📊 Code type:', typeof code);
-  console.log('📏 Code length:', code?.length);
+  console.log('📥 Request body:', req.body);
+  console.log('📥 Code/OTP received:', verificationCode);
+  console.log('📊 Code type:', typeof verificationCode);
+  console.log('📏 Code length:', verificationCode?.length);
   console.log('⏰ Current timestamp:', Date.now());
   console.log('⏰ Current time:', new Date().toLocaleString());
   
   try {
-    if (!code) {
+    if (!verificationCode) {
       console.log('❌ No code provided');
       return res.status(400).json({ success: false, message: "Verification code is required" });
     }
 
     // STEP 1: Check if user exists with this code
-    const userWithCode = await User.findOne({ verificationToken: String(code).trim() });
+    const codeString = String(verificationCode).trim();
+    console.log('  Searching for code:', codeString);
+    const userWithCode = await User.findOne({ verificationToken: codeString });
     
     console.log('\n📋 STEP 1: User lookup');
     console.log('  User found:', userWithCode ? '✅ YES' : '❌ NO');
@@ -221,32 +226,79 @@ export const verifyEmail = async (req: Request, res: Response) => {
 // Login with cookie-based authentication
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
+  
+  console.log('\n🔐 =============== LOGIN ATTEMPT ===============');
+  console.log('📧 Email:', email);
+  console.log('🔑 Password provided:', password ? 'YES' : 'NO');
+  console.log('📏 Password length:', password?.length);
+  
   try {
+    // STEP 1: Find user
     const user = await User.findOne({ email }).select('+password');
+    
+    console.log('\n📋 STEP 1: User lookup');
+    console.log('  User found:', user ? '✅ YES' : '❌ NO');
+    
     if (!user) {
+      console.log('❌ User not found');
+      console.log('=============== LOGIN FAILED ===============\n');
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
     
-    // Check if user is verified
+    console.log('  User email:', user.email);
+    console.log('  User ID:', user._id);
+    console.log('  Is verified:', user.isVerified);
+    console.log('  Has password in DB:', user.password ? 'YES' : 'NO');
+    console.log('  Password hash length:', user.password?.length);
+    
+    // STEP 2: Check if user is verified
+    console.log('\n✓ STEP 2: Verification check');
     if (!user.isVerified) {
+      console.log('❌ User not verified');
+      console.log('=============== LOGIN FAILED ===============\n');
       return res.status(403).json({ 
         success: false, 
         message: "Please verify your email before logging in. Check your inbox for the verification code." 
       });
     }
+    console.log('  ✅ User is verified');
     
-    // Check password
+    // STEP 3: Check password
+    console.log('\n🔑 STEP 3: Password verification');
+    console.log('  Password entered:', password);
+    console.log('  Password hash in DB:', user.password);
+    console.log('  Password hash starts with:', user.password?.substring(0, 10));
+    console.log('  Hash format valid:', user.password?.startsWith('$2a$') || user.password?.startsWith('$2b$'));
+    console.log('  Comparing password with hash...');
+    
     const isPasswordValid = await bcryptjs.compare(password, user.password);
+    
+    console.log('  Password valid:', isPasswordValid ? '✅ YES' : '❌ NO');
+    
+    // Try alternate comparison method as backup
+    if (!isPasswordValid) {
+      console.log('  Trying alternate bcrypt comparison...');
+      const bcrypt = require('bcryptjs');
+      const altValid = await bcrypt.compare(password, user.password);
+      console.log('  Alternate comparison result:', altValid ? '✅ YES' : '❌ NO');
+    }
       
     if (!isPasswordValid) {
+      console.log('❌ Invalid password');
+      console.log('=============== LOGIN FAILED ===============\n');
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    // Generate JWT and set cookie
+    // STEP 4: Generate token and login
+    console.log('\n✅ STEP 4: Login successful');
     const token = generateTokenAndSetCookie(res, user._id);
 
     user.lastLogin = new Date();
     await user.save();
+
+    console.log('  JWT generated');
+    console.log('  Last login updated');
+    console.log('=============== LOGIN SUCCESS ===============\n');
 
     res.status(200).json({
       success: true,
@@ -269,7 +321,8 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.log("Error in login ", error);
+    console.log("\n❌ Error in login:", error);
+    console.log('=============== LOGIN ERROR ===============\n');
     res.status(400).json({ success: false, message: (error as Error).message });
   }
 };
