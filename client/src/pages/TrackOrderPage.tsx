@@ -251,6 +251,14 @@ export default function TrackOrderPage() {
     }
   };
 
+  // Debug: Log when tracking data changes
+  useEffect(() => {
+    if (trackingData) {
+      console.log('📦 Tracking Data Status:', trackingData.status);
+      console.log('📦 Is Delivered?:', trackingData.status.toUpperCase() === 'DELIVERED');
+    }
+  }, [trackingData]);
+
   return (
     <>
       <SEO
@@ -439,33 +447,39 @@ export default function TrackOrderPage() {
                       Refresh
                     </button>
                     {canCancelOrder() && (
-                    <button
-                      onClick={() => setShowCancelDialog(true)}
-                      className="flex items-center text-red-600 hover:text-red-700 font-medium"
-                    >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      Cancel Order
-                    </button>
-                  )}
-                  {trackingData.status.toUpperCase() === "DELIVERED" && (
-                    <button
-                      onClick={handleDownloadPOD}
-                      disabled={isDownloadingPOD}
-                      className="flex items-center text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isDownloadingPOD ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <FileText className="w-4 h-4 mr-1" />
-                          Proof of Delivery
-                        </>
-                      )}
-                    </button>
-                  )}
+                      <button
+                        onClick={() => setShowCancelDialog(true)}
+                        className="flex items-center text-red-600 hover:text-red-700 font-medium"
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Cancel Order
+                      </button>
+                    )}
+                    {(() => {
+                      const status = trackingData.status.toUpperCase();
+                      const isDelivered = status === "DELIVERED";
+                      console.log('🔍 POD Button Check - Status:', status, 'Is Delivered:', isDelivered);
+                      
+                      return isDelivered && (
+                        <button
+                          onClick={handleDownloadPOD}
+                          disabled={isDownloadingPOD}
+                          className="flex items-center text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isDownloadingPOD ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              <FileText className="w-4 h-4 mr-1" />
+                              Proof of Delivery
+                            </>
+                          )}
+                        </button>
+                      );
+                    })()}
                 </div>
               </div>
             </div>
