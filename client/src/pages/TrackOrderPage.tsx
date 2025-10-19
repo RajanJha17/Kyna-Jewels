@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Package, Search, Mail, AlertCircle, Clock, RefreshCw, XCircle } from "lucide-react";
+import { Package, Search, Mail, AlertCircle, Clock, RefreshCw, XCircle, FileText, Download } from "lucide-react";
 import { trackingApi } from "@/services/api";
 import TrackingProgress from "@/components/tracking/TrackingProgress";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
@@ -64,6 +64,7 @@ export default function TrackOrderPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [isDownloadingPOD, setIsDownloadingPOD] = useState(false);
 
   // Load cached data and test orders on mount
   useEffect(() => {
@@ -216,6 +217,38 @@ export default function TrackOrderPage() {
     console.log('  ✅ Final Result:', canCancel);
     
     return canCancel;
+  };
+
+  const handleDownloadPOD = async () => {
+    if (!trackingData?.docketNumber) {
+      alert("Docket number not available");
+      return;
+    }
+
+    setIsDownloadingPOD(true);
+
+    try {
+      const response = await trackingApi.downloadPOD({
+        orderNumber: trackingData.orderNumber,
+        docketNumber: trackingData.docketNumber,
+        email: trackingData.customerEmail,
+      });
+
+      if (response.success && response.data?.link) {
+        // Open PDF in new tab
+        window.open(response.data.link, "_blank");
+      } else {
+        alert(
+          response.error ||
+            "Proof of Delivery is being processed. Please try again in 1-2 hours."
+        );
+      }
+    } catch (err) {
+      console.error("Failed to download POD:", err);
+      alert("Failed to download Proof of Delivery. Please try again later.");
+    } finally {
+      setIsDownloadingPOD(false);
+    }
   };
 
   return (
@@ -406,17 +439,36 @@ export default function TrackOrderPage() {
                       Refresh
                     </button>
                     {canCancelOrder() && (
-                      <button
-                        onClick={() => setShowCancelDialog(true)}
-                        className="flex items-center text-red-600 hover:text-red-700 font-medium"
-                      >
-                        <XCircle className="w-4 h-4 mr-1" />
-                        Cancel Order
-                      </button>
-                    )}
-                  </div>
+                    <button
+                      onClick={() => setShowCancelDialog(true)}
+                      className="flex items-center text-red-600 hover:text-red-700 font-medium"
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Cancel Order
+                    </button>
+                  )}
+                  {trackingData.status.toUpperCase() === "DELIVERED" && (
+                    <button
+                      onClick={handleDownloadPOD}
+                      disabled={isDownloadingPOD}
+                      className="flex items-center text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDownloadingPOD ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-4 h-4 mr-1" />
+                          Proof of Delivery
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
+            </div>
 
               {/* Progress Bar */}
               <TrackingProgress status={trackingData.status} />

@@ -40,6 +40,8 @@ export interface TrackingOrder {
   updatedAt: Date;
   docketNumber?: string;
   estimatedDelivery?: Date;
+  deliveredAt?: Date;
+  podLink?: string;
   trackingHistory: TrackingEvent[];
 }
 

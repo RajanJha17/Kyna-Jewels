@@ -201,6 +201,19 @@ router.get('/test-orders', generalRateLimit, (req, res) => {
   }
 });
 
+// Download Proof of Delivery endpoint
+router.post('/download-pod', trackingRateLimit, (req, res) => {
+  try {
+    const controller = getController();
+    controller.downloadProofOfDelivery(req, res, () => {});
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      error: 'Tracking service not initialized'
+    });
+  }
+});
+
 // Development only endpoints
 if (process.env.NODE_ENV !== 'production') {
   router.post('/test/create-order', (req, res) => {

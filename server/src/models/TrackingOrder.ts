@@ -80,6 +80,11 @@ const TrackingOrderSchema = new Schema<TrackingOrderDocument>({
     trim: true
   },
   estimatedDelivery: { type: Date },
+  deliveredAt: { type: Date },
+  podLink: { 
+    type: String,
+    trim: true
+  },
   trackingHistory: [TrackingEventSchema]
 }, {
   timestamps: true,

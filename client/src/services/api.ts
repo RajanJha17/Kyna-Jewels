@@ -228,6 +228,17 @@ class TrackingApiService {
       method: "GET",
     });
   }
+
+  async downloadPOD(data: {
+    orderNumber: string;
+    docketNumber: string;
+    email: string;
+  }) {
+    return this.makeRequest("/tracking/download-pod", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiService = new ApiService();

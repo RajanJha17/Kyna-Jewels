@@ -614,4 +614,36 @@ export class TrackingService {
       throw error;
     }
   }
+
+  /**
+   * Download Proof of Delivery (POD) for delivered orders
+   */
+  async downloadPOD(
+    docketNumbers: string[],
+    fromDate: string,
+    toDate: string
+  ): Promise<string | null> {
+    try {
+      logInfo(`Requesting POD for dockets: ${docketNumbers.join(', ')}`);
+      
+      // Call Sequel247 API to get POD link
+      const podLink = await this.sequelService.downloadPOD(
+        docketNumbers,
+        fromDate,
+        toDate
+      );
+      
+      if (podLink) {
+        logInfo(`POD available: ${podLink}`);
+      } else {
+        logInfo('POD not available yet');
+      }
+      
+      return podLink;
+
+    } catch (error) {
+      logError(error as Error, 'downloadPOD');
+      return null;
+    }
+  }
 }

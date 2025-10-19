@@ -444,6 +444,92 @@ export class TrackingController {
       next(error);
     }
   };
+
+  /**
+   * Download Proof of Delivery (POD) for delivered orders
+   */
+  downloadProofOfDelivery = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { orderNumber, docketNumber, email } = req.body;
+
+      // Validate required fields
+      if (!orderNumber || !docketNumber || !email) {
+        const response: ApiResponse = createErrorResponse(
+          'Order number, docket number, and email are required'
+        );
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
+        return;
+      }
+
+      // Find the order
+      const { TrackingOrder } = await import('../models/TrackingOrder');
+      const order = await TrackingOrder.findOne({ 
+        orderNumber, 
+        docketNumber,
+        customerEmail: email 
+      });
+
+      if (!order) {
+        const response: ApiResponse = createErrorResponse(
+          'Order not found or email does not match'
+        );
+        res.status(HTTP_STATUS.NOT_FOUND).json(response);
+        return;
+      }
+
+      // Check if order is delivered
+      if (order.status !== 'DELIVERED') {
+        const response: ApiResponse = createErrorResponse(
+          'Proof of Delivery is only available for delivered orders'
+        );
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
+        return;
+      }
+
+      // Check if POD link is already cached
+      if (order.podLink) {
+        const response: ApiResponse = createSuccessResponse(
+          { link: order.podLink },
+          'POD retrieved from cache'
+        );
+        res.status(HTTP_STATUS.OK).json(response);
+        return;
+      }
+
+      // Get delivery date
+      const deliveryDate = order.deliveredAt 
+        ? new Date(order.deliveredAt).toISOString().split('T')[0]
+        : new Date().toISOString().split('T')[0];
+
+      // Fetch POD from Sequel247
+      const podLink = await this.trackingService.downloadPOD(
+        [docketNumber],
+        deliveryDate,
+        deliveryDate
+      );
+
+      if (podLink) {
+        // Cache the POD link in database
+        order.podLink = podLink;
+        await order.save();
+
+        const response: ApiResponse = createSuccessResponse(
+          { link: podLink },
+          'Proof of Delivery is ready for download'
+        );
+        res.status(HTTP_STATUS.OK).json(response);
+      } else {
+        const response: ApiResponse = createErrorResponse(
+          'Proof of Delivery is being processed. Please try again in 1-2 hours.'
+        );
+        res.status(HTTP_STATUS.NOT_FOUND).json(response);
+      }
+
+    } catch (error) {
+      logError(error as Error, 'downloadProofOfDelivery');
+      next(error);
+    }
+  };
 }
 
 // Error handling middleware
