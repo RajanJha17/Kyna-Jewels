@@ -250,7 +250,14 @@ function App() {
             }
           />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/track-order" element={<TrackOrderPage />} />
+          <Route
+            path="/track-order"
+            element={
+              <PrivateRoute>
+                <TrackOrderPage />
+              </PrivateRoute>
+            }
+          />
         </Routes>
 
         <Footer />

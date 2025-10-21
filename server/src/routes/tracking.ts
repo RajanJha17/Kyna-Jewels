@@ -2,6 +2,7 @@ import express, { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { TrackingController } from '../controllers/trackingController';
 import { RATE_LIMITS } from '../constants/tracking';
+import { authenticateToken } from '../middleware/auth';
 
 const router: Router = express.Router();
 
@@ -188,8 +189,8 @@ router.post('/cancel-shipment', trackingRateLimit, (req, res) => {
   }
 });
 
-// Get all test orders endpoint
-router.get('/test-orders', generalRateLimit, (req, res) => {
+// Get all test orders endpoint - Protected route (user must be logged in)
+router.get('/test-orders', authenticateToken, generalRateLimit, (req, res) => {
   try {
     const controller = getController();
     controller.getAllTestOrders(req, res, () => {});

@@ -406,18 +406,31 @@ export class TrackingController {
   };
 
   /**
-   * Get all test orders for display on tracking page
+   * Get all orders for the logged-in user
+   * Protected route - only returns orders for the authenticated user's email
    */
   getAllTestOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { TrackingOrder } = await import('../models/TrackingOrder');
       
-      // Fetch all orders, limiting to 20 most recent
-      const orders = await TrackingOrder.find()
+      // Get user from request (set by authenticateToken middleware)
+      const user = (req as any).user;
+      if (!user || !user.email) {
+        const response: ApiResponse = createErrorResponse('User not authenticated');
+        res.status(HTTP_STATUS.UNAUTHORIZED).json(response);
+        return;
+      }
+
+      console.log('📧 Fetching orders for user email:', user.email);
+      
+      // Fetch only orders for the logged-in user's email, limiting to 20 most recent
+      const orders = await TrackingOrder.find({ customerEmail: user.email.toLowerCase() })
         .sort({ createdAt: -1 })
         .limit(20)
         .select('orderNumber customerEmail customerName status orderType totalAmount items docketNumber createdAt updatedAt')
         .lean();
+
+      console.log(`✅ Found ${orders.length} orders for user ${user.email}`);
 
       // Format the response
       const formattedOrders = orders.map((order: any) => ({
@@ -435,7 +448,7 @@ export class TrackingController {
 
       const response: ApiResponse = createSuccessResponse(
         formattedOrders,
-        'Test orders fetched successfully'
+        `Found ${formattedOrders.length} orders for your account`
       );
       res.status(HTTP_STATUS.OK).json(response);
 

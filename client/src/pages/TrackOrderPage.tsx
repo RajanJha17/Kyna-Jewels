@@ -80,12 +80,20 @@ export default function TrackOrderPage() {
       }
     }
 
-    // Fetch test orders from database
+    // Fetch orders for the logged-in user from database
     const fetchTestOrders = async () => {
       try {
+        console.log('🔐 Fetching orders for logged-in user...');
         const response = await trackingApi.getAllTestOrders();
+        console.log('📦 Orders response:', response);
         if (response.success && response.data) {
           setTestOrders(response.data as TestOrder[]);
+          console.log('✅ Loaded orders:', response.data);
+        } else {
+          console.error('❌ Failed to fetch orders:', response.error);
+          if (response.error?.includes('authenticated')) {
+            setError('Please log in to view your orders');
+          }
         }
       } catch (err) {
         console.error("Failed to fetch test orders:", err);
@@ -278,10 +286,10 @@ export default function TrackOrderPage() {
             </p>
           </div>
 
-          {/* Test Orders Cards */}
+          {/* User's Orders Cards */}
           {testOrders.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Test Orders from Database</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Orders</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {testOrders.map((order) => {
                   const statusColors: Record<string, string> = {
