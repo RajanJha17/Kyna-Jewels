@@ -32,38 +32,51 @@ const LoginPage: React.FC = () => {
 
     try {
       // Use apiService instead of hardcoded URL
-      const response = await apiService.login({
+      const response: any = await apiService.login({
         email: formData.email,
         password: formData.password,
         useCookie: true,
       });
 
-      if (response.success && response.data) {
-        console.log("Login response:", response.data);
+      // API service now returns backend response directly (not double-wrapped)
+      // response = { success: true, token: "...", user: {...}, message: "..." }
+      if (response.success && response.token) {
+        console.log("===========================================");
+        console.log("🔐 LOGIN RESPONSE DEBUG");
+        console.log("===========================================");
+        console.log("Full response:", JSON.stringify(response, null, 2));
+        console.log("Token value:", response.token);
+        console.log("User value:", response.user);
 
-        // Save access token if backend returns it
-        if (response.data?.token) {
-          setAccessToken(response.data.token);
-        }
+        // Save access token
+        console.log("✅ SAVING TOKEN:", response.token.substring(0, 20) + "...");
+        setAccessToken(response.token);
+        
+        // Verify it was saved
+        setTimeout(() => {
+          const saved = sessionStorage.getItem("accessToken");
+          console.log("✅ Token verified in sessionStorage:", saved ? "YES" : "NO");
+          if (saved) {
+            console.log("Token length:", saved.length);
+          }
+        }, 100);
+
+        console.log("===========================================");
 
         // Dispatch login success action with token and user data
         dispatch(
           loginSucceeded({
-            token: response.data.token,
-            user: response.data.user,
+            token: response.token,
+            user: response.user,
           })
         );
 
-        console.log("Login successful. User payload:", response.data?.user || null);
-        console.log("Redux auth state should be updated now");
+        console.log("Login successful. User:", response.user?.email || null);
+        console.log("Redux auth state updated");
 
-        // Navigate to profile page
-        navigate("/profile", {
-          state: {
-            userData: response.data?.user,
-            name: response.data?.user?.firstName,
-          },
-        });
+        // Navigate to track order page
+        console.log("🚀 Navigating to /track-order");
+        navigate("/track-order");
       } else {
         setError(response.error || "Login failed");
       }

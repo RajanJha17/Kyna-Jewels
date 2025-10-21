@@ -6,6 +6,10 @@ interface ApiResponse<T = unknown> {
   data?: T;
   message?: string;
   error?: string;
+  // Additional fields that backend may return directly
+  token?: string;
+  user?: any;
+  [key: string]: any; // Allow any additional fields from backend
 }
 
 class ApiService {
@@ -16,28 +20,36 @@ class ApiService {
     try {
       const url = `${API_BASE_URL}${endpoint}`;
       const token = getAccessToken();
+      
+      // Debug logging
+      console.log(`🌐 API Request: ${options.method || 'GET'} ${endpoint}`);
+      console.log(`🔑 Token from storage:`, token ? `${token.substring(0, 20)}...` : 'NULL');
+      console.log(`🍪 Cookies will be sent automatically via credentials: "include"`);
+      
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
+          // Always add Authorization header if token is available in storage
+          // Backend will check cookie first, then fall back to Authorization header
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...options.headers,
         },
-        credentials: "include",
+        credentials: "include", // This automatically sends httpOnly cookies
         ...options,
       });
+      
+      console.log(`📡 Response status: ${response.status}`);
 
       const data = await response.json();
 
+      // Return backend response directly (don't double wrap)
       if (response.ok) {
-        return {
-          success: true,
-          data,
-          message: data.message,
-        };
+        // Backend already returns { success, data, message }
+        return data;
       } else {
         return {
           success: false,
-          error: data.message || "Request failed",
+          error: data.message || data.error || "Request failed",
         };
       }
     } catch {
@@ -162,13 +174,24 @@ class TrackingApiService {
   ): Promise<ApiResponse<T>> {
     try {
       const url = `${API_BASE_URL}${endpoint}`;
+      const token = getAccessToken(); // Get authentication token
+      
+      // Debug logging
+      console.log(`🌐 Tracking API Request: ${options.method || 'GET'} ${endpoint}`);
+      console.log(`🔑 Token:`, token ? `${token.substring(0, 20)}...` : 'NULL');
+      
       const response = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
+          // Add Authorization header if token exists
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...options.headers,
         },
+        credentials: "include", // Send cookies with request
         ...options,
       });
+
+      console.log(`📡 Response status: ${response.status}`);
 
       const data = await response.json();
 
@@ -184,7 +207,8 @@ class TrackingApiService {
           error: data.message || data.error || "Request failed",
         };
       }
-    } catch {
+    } catch (error) {
+      console.error('❌ Tracking API Error:', error);
       return {
         success: false,
         error: "Network error. Please check your connection.",

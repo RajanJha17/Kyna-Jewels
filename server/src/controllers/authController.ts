@@ -69,7 +69,7 @@ export const signup = async (req: Request, res: Response) => {
 
     // Send verification email
     try {
-      await sendVerificationEmail(user.email, verificationToken);
+    await sendVerificationEmail(user.email, verificationToken);
       console.log('✅ Verification email sent successfully');
     } catch (emailError) {
       console.error('❌ Error sending verification email:', emailError);
@@ -329,7 +329,20 @@ export const login = async (req: Request, res: Response) => {
 
 // Logout
 export const logout = async (req: Request, res: Response) => {
-  res.clearCookie("token");
+  console.log('\n🚪 =============== LOGOUT REQUEST ===============');
+  console.log('📧 User:', (req as any).user?.email || 'Not authenticated');
+  
+  // Clear cookie with all possible options to ensure it's removed
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax", // Must match the setting used when creating the cookie
+    path: "/"
+  });
+  
+  console.log('✅ Token cookie cleared');
+  console.log('=============== LOGOUT SUCCESS ===============\n');
+  
   res.status(200).json({ success: true, message: "Logged out successfully" });
 };
 

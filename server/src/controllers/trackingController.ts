@@ -351,16 +351,48 @@ export class TrackingController {
         }
       }
 
-      // Check order type - only 'normal' orders can be cancelled
+      // Check order type and delivery status - validate cancellation eligibility
       const { TrackingOrder } = await import('../models/TrackingOrder');
-      const trackingOrder = await TrackingOrder.findOne({ docketNumber });
+      const { default: OrderModel } = await import('../models/orderModel');
+      const { OrderStatus } = await import('../types/tracking');
+      const trackingOrder = await TrackingOrder.findOne({ docketNumber }).populate('order');
       
-      if (trackingOrder && trackingOrder.orderType === 'customized') {
+      if (!trackingOrder) {
         const response: ApiResponse = createErrorResponse(
-          'Cannot cancel customized orders. Customized orders cannot be cancelled once placed.'
+          'Order not found with this docket number.'
+        );
+        res.status(HTTP_STATUS.NOT_FOUND).json(response);
+        return;
+      }
+
+      // Check 1: Order must NOT be delivered
+      if (trackingOrder.status === OrderStatus.DELIVERED) {
+        const response: ApiResponse = createErrorResponse(
+          'Cannot cancel delivered orders. This order has already been delivered.'
         );
         res.status(HTTP_STATUS.FORBIDDEN).json(response);
         return;
+      }
+
+      // Check 2: Order must NOT be already cancelled
+      if (trackingOrder.status === OrderStatus.CANCELLED) {
+        const response: ApiResponse = createErrorResponse(
+          'This order has already been cancelled.'
+        );
+        res.status(HTTP_STATUS.BAD_REQUEST).json(response);
+        return;
+      }
+
+      // Check 3: Only 'normal' orders can be cancelled (not 'customized')
+      if (trackingOrder.order) {
+        const order = trackingOrder.order as any;
+        if (order.orderType === 'customized') {
+          const response: ApiResponse = createErrorResponse(
+            'Cannot cancel customized orders. Customized products (Build Your Own, Upload Your Own, Engraved) cannot be cancelled once placed.'
+          );
+          res.status(HTTP_STATUS.FORBIDDEN).json(response);
+          return;
+        }
       }
 
       // Cancel the shipment with Sequel247
@@ -407,7 +439,7 @@ export class TrackingController {
 
   /**
    * Get all orders for the logged-in user
-   * Protected route - only returns orders for the authenticated user's email
+   * Protected route - uses direct userId reference in TrackingOrder and populates Order data
    */
   getAllTestOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -415,36 +447,76 @@ export class TrackingController {
       
       // Get user from request (set by authenticateToken middleware)
       const user = (req as any).user;
-      if (!user || !user.email) {
+      if (!user || !user._id) {
+        console.error('❌ NO USER IN REQUEST!');
         const response: ApiResponse = createErrorResponse('User not authenticated');
         res.status(HTTP_STATUS.UNAUTHORIZED).json(response);
         return;
       }
 
-      console.log('📧 Fetching orders for user email:', user.email);
+      console.log('\n=================================================');
+      console.log('🔍 GET USER ORDERS - PROTECTED ROUTE');
+      console.log('=================================================');
+      console.log('📧 Authenticated User:', user.email);
+      console.log('🆔 User ID:', user._id);
+      console.log('👤 User Name:', user.firstName);
+      console.log('=================================================\n');
       
-      // Fetch only orders for the logged-in user's email, limiting to 20 most recent
-      const orders = await TrackingOrder.find({ customerEmail: user.email.toLowerCase() })
+      // Query TrackingOrder and populate Order data
+      console.log('📊 Fetching tracking orders with populated order data...');
+      const trackingOrders = await TrackingOrder.find({ userId: user._id })
+        .populate({
+          path: 'order',
+          select: 'orderNumber orderType items totalAmount shippingAddress createdAt'
+        })
         .sort({ createdAt: -1 })
         .limit(20)
-        .select('orderNumber customerEmail customerName status orderType totalAmount items docketNumber createdAt updatedAt')
         .lean();
 
-      console.log(`✅ Found ${orders.length} orders for user ${user.email}`);
+      console.log('✅ QUERY RESULTS:');
+      console.log(`   Total Tracking Orders Found: ${trackingOrders.length}`);
+      console.log('');
+      
+      // Log each order's details
+      if (trackingOrders.length > 0) {
+        console.log('📦 TRACKING ORDER DETAILS:');
+        trackingOrders.forEach((tracking: any, index: number) => {
+          const order = tracking.order;
+          console.log(`   ${index + 1}. Order: ${order?.orderNumber}`);
+          console.log(`      User ID: ${tracking.userId}`);
+          console.log(`      Type: ${order?.orderType || 'normal'}`);
+          console.log(`      Tracking Status: ${tracking.status}`);
+          console.log(`      Docket: ${tracking.docketNumber || 'Not assigned'}`);
+        });
+        
+        // Verify all orders belong to the authenticated user
+        const wrongUserOrders = trackingOrders.filter((o: any) => o.userId?.toString() !== user._id.toString());
+        if (wrongUserOrders.length > 0) {
+          console.log('\n❌ ERROR: Found orders from other users!');
+        } else {
+          console.log('\n✅ USER ISOLATION VERIFIED: All orders belong to userId:', user._id);
+        }
+      } else {
+        console.log('⚠️  NO TRACKING ORDERS FOUND for user:', user.email);
+      }
+      console.log('\n=================================================\n');
 
-      // Format the response
-      const formattedOrders = orders.map((order: any) => ({
-        orderNumber: order.orderNumber,
-        email: order.customerEmail,
-        customerName: order.customerName,
-        status: order.status,
-        orderType: order.orderType || 'normal',
-        amount: order.totalAmount,
-        productName: order.items && order.items.length > 0 ? order.items[0].productName : 'Product',
-        docketNumber: order.docketNumber,
-        createdAt: order.createdAt,
-        updatedAt: order.updatedAt
-      }));
+      // Format the response by combining tracking and order data
+      const formattedOrders = trackingOrders.map((tracking: any) => {
+        const order = tracking.order;
+        return {
+          orderNumber: order?.orderNumber || 'N/A',
+          email: user.email, // From authenticated user
+          customerName: `${user.firstName} ${user.lastName || ''}`.trim(), // From authenticated user
+          status: tracking.status, // From TrackingOrder
+          orderType: order?.orderType || 'normal', // From Order
+          amount: order?.totalAmount || 0, // From Order
+          productName: order?.items && order.items.length > 0 ? order.items[0].productName || 'Product' : 'Product', // From Order.items
+          docketNumber: tracking.docketNumber, // From TrackingOrder
+          createdAt: tracking.createdAt,
+          updatedAt: tracking.updatedAt
+        };
+      });
 
       const response: ApiResponse = createSuccessResponse(
         formattedOrders,

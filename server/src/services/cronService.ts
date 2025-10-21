@@ -83,7 +83,7 @@ export const startTrackingCronJob = (trackingService: TrackingService, sequelSer
                 const newStatus = order.status;
                 
                 if (previousStatus !== newStatus) {
-                  console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+                  console.log(`✅ Order ${order._id}: ${previousStatus} → ${newStatus}`);
                   
                   // Sync status back to original order with previous status for notifications
                   await trackingService.syncOrderStatus(order, previousStatus);
@@ -91,7 +91,7 @@ export const startTrackingCronJob = (trackingService: TrackingService, sequelSer
                   updatedCount++;
                 }
               } catch (error) {
-                console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+                console.error(`❌ Failed to update order ${order._id}:`, (error as Error).message);
                 errorCount++;
               }
             }
@@ -127,12 +127,12 @@ export const startTrackingCronJob = (trackingService: TrackingService, sequelSer
             const newStatus = order.status;
             
             if (previousStatus !== newStatus) {
-              console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+              console.log(`✅ Order ${order._id}: ${previousStatus} → ${newStatus}`);
               await trackingService.syncOrderStatus(order, previousStatus);
               updatedCount++;
             }
           } catch (error) {
-            console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+            console.error(`❌ Failed to update order ${order._id}:`, (error as Error).message);
             errorCount++;
           }
         }
@@ -197,12 +197,12 @@ export const runTrackingUpdateJob = async (trackingService: TrackingService, seq
                   
                   const newStatus = order.status;
                   if (previousStatus !== newStatus) {
-                    console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+                    console.log(`✅ Order ${order._id}: ${previousStatus} → ${newStatus}`);
                     await trackingService.syncOrderStatus(order, previousStatus);
                     updatedCount++;
                   }
                 } catch (error) {
-                  console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+                  console.error(`❌ Failed to update order ${order._id}:`, (error as Error).message);
                   errorCount++;
                 }
               }
@@ -231,12 +231,12 @@ export const runTrackingUpdateJob = async (trackingService: TrackingService, seq
           
           const newStatus = order.status;
           if (previousStatus !== newStatus) {
-            console.log(`✅ Order ${order.orderNumber}: ${previousStatus} → ${newStatus}`);
+            console.log(`✅ Order ${order._id}: ${previousStatus} → ${newStatus}`);
             await trackingService.syncOrderStatus(order, previousStatus);
             updatedCount++;
           }
         } catch (error) {
-          console.error(`❌ Failed to update order ${order.orderNumber}:`, (error as Error).message);
+          console.error(`❌ Failed to update order ${order._id}:`, (error as Error).message);
           errorCount++;
         }
       }

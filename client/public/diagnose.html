@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnose Authentication</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #00ff00; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #00ff00; }
+        .good { color: #00ff00; }
+        .bad { color: #ff0000; }
+        button { padding: 10px 20px; background: #00ff00; color: #000; border: none; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Authentication Diagnostic</h1>
+    
+    <div class="section">
+        <h3>Current Status:</h3>
+        <div id="status"></div>
+    </div>
+
+    <div class="section">
+        <h3>Actions:</h3>
+        <button onclick="check()">Check Status</button>
+        <button onclick="clearAll()">Clear Everything</button>
+        <button onclick="testAPI()">Test API</button>
+    </div>
+
+    <script>
+        function check() {
+            const statusDiv = document.getElementById('status');
+            let html = '';
+            
+            // Check sessionStorage
+            const token = sessionStorage.getItem('accessToken');
+            html += '<p><strong>SessionStorage Token:</strong> ';
+            if (token) {
+                html += `<span class="good">EXISTS (${token.length} chars)</span><br>`;
+                html += `First 30 chars: ${token.substring(0, 30)}...`;
+            } else {
+                html += '<span class="bad">MISSING ❌</span>';
+            }
+            html += '</p>';
+            
+            // Check localStorage
+            const isAuth = localStorage.getItem('isAuthenticated');
+            html += '<p><strong>LocalStorage isAuthenticated:</strong> ';
+            html += isAuth ? `<span class="good">${isAuth}</span>` : '<span class="bad">MISSING</span>';
+            html += '</p>';
+            
+            // Check cookies
+            const cookies = document.cookie;
+            html += '<p><strong>Cookies:</strong> ';
+            if (cookies) {
+                html += `<span class="good">${cookies}</span>`;
+            } else {
+                html += '<span class="bad">NONE</span>';
+            }
+            html += '</p>';
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.cookie.split(";").forEach(c => {
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+            alert('✅ All cleared! Now go to /login and login again.');
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
+        }
+        
+        async function testAPI() {
+            const token = sessionStorage.getItem('accessToken');
+            if (!token) {
+                alert('❌ No token! Login first.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/tracking/test-orders', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert(`✅ SUCCESS! Found ${data.data?.length || 0} orders.\n\nCheck console for details.`);
+                    console.log('API Response:', data);
+                } else {
+                    alert(`❌ FAILED: ${data.error || data.message}`);
+                }
+            } catch (error) {
+                alert(`❌ ERROR: ${error.message}`);
+            }
+        }
+        
+        // Auto-check on load
+        check();
+    </script>
+</body>
+</html>
+
+

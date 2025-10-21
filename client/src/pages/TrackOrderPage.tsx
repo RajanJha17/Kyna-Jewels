@@ -5,6 +5,7 @@ import TrackingProgress from "@/components/tracking/TrackingProgress";
 import TrackingTimeline from "@/components/tracking/TrackingTimeline";
 import TrackingCard from "@/components/tracking/TrackingCard";
 import SEO from "@/components/SEO";
+import { setAccessToken, getAccessToken } from "@/lib/authToken";
 
 interface TrackingData {
   orderNumber: string;
@@ -68,6 +69,54 @@ export default function TrackOrderPage() {
 
   // Load cached data and test orders on mount
   useEffect(() => {
+    console.log("\n" + "=".repeat(60));
+    console.log("🔄 TrackOrderPage: Initializing...");
+    console.log("=".repeat(60));
+    
+    // Debug: Check all storage locations
+    console.log("📊 Storage Check:");
+    console.log("   sessionStorage.token:", sessionStorage.getItem("token") ? "EXISTS" : "MISSING");
+    console.log("   sessionStorage.accessToken:", sessionStorage.getItem("accessToken") ? "EXISTS" : "MISSING");
+    console.log("   localStorage.token:", localStorage.getItem("token") ? "EXISTS" : "MISSING");
+    console.log("   localStorage.isAuthenticated:", localStorage.getItem("isAuthenticated"));
+    console.log("   document.cookie:", document.cookie || "EMPTY");
+    
+    // Try to get token from storage first, then from cookie
+    let currentToken = getAccessToken();
+    
+    // If no token in storage, try reading from cookie (now non-httpOnly)
+    if (!currentToken) {
+      console.log("⚠️  No token in storage, checking cookie...");
+      const cookieMatch = document.cookie.match(/(?:^|;\s*)token=([^;]*)/);
+      if (cookieMatch) {
+        currentToken = decodeURIComponent(cookieMatch[1]);
+        console.log("🍪 Found token in cookie:", currentToken.substring(0, 20) + "...");
+        console.log("💾 Saving to storage...");
+        setAccessToken(currentToken); // Save for future requests
+      } else {
+        console.log("❌ No token in cookie either!");
+      }
+    }
+    
+    console.log("🔑 Final Token Status:", currentToken ? `✅ ${currentToken.substring(0, 20)}...` : "❌ NONE");
+    
+    // If NO token found anywhere, don't try to fetch orders
+    if (!currentToken) {
+      console.error("\n❌❌❌ AUTHENTICATION FAILED ❌❌❌");
+      console.error("No token found in:");
+      console.error("  - sessionStorage.token");
+      console.error("  - sessionStorage.accessToken");
+      console.error("  - localStorage.token");
+      console.error("  - document.cookie");
+      console.error("\n💡 SOLUTION:");
+      console.error("  1. Go to: http://localhost:5173/login");
+      console.error("  2. Login with your credentials");
+      console.error("  3. You'll be redirected back here with a token");
+      console.error("=".repeat(60) + "\n");
+      setError('Please log in to view your orders');
+      return; // Stop here - don't fetch orders without token
+    }
+    
     const cachedData = localStorage.getItem("lastTrackedOrder");
     if (cachedData) {
       try {
@@ -84,21 +133,34 @@ export default function TrackOrderPage() {
     const fetchTestOrders = async () => {
       try {
         console.log('🔐 Fetching orders for logged-in user...');
+        
+        // Safety check (should never be null here due to early return above)
+        if (!currentToken) {
+          console.error('❌ Token is null inside fetchTestOrders - this should not happen!');
+          setError('Authentication error. Please login again.');
+          return;
+        }
+        
+        console.log('🔑 Using token:', currentToken.substring(0, 20) + '...');
+        
         const response = await trackingApi.getAllTestOrders();
         console.log('📦 Orders response:', response);
+        
         if (response.success && response.data) {
           setTestOrders(response.data as TestOrder[]);
           console.log('✅ Loaded orders:', response.data);
         } else {
           console.error('❌ Failed to fetch orders:', response.error);
-          if (response.error?.includes('authenticated')) {
+          if (response.error?.includes('token') || response.error?.includes('authenticated')) {
             setError('Please log in to view your orders');
           }
         }
       } catch (err) {
-        console.error("Failed to fetch test orders:", err);
+        console.error("❌ Failed to fetch test orders:", err);
+        setError('Failed to load orders. Please try again.');
       }
     };
+    
     fetchTestOrders();
   }, []);
 

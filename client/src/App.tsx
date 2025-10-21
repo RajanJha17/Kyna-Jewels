@@ -56,16 +56,35 @@ function PrivateRoute({ children }: { children: JSX.Element }) {
     // ignore storage read failures
   }
 
+  // CRITICAL: Also check if we have an actual token (not just the boolean flag)
+  let hasToken = false;
+  try {
+    const token = sessionStorage.getItem("token") || 
+                  sessionStorage.getItem("accessToken") || 
+                  localStorage.getItem("token");
+    hasToken = !!token;
+  } catch {
+    // ignore storage read failures
+  }
+
   console.log("PrivateRoute check:", {
     reduxAuth: isAuthenticated,
     storageAuth: isAuthenticatedFromStorage,
+    hasToken: hasToken,
   });
 
-  if (!isAuthenticated && !isAuthenticatedFromStorage) {
-    console.log("Not authenticated, redirecting to login");
+  // Require BOTH the boolean flag AND the actual token
+  const canAccess = (isAuthenticated || isAuthenticatedFromStorage) && hasToken;
+  
+  if (!canAccess) {
+    console.log("❌ Not authenticated or missing token, redirecting to login");
+    console.log("   isAuthenticated:", isAuthenticated);
+    console.log("   isAuthenticatedFromStorage:", isAuthenticatedFromStorage);
+    console.log("   hasToken:", hasToken);
     return <Navigate to="/login" replace />;
   }
-  console.log("User is authenticated, allowing access to protected route");
+  
+  console.log("✅ User is authenticated with valid token, allowing access");
   return children;
 }
 

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clearing Session...</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { font-size: 48px; margin: 0 0 20px 0; }
+        p { font-size: 18px; margin: 10px 0; }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹</h1>
+        <p id="status">Clearing all session data...</p>
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        async function clearAndRedirect() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                // Clear everything
+                statusEl.textContent = 'Clearing localStorage...';
+                localStorage.clear();
+                await new Promise(r => setTimeout(r, 300));
+                
+                statusEl.textContent = 'Clearing sessionStorage...';
+                sessionStorage.clear();
+                await new Promise(r => setTimeout(r, 300));
+                
+                statusEl.textContent = 'Clearing cookies...';
+                document.cookie.split(";").forEach(c => {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                await new Promise(r => setTimeout(r, 300));
+                
+                statusEl.textContent = 'Redirecting to login...';
+                await new Promise(r => setTimeout(r, 500));
+                
+                // Redirect to login
+                window.location.href = '/login';
+                
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Auto-run on page load
+        clearAndRedirect();
+    </script>
+</body>
+</html>
+
+

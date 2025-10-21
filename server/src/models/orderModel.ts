@@ -38,6 +38,7 @@ export interface IOrder extends Document {
   totalAmount: number;
   trackingNumber?: string;
   courierService?: string;
+  trackingOrder?: Schema.Types.ObjectId; // Reference to TrackingOrder model
   trackingInfo?: {
     docketNumber?: string;
     status?: string;
@@ -110,7 +111,7 @@ const orderSchema = new Schema<IOrder>({
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'], 
     default: 'pending' 
   },
-
+  
   // Pricing breakdown
   subtotal: { type: Number, required: true },
   gst: { type: Number, default: 0 },
@@ -120,6 +121,7 @@ const orderSchema = new Schema<IOrder>({
   // Tracking info
   trackingNumber: { type: String },
   courierService: { type: String },
+  trackingOrder: { type: Schema.Types.ObjectId, ref: 'TrackingOrder' }, // ✅ Reference to TrackingOrder
   trackingInfo: {
     docketNumber: { type: String },
     status: { type: String },

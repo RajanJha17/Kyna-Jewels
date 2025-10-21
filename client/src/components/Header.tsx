@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store";
 import { logoutSucceeded } from "@/store/slices/authSlice";
 import { clearAccessToken } from "@/lib/authToken";
+import apiService from "@/services/api";
 import {
   Menu,
   Search,
@@ -56,17 +57,46 @@ export default function Navbar() {
     };
   }, [isUserMenuOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("displayName");
-    } catch {
-      /* ignore storage errors */
+      console.log('🚪 Logging out...');
+      
+      // Call backend logout API to clear cookie
+      await apiService.logout();
+      console.log('✅ Backend logout successful');
+      
+      // Clear frontend storage
+      try {
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("displayName");
+        localStorage.removeItem("token");
+        sessionStorage.clear();
+        console.log('✅ Cleared local storage');
+      } catch {
+        /* ignore storage errors */
+      }
+      
+      // Clear token from memory
+      clearAccessToken();
+      console.log('✅ Cleared access token');
+      
+      // Clear Redux state
+      dispatch(logoutSucceeded());
+      console.log('✅ Redux state cleared');
+      
+      // Close menu and redirect
+      setIsUserMenuOpen(false);
+      navigate("/");
+      
+      console.log('✅ Logout complete - redirected to home');
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Still clear frontend state even if backend fails
+      clearAccessToken();
+      dispatch(logoutSucceeded());
+      setIsUserMenuOpen(false);
+      navigate("/");
     }
-    clearAccessToken();
-    dispatch(logoutSucceeded());
-    setIsUserMenuOpen(false);
-    navigate("/");
   };
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">

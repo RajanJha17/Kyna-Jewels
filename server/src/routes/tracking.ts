@@ -202,6 +202,19 @@ router.get('/test-orders', authenticateToken, generalRateLimit, (req, res) => {
   }
 });
 
+// Get user-specific orders endpoint - NEW ENDPOINT to bypass any caching issues
+router.get('/my-orders', authenticateToken, generalRateLimit, (req, res) => {
+  try {
+    const controller = getController();
+    controller.getAllTestOrders(req, res, () => {});
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      error: 'Tracking service not initialized'
+    });
+  }
+});
+
 // Download Proof of Delivery endpoint
 router.post('/download-pod', trackingRateLimit, (req, res) => {
   try {

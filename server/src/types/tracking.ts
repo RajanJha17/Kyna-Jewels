@@ -27,22 +27,16 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 // Order and Tracking Types
 export interface TrackingOrder {
   _id: string;
-  orderNumber: string;
-  customerEmail: string;
-  customerName: string;
-  totalAmount: number;
-  orderType: 'normal' | 'customized';
+  userId: any; // Reference to User model ObjectId
+  order: any; // Reference to Order model ObjectId
   status: OrderStatus;
-  items: OrderItem[];
-  shippingAddress: Address;
-  billingAddress: Address;
-  createdAt: Date;
-  updatedAt: Date;
   docketNumber?: string;
   estimatedDelivery?: Date;
   deliveredAt?: Date;
   podLink?: string;
   trackingHistory: TrackingEvent[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface OrderItem {

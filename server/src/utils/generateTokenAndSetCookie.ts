@@ -9,11 +9,14 @@ export const generateTokenAndSetCookie = (res: Response, userId: string) => {
     expiresIn: "7d",
   });
 
+  // SIMPLIFIED: Set cookie as non-httpOnly so frontend can read it
+  // This allows frontend to add it to Authorization header reliably
   res.cookie("token", token, {
-    httpOnly: true,
+    httpOnly: false, // Allow JavaScript to read - frontend will use Authorization header
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: "/",
   });
 
   return token;

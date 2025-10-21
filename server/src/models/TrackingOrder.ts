@@ -1,25 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { TrackingOrder as ITrackingOrder, OrderStatus, OrderItem, Address, TrackingEvent } from '../types/tracking';
 
-const OrderItemSchema = new Schema<OrderItem>({
-  productId: { type: String, required: true },
-  productName: { type: String, required: true },
-  quantity: { type: Number, required: true, min: 1 },
-  price: { type: Number, required: true, min: 0 },
-  image: { type: String }
-}, { _id: false });
-
-const AddressSchema = new Schema<Address>({
-  name: { type: String, required: true, trim: true },
-  line1: { type: String, required: true, trim: true },
-  line2: { type: String, trim: true },
-  city: { type: String, required: true, trim: true },
-  state: { type: String, required: true, trim: true },
-  pincode: { type: String, required: true, trim: true },
-  phone: { type: String, required: true, trim: true },
-  email: { type: String, required: true, trim: true }
-}, { _id: false });
-
 const TrackingEventSchema = new Schema<TrackingEvent>({
   status: { 
     type: String, 
@@ -33,46 +14,27 @@ const TrackingEventSchema = new Schema<TrackingEvent>({
 }, { _id: false });
 
 const TrackingOrderSchema = new Schema<TrackingOrderDocument>({
-  orderNumber: { 
-    type: String, 
-    required: true, 
-    unique: true, 
-    index: true,
-    uppercase: true,
-    trim: true
+  // Core References - Links to other models
+  userId: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true,
+    index: true
   },
-  customerEmail: { 
-    type: String, 
-    required: true, 
-    index: true,
-    lowercase: true,
-    trim: true
+  order: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'Order',
+    required: true,
+    index: true
   },
-  customerName: { 
-    type: String, 
-    required: true, 
-    trim: true 
-  },
-  totalAmount: { 
-    type: Number, 
-    required: true, 
-    min: 0 
-  },
-  orderType: {
-    type: String,
-    enum: ['normal', 'customized'],
-    default: 'normal',
-    required: true
-  },
+  
+  // Tracking-Specific Fields ONLY
   status: { 
     type: String, 
     enum: Object.values(OrderStatus), 
     default: OrderStatus.ORDER_PLACED,
     index: true
   },
-  items: [OrderItemSchema],
-  shippingAddress: { type: AddressSchema, required: true },
-  billingAddress: { type: AddressSchema, required: true },
   docketNumber: { 
     type: String, 
     sparse: true,
@@ -99,10 +61,10 @@ const TrackingOrderSchema = new Schema<TrackingOrderDocument>({
 });
 
 // Indexes for better query performance
-TrackingOrderSchema.index({ orderNumber: 1, customerEmail: 1 });
-TrackingOrderSchema.index({ status: 1, createdAt: -1 });
-TrackingOrderSchema.index({ docketNumber: 1 });
-TrackingOrderSchema.index({ customerEmail: 1, createdAt: -1 });
+TrackingOrderSchema.index({ userId: 1, createdAt: -1 }); // Primary index for fetching user's orders
+TrackingOrderSchema.index({ order: 1 }); // Index for querying by order reference
+TrackingOrderSchema.index({ status: 1, createdAt: -1 }); // Index for filtering by status
+TrackingOrderSchema.index({ docketNumber: 1 }); // Index for courier tracking queries
 
 // Virtual for progress calculation
 TrackingOrderSchema.virtual('progress').get(function() {
@@ -176,11 +138,25 @@ TrackingOrderSchema.methods.mapSequelStatus = function(sequelCode: string): Orde
 };
 
 // Static methods
-TrackingOrderSchema.statics.findByOrderNumberAndEmail = function(orderNumber: string, email: string) {
-  return this.findOne({ 
-    orderNumber: orderNumber.toUpperCase(), 
-    customerEmail: email.toLowerCase() 
+TrackingOrderSchema.statics.findByOrderNumberAndEmail = async function(orderNumber: string, email: string) {
+  // Since orderNumber and customerEmail are now in the Order model,
+  // we need to first find the order, then find the tracking order
+  const OrderModel = require('./orderModel').default;
+  const UserModel = require('./userModel').default;
+  
+  // Find user by email
+  const user = await UserModel.findOne({ email: email.toLowerCase() });
+  if (!user) return null;
+  
+  // Find order by orderNumber and user
+  const order = await OrderModel.findOne({ 
+    orderNumber: orderNumber.toUpperCase(),
+    user: user._id
   });
+  if (!order) return null;
+  
+  // Find tracking order by order reference
+  return this.findOne({ order: order._id }).populate('order');
 };
 
 TrackingOrderSchema.statics.findByDocketNumber = function(docketNumber: string) {
@@ -209,16 +185,8 @@ export interface TrackingOrderDocument extends Omit<ITrackingOrder, '_id'>, Docu
 
 // Pre-save middleware
 TrackingOrderSchema.pre('save', function(next) {
-  // Ensure order number is uppercase
-  if (this.isModified('orderNumber')) {
-    this.orderNumber = this.orderNumber.toUpperCase();
-  }
-  
-  // Ensure email is lowercase
-  if (this.isModified('customerEmail')) {
-    this.customerEmail = this.customerEmail.toLowerCase();
-  }
-  
+  // No pre-save transformations needed since we removed orderNumber and customerEmail
+  // These fields are now in the Order model
   next();
 });
 
